@@ -1,0 +1,12 @@
+path: D:\Projects\CSCRS\datasets\Master_Dataset # Master dataset ka absolute path
+train: train/images                    # Balanced training folder
+val: val/images                        # Un-augmented strict validation exam folder
+
+# Exact mapping aligning 100% with your compiled folder structure
+names:
+  0: Damage Electric Pole
+  1: Damage Street Light
+  2: Garbage
+  3: Manhole
+  4: Road Damage
+  5: Waterlogging

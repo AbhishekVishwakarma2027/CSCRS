@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual Environment
+venv/
+env/
+cscrs/
+
+# Model Weights
+*.pt
+*.onnx
+*.engine
+
+# Dataset
+Dataset/
+datasets/
+
+# Logs
+logs/
+
+# Outputs
+outputs/
+runs/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+
+Previous/
+Production_Test/
