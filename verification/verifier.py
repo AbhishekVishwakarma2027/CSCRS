@@ -1,17 +1,39 @@
-from verification.ai_generated.detector import AIGeneratedDetector
+from verification.exif.detector import EXIFDetector
+from verification.quality.detector import QualityDetector
+from verification.risk_engine import RiskEngine
 
 
 class VerificationEngine:
 
     def __init__(self):
 
-        self.ai_detector = AIGeneratedDetector()
+        self.exif = EXIFDetector()
+        self.quality = QualityDetector()
+
+        self.risk_engine = RiskEngine()
 
     def verify(self, image_path):
 
-        result = self.ai_detector.predict(image_path)
+        exif = self.exif.predict(image_path)
+
+        quality = self.quality.predict(image_path)
+
+        detectors = {
+
+            "exif": exif,
+
+            "quality": quality
+        }
+
+        risk = self.risk_engine.evaluate(detectors)
 
         return {
-            "verification_passed": True,
-            "ai_generated": result
+
+            "success": True,
+
+            **risk,
+
+            "exif": exif,
+
+            "quality": quality
         }
