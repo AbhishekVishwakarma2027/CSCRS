@@ -29,7 +29,7 @@ class InferenceEngine:
 
                 "success": False,
 
-                "message": "Image failed verification.",
+                "message": "Image rejected during verification.",
 
                 "verification": verification,
 
