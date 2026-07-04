@@ -6,6 +6,7 @@ from sqlalchemy import (
     Integer,
     String,
 )
+
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -24,8 +25,28 @@ class ReportImage(Base):
         nullable=False,
     )
 
+    original_filename = Column(
+        String(255),
+        nullable=False,
+    )
+
+    stored_filename = Column(
+        String(255),
+        nullable=False,
+    )
+
     image_path = Column(
         String(500),
+        nullable=False,
+    )
+
+    mime_type = Column(
+        String(100),
+        nullable=False,
+    )
+
+    file_size = Column(
+        Integer,
         nullable=False,
     )
 
