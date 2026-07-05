@@ -63,3 +63,18 @@ class UserCRUD:
         db.refresh(user)
 
         return user
+    
+    @staticmethod
+    def update_password(
+        db: Session,
+        user,
+        password_hash: str,
+    ):
+
+        user.password_hash = password_hash
+
+        db.commit()
+
+        db.refresh(user)
+
+        return user

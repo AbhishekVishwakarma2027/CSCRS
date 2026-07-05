@@ -7,3 +7,4 @@ from .assignment import Assignment
 from .resolution import Resolution
 from .audit_log import AuditLog
 from .email_verification import EmailVerification
+from .password_reset import PasswordReset

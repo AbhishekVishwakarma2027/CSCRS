@@ -48,3 +48,38 @@ class TokenPayload(BaseModel):
     sub: int
 
     role: UserRole
+
+class VerifyEmailRequest(BaseModel):
+    email: EmailStr
+    otp: str = Field(
+        min_length=6,
+        max_length=6,
+    )
+
+
+class MessageResponse(BaseModel):
+    message: str
+
+class ResendOTPRequest(BaseModel):
+    email: EmailStr
+
+
+class MessageResponse(BaseModel):
+    message: str
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class VerifyResetOTPRequest(BaseModel):
+    email: EmailStr
+    otp: str
+
+
+class ResetPasswordRequest(BaseModel):
+    email: EmailStr
+    otp: str
+    new_password: str = Field(
+        min_length=8,
+        max_length=128,
+    )

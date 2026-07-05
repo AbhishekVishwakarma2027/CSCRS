@@ -1,19 +1,19 @@
 from sqlalchemy import (
+    Boolean,
     Column,
+    DateTime,
+    ForeignKey,
     Integer,
     String,
-    DateTime,
-    Boolean,
-    ForeignKey,
+    func,
 )
-from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
 
 from database.base import Base
 
 
-class EmailVerification(Base):
-    __tablename__ = "email_verifications"
+class PasswordReset(Base):
+
+    __tablename__ = "password_resets"
 
     id = Column(
         Integer,
@@ -23,13 +23,13 @@ class EmailVerification(Base):
 
     user_id = Column(
         Integer,
-        ForeignKey("users.id", ondelete="CASCADE"),
+        ForeignKey("users.id"),
         nullable=False,
         index=True,
     )
 
     otp_hash = Column(
-        String(64),
+        String,
         nullable=False,
     )
 
@@ -54,12 +54,3 @@ class EmailVerification(Base):
         DateTime(timezone=True),
         server_default=func.now(),
     )
-
-    user = relationship(
-        "User",
-    )
-    # last_sent_at = Column(
-    # DateTime(timezone=True),
-    # server_default=func.now(),
-    # nullable=False,
-    # )
