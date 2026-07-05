@@ -6,3 +6,4 @@ from .report_image import ReportImage
 from .assignment import Assignment
 from .resolution import Resolution
 from .audit_log import AuditLog
+from .email_verification import EmailVerification

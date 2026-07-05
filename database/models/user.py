@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy import Column, Integer, String, DateTime, Boolean
 from sqlalchemy.sql import func
 from sqlalchemy import Enum
 from database.enums import UserRole
@@ -18,6 +18,18 @@ class User(Base):
     phone = Column(String(20), unique=True, nullable=True)
 
     password_hash = Column(String(255), nullable=False)
+
+    is_active = Column(
+        Boolean,
+        nullable=False,
+        default=False,
+    )
+
+    is_email_verified = Column(
+        Boolean,
+        nullable=False,
+        default=False,
+    )
 
     role = Column(
         Enum(UserRole),
@@ -49,4 +61,8 @@ class User(Base):
 
     resolutions = relationship(
         "Resolution",
+    )
+    email_verifications = relationship(
+    "EmailVerification",
+    cascade="all, delete-orphan",
     )

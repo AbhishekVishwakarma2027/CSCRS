@@ -20,6 +20,10 @@ from inference.engine import InferenceEngine
 from services.department_service import DepartmentService
 from services.report_builder import ReportBuilder
 from services.report_service import ReportService
+from authentication.dependencies import (
+    require_citizen,
+)
+
 
 router = APIRouter()
 
@@ -32,7 +36,7 @@ UPLOAD_DIR.mkdir(exist_ok=True)
 async def report_issue(
     file: UploadFile = File(...),
     description: str | None = Form(None),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_citizen()),
     db: Session = Depends(get_db),
 ):
 
