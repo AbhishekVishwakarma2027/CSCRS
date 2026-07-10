@@ -5,6 +5,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 MODEL_PATH = PROJECT_ROOT / "models" / "best_cscrs_seg_v1.pt"
 
+MODEL_VERSION = "best_cscrs_seg_v1"
 
 DEVICE = 0 if torch.cuda.is_available() else "cpu"
 

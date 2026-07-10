@@ -8,17 +8,13 @@ from sqlalchemy.orm import Session
 from database.dependencies import get_db
 from schemas.user import (
     VerifyEmailRequest,
-    MessageResponse,
 )
 from schemas.user import (
     Token,
     UserCreate,
-    UserResponse,
-    UserLogin,
 )
 from schemas.user import (
     ResendOTPRequest,
-    MessageResponse,
 )
 from services.auth_service import AuthService
 from authentication.dependencies import get_current_user

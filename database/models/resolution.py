@@ -5,12 +5,14 @@ from sqlalchemy import (
     ForeignKey,
     Integer,
     Text,
+    Float,
+    Enum,
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 from database.base import Base
-
+from database.enums import VerificationDecision
 
 class Resolution(Base):
     __tablename__ = "resolutions"
@@ -54,4 +56,33 @@ class Resolution(Base):
     worker = relationship(
         "User",
         foreign_keys=[worker_id],
+    )
+
+    attempts = relationship(
+        "ResolutionAttempt",
+        back_populates="resolution",
+        cascade="all, delete-orphan",
+    )
+
+
+
+    verification_score = Column(
+        Float,
+        nullable=True,
+    )
+
+    verification_decision = Column(
+        Enum(VerificationDecision),
+        nullable=True,
+    )
+
+    manual_review = Column(
+        Boolean,
+        nullable=False,
+        default=False,
+    )
+
+    verified_at = Column(
+        DateTime(timezone=True),
+        nullable=True,
     )

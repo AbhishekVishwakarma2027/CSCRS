@@ -19,7 +19,17 @@ class UserCRUD:
             .filter(User.email == email)
             .first()
         )
+    @staticmethod
+    def get_by_phone(
+        db: Session,
+        phone: str,
+    ) -> User | None:
 
+        return (
+            db.query(User)
+            .filter(User.phone == phone)
+            .first()
+        )
     @staticmethod
     def get_by_id(
         db: Session,
@@ -78,3 +88,20 @@ class UserCRUD:
         db.refresh(user)
 
         return user
+    @staticmethod
+    def build(
+        *,
+        name: str,
+        email: str,
+        phone: str | None,
+        password: str,
+        role: UserRole = UserRole.CITIZEN,
+    ) -> User:
+
+        return User(
+            name=name,
+            email=email,
+            phone=phone,
+            password_hash=hash_password(password),
+            role=role,
+        )

@@ -40,6 +40,12 @@ class VerificationDecision(str, Enum):
 class AssignmentStatus(str, Enum):
     ASSIGNED = "Assigned"
     ACCEPTED = "Accepted"
+    # IN_PROGRESS = "In Progress"
     REJECTED = "Rejected"
     COMPLETED = "Completed"
     CANCELLED = "Cancelled"
+class ResolutionDecision(str, Enum):
+    FULLY_RESOLVED = "Fully Resolved"
+    PARTIALLY_RESOLVED = "Partially Resolved"
+    NOT_RESOLVED = "Not Resolved"
+    REVIEW = "Review Required"

@@ -1,0 +1,3 @@
+class GPSVerifier:
+
+    pass

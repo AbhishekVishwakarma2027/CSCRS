@@ -14,10 +14,7 @@ class ReportBuilder:
         address: str | None = None,
     ) -> ReportCreateInternal:
 
-        detections = inference_result.get(
-            "detections",
-            [],
-        )
+        detections = inference_result["ai"]["detections"]
 
         if not detections:
             raise ValueError(
@@ -44,7 +41,7 @@ class ReportBuilder:
 
             department_id=department_id,
 
-            issue_type=detection["class"],
+            issue_type=detection["class_name"],
 
             description=description,
 

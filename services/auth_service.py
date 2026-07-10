@@ -133,6 +133,12 @@ class AuthService:
                 status_code=403,
                 detail="Please verify your email before logging in.",
             )
+        if not user.is_active:
+
+            raise HTTPException(
+                status_code=403,
+                detail="Account is inactive. Please contact the administrator.",
+            )
 
 
         token = create_access_token(

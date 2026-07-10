@@ -38,3 +38,13 @@ OTP_EXPIRY_MINUTES = 5
 OTP_MAX_ATTEMPTS = 5
 
 OTP_RESEND_COOLDOWN_SECONDS = 60
+
+# ==========================
+# Application Configuration
+# ==========================
+
+APP_BASE_URL = "http://localhost:8000"
+
+FRONTEND_BASE_URL = "http://localhost:3000"
+
+WORKER_INVITATION_EXPIRY_HOURS = 24

@@ -150,3 +150,14 @@ class Report(Base):
         back_populates="report",
         cascade="all, delete-orphan",
     )
+    detections = relationship(
+        "ReportDetection",
+        back_populates="report",
+        cascade="all, delete-orphan",
+    )
+    resolution_ai = relationship(
+        "ResolutionAIResult",
+        back_populates="report",
+        uselist=False,
+        cascade="all, delete-orphan",
+    )

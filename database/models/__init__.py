@@ -8,3 +8,7 @@ from .resolution import Resolution
 from .audit_log import AuditLog
 from .email_verification import EmailVerification
 from .password_reset import PasswordReset
+from .worker_invitation import WorkerInvitation
+from .report_detection import ReportDetection
+from .resolution_ai_result import ResolutionAIResult
+from .resolution_attempt import ResolutionAttempt

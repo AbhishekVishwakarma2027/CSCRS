@@ -21,9 +21,9 @@ def hash_password(password: str) -> str:
     Hash plain text password.
     """
 
-    print("PASSWORD TYPE:", type(password))
-    print("PASSWORD VALUE:", repr(password))
-    print("PASSWORD LENGTH:", len(str(password)))
+    # print("PASSWORD TYPE:", type(password))
+    # print("PASSWORD VALUE:", repr(password))
+    # print("PASSWORD LENGTH:", len(str(password)))
     return pwd_context.hash(password)
 
 
