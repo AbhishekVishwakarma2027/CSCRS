@@ -1,6 +1,14 @@
-from sqlalchemy import Column, Integer, String, DateTime, Boolean
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    Enum,
+    ForeignKey,
+    Integer,
+    String,
+)
 from sqlalchemy.sql import func
-from sqlalchemy import Enum
+
 from database.enums import UserRole
 from database.base import Base
 from sqlalchemy.orm import relationship
@@ -36,12 +44,21 @@ class User(Base):
         nullable=False,
         default=UserRole.CITIZEN,
     )
-
+    department_id = Column(
+        Integer,
+        ForeignKey("departments.id"),
+        nullable=True,
+    )
     created_at = Column(
         DateTime(timezone=True),
         server_default=func.now(),
     )
     reports = relationship("Report", back_populates="citizen")
+
+    department = relationship(
+        "Department",
+        foreign_keys=[department_id],
+    )
 
     worker_profile = relationship(
         "WorkerProfile",

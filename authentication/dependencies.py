@@ -67,6 +67,7 @@ def get_current_user(
         )
 
     return user
+
 def require_roles(
     *allowed_roles: UserRole,
 ):
@@ -89,27 +90,34 @@ def require_roles(
         return current_user
 
     return dependency
+
 def require_citizen():
     return require_roles(
         UserRole.CITIZEN,
     )
-
 
 def require_worker():
     return require_roles(
         UserRole.WORKER,
     )
 
-
-def require_admin():
+def require_department_admin():
     return require_roles(
-        UserRole.ADMIN,
-        UserRole.SUPERVISOR,
-        UserRole.SUPER_ADMIN,
+        UserRole.DEPARTMENT_ADMIN,
     )
 
+def require_city_admin():
+    return require_roles(
+        UserRole.CITY_ADMIN,
+    )
 
 def require_super_admin():
     return require_roles(
+        UserRole.SUPER_ADMIN,
+    )
+
+def require_admin():
+    return require_roles(
+        UserRole.DEPARTMENT_ADMIN,
         UserRole.SUPER_ADMIN,
     )

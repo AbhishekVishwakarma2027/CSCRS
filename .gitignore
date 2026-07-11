@@ -37,3 +37,21 @@ Thumbs.db
 
 Previous/
 Production_Test/
+
+# Database
+cscrs.db
+*.sqbpro
+
+# Uploads
+uploads/
+
+# Python
+__pycache__/
+*.pyc
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log

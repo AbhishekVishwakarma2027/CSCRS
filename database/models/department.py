@@ -36,6 +36,11 @@ class Department(Base):
         back_populates="department",
     )
 
+    department_admins = relationship(
+        "User",
+        foreign_keys="User.department_id",
+    )
+
     reports = relationship(
         "Report",
         back_populates="department",

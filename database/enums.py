@@ -4,8 +4,10 @@ from enum import Enum
 class UserRole(str, Enum):
     CITIZEN = "Citizen"
     WORKER = "Worker"
-    ADMIN = "Admin"
-    SUPERVISOR = "Supervisor"
+
+    DEPARTMENT_ADMIN = "DepartmentAdmin"
+    CITY_ADMIN = "CityAdmin"
+
     SUPER_ADMIN = "SuperAdmin"
 
 

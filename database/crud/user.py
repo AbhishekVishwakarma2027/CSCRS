@@ -67,10 +67,7 @@ class UserCRUD:
         )
 
         db.add(user)
-
-        db.commit()
-
-        db.refresh(user)
+        db.flush()
 
         return user
     
@@ -82,10 +79,7 @@ class UserCRUD:
     ):
 
         user.password_hash = password_hash
-
-        db.commit()
-
-        db.refresh(user)
+        db.flush()
 
         return user
     @staticmethod

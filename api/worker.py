@@ -1,7 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from authentication.dependencies import require_admin
+from authentication.dependencies import (
+    require_department_admin,
+    require_super_admin,
+    require_roles,
+)
+from database.enums import UserRole
 from database.dependencies import get_db
 from database.models.user import User
 from schemas.worker import WorkerCreate, WorkerResponse
@@ -11,10 +16,12 @@ from schemas.worker import (
     WorkerActivationResponse,
 )
 
+
 from authentication.dependencies import require_worker
 from schemas.worker import WorkerProfileUpdate
 from schemas.worker import WorkerProfileResponse
 from schemas.worker import WorkerStatusResponse
+
 
 router = APIRouter(
     prefix="/workers",
@@ -30,7 +37,12 @@ router = APIRouter(
 def create_worker(
     worker: WorkerCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin()),
+    current_user: User = Depends(
+        require_roles(
+            UserRole.DEPARTMENT_ADMIN,
+            UserRole.SUPER_ADMIN,
+        )
+    ),
 ):
 
     service = WorkerService(db)
@@ -38,6 +50,7 @@ def create_worker(
     try:
 
         return service.create_worker(
+            current_user=current_user,
             name=worker.name,
             email=worker.email,
             phone=worker.phone,
@@ -109,7 +122,12 @@ def update_worker_profile(
 def deactivate_worker(
     worker_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin()),
+    current_user: User = Depends(
+        require_roles(
+            UserRole.DEPARTMENT_ADMIN,
+            UserRole.SUPER_ADMIN,
+        )
+    ),
 ):
 
     service = WorkerService(db)
@@ -126,7 +144,12 @@ def deactivate_worker(
 def activate_worker_account(
     worker_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin()),
+    current_user: User = Depends(
+        require_roles(
+            UserRole.DEPARTMENT_ADMIN,
+            UserRole.SUPER_ADMIN,
+        )
+    ),
 ):
 
     service = WorkerService(db)

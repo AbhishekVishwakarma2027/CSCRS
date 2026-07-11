@@ -13,7 +13,8 @@ from configs.config import (
     APP_BASE_URL,
     FRONTEND_BASE_URL,
 )
-
+from database.models.user import User
+from database.models.worker_profile import WorkerProfile
 
 class WorkerService:
 
@@ -23,6 +24,7 @@ class WorkerService:
     def create_worker(
         self,
         *,
+        current_user: User,
         name: str,
         email: str,
         phone: str | None,
@@ -31,6 +33,10 @@ class WorkerService:
         designation: str,
         phone_extension: str | None,
     ) -> WorkerProfile:
+        
+        if current_user.role == UserRole.DEPARTMENT_ADMIN:
+
+            department_id = current_user.department_id
 
         department = WorkerCRUD.get_department_by_id(
             self.db,
@@ -97,10 +103,6 @@ class WorkerService:
 
         try:
 
-            self.db.commit()
-
-            self.db.refresh(worker_profile)
-
             EmailService().send_email(
                 to_email=user.email,
                 subject="Activate your CSCRS Worker Account",
@@ -118,10 +120,16 @@ class WorkerService:
             )
 
         except Exception as e:
-
+            
+            self.db.rollback()
             # TODO:
             # Replace with proper logging in Phase 15.
-            print(f"Invitation email failed: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Invitation email failed: {e}",
+            )
+        self.db.commit()
+        self.db.refresh(worker_profile)
 
         return worker
     
