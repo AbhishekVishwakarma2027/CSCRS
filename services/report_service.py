@@ -88,3 +88,40 @@ class ReportService:
             self.db,
             image,
         )
+    def get_my_reports(
+        self,
+        citizen_id: int,
+    ):
+
+        return report_crud.get_reports_by_citizen(
+            self.db,
+            citizen_id,
+        )
+    def get_my_report(
+        self,
+        citizen_id: int,
+        report_number: str,
+    ):
+
+        report = report_crud.get_citizen_report_by_number(
+            self.db,
+            citizen_id,
+            report_number,
+        )
+
+        if report is None:
+
+            raise ValueError(
+                "Report not found."
+            )
+
+        return report
+    def get_department_reports(
+        self,
+        department_id: int,
+    ):
+
+        return report_crud.get_reports_by_department(
+            self.db,
+            department_id,
+        )

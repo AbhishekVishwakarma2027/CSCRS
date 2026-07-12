@@ -41,13 +41,41 @@ def get_report_by_number(
         .filter(Report.report_number == report_number)
         .first()
     )
+def get_citizen_report_by_number(
+    db: Session,
+    citizen_id: int,
+    report_number: str,
+) -> Report | None:
 
+    return (
+        db.query(Report)
+        .filter(
+            Report.citizen_id == citizen_id,
+            Report.report_number == report_number,
+        )
+        .first()
+    )
 
 def get_all_reports(
     db: Session,
 ) -> list[Report]:
     return db.query(Report).all()
 
+def get_reports_by_citizen(
+    db: Session,
+    citizen_id: int,
+):
+
+    return (
+        db.query(Report)
+        .filter(
+            Report.citizen_id == citizen_id
+        )
+        .order_by(
+            Report.created_at.desc()
+        )
+        .all()
+    )
 
 def update_report(
     db: Session,
@@ -65,3 +93,19 @@ def delete_report(
 ):
     db.delete(report)
     db.commit()
+
+def get_reports_by_department(
+    db: Session,
+    department_id: int,
+) -> list[Report]:
+
+    return (
+        db.query(Report)
+        .filter(
+            Report.department_id == department_id
+        )
+        .order_by(
+            Report.created_at.desc()
+        )
+        .all()
+    )

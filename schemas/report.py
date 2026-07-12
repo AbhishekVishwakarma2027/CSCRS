@@ -1,5 +1,5 @@
 from typing import Optional
-
+from datetime import datetime
 from pydantic import BaseModel, ConfigDict
 
 from database.enums import (
@@ -75,3 +75,20 @@ class ReportResponse(BaseModel):
     verification_decision: VerificationDecision
 
     verification_passed: bool
+class CitizenReportListItem(BaseModel):
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+    id: int
+
+    report_number: str
+
+    issue_type: str
+
+    status: ReportStatus
+
+    priority: Priority
+
+    created_at: datetime
