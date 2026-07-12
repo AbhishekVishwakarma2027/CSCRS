@@ -15,6 +15,8 @@ from configs.config import (
 )
 from database.models.user import User
 from database.models.worker_profile import WorkerProfile
+from services.notification_service import NotificationService
+
 
 class WorkerService:
 
@@ -103,21 +105,27 @@ class WorkerService:
 
         try:
 
-            EmailService().send_email(
-                to_email=user.email,
-                subject="Activate your CSCRS Worker Account",
-                body=(
-                    f"Hello {user.name},\n\n"
-                    "You have been invited to join the "
-                    "Crowdsourced Civic Issue Reporting & Resolution System "
-                    "as a Worker.\n\n"
-                    "Please activate your account using the link below:\n\n"
-                    f"{activation_link}\n\n"
-                    "This activation link is valid for 24 hours.\n\n"
-                    "If you were not expecting this invitation, "
-                    "please ignore this email."
-                ),
+            NotificationService().send_worker_invitation(
+                worker_name=user.name,
+                worker_email=user.email,
+                activation_link=activation_link,
             )
+
+            # EmailService().send_email(
+            #     to_email=user.email,
+            #     subject="Activate your CSCRS Worker Account",
+            #     body=(
+            #         f"Hello {user.name},\n\n"
+            #         "You have been invited to join the "
+            #         "Crowdsourced Civic Issue Reporting & Resolution System "
+            #         "as a Worker.\n\n"
+            #         "Please activate your account using the link below:\n\n"
+            #         f"{activation_link}\n\n"
+            #         "This activation link is valid for 24 hours.\n\n"
+            #         "If you were not expecting this invitation, "
+            #         "please ignore this email."
+            #     ),
+            # )
 
         except Exception as e:
             
@@ -173,6 +181,12 @@ class WorkerService:
         invitation.used = True
 
         self.db.commit()
+
+        NotificationService().send_account_activation_success(
+            user_name=user.name,
+            user_email=user.email,
+            role_name="Worker",
+        )
 
         return {
             "message": "Worker account activated successfully."

@@ -7,7 +7,7 @@ from database.enums import UserRole
 from database.models.user import User
 
 from services.worker_invitation import WorkerInvitationService
-from services.email_service import EmailService
+from services.notification_service import NotificationService
 
 from configs.config import FRONTEND_BASE_URL
 from authentication.security import hash_password
@@ -73,20 +73,10 @@ class CityAdminService:
         )
 
         try:
-
-            EmailService().send_email(
-                to_email=user.email,
-                subject="Activate your CSCRS City Admin Account",
-                body=(
-                    f"Hello {user.name},\n\n"
-                    "You have been invited as a City Admin in the "
-                    "Crowdsourced Civic Issue Reporting & Resolution System.\n\n"
-                    "Please activate your account using the link below:\n\n"
-                    f"{activation_link}\n\n"
-                    "This activation link is valid for 24 hours.\n\n"
-                    "If you were not expecting this invitation, "
-                    "please ignore this email."
-                ),
+            NotificationService().send_city_admin_invitation(
+                admin_name=user.name,
+                admin_email=user.email,
+                activation_link=activation_link,
             )
 
         except Exception as e:
@@ -141,6 +131,12 @@ class CityAdminService:
         invitation.used = True
 
         self.db.commit()
+
+        NotificationService().send_account_activation_success(
+            user_name=user.name,
+            user_email=user.email,
+            role_name="City Administrator",
+        )
 
         return {
             "message": "City Admin account activated successfully."

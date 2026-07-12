@@ -4,7 +4,10 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException
 
 from database.dependencies import get_db
-from authentication.dependencies import require_super_admin
+from authentication.dependencies import (
+    require_super_admin,
+    require_city_admin,
+)
 from database.models.user import User
 from services.admin_service import AdminService
 from schemas.admin import (
@@ -18,6 +21,9 @@ from schemas.admin import (
 
 from authentication.dependencies import require_roles
 from database.enums import UserRole
+from services.analytics_service import AnalyticsService
+from schemas.analytics import DashboardSummaryResponse
+
 
 router = APIRouter(
     prefix="/admins",

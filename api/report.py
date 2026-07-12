@@ -46,7 +46,7 @@ from database.enums import (
 
 
 router = APIRouter(
-    tags=["Report"]
+    tags=["Reports"]
 )
 
 engine = InferenceEngine()

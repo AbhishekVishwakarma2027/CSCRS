@@ -15,7 +15,7 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 from services.otp_service import OTPService
-from services.email_service import EmailService
+from services.notification_service import NotificationService
 
 from database.crud.email_verification import (
     EmailVerificationCRUD,
@@ -79,14 +79,11 @@ class AuthService:
         )
 
         try:
-
-            EmailService().send_email(
-                to_email=user.email,
-                subject="CSCRS Email Verification",
-                body=(
-                    f"Your CSCRS verification code is: {otp}\n\n"
-                    "This OTP is valid for 5 minutes."
-                ),
+            NotificationService().send_email_verification_otp(
+                user_name=user.name,
+                user_email=user.email,
+                otp=otp,
+                expiry_minutes=5,
             )
 
         except Exception as e:
@@ -233,6 +230,12 @@ class AuthService:
             verification,
         )
 
+        NotificationService().send_account_activation_success(
+            user_name=user.name,
+            user_email=user.email,
+            role_name="Citizen",
+        )
+
         return {
             "message": "Email verified successfully."
         }
@@ -281,13 +284,11 @@ class AuthService:
             expires_at=expires_at,
         )
 
-        EmailService().send_email(
-            to_email=user.email,
-            subject="CSCRS Email Verification",
-            body=(
-                f"Your new verification OTP is: {otp}\n\n"
-                "Valid for 5 minutes."
-            ),
+        NotificationService().send_email_verification_otp(
+            user_name=user.name,
+            user_email=user.email,
+            otp=otp,
+            expiry_minutes=5,
         )
 
         return {
@@ -336,13 +337,11 @@ class AuthService:
             expires_at=expires_at,
         )
 
-        EmailService().send_email(
-            to_email=user.email,
-            subject="CSCRS Password Reset",
-            body=(
-                f"Your password reset OTP is: {otp}\n\n"
-                "This OTP is valid for 5 minutes."
-            ),
+        NotificationService().send_password_reset_otp(
+            user_name=user.name,
+            user_email=user.email,
+            otp=otp,
+            expiry_minutes=5,
         )
 
         return {

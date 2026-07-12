@@ -7,6 +7,10 @@ from api.admin import router as admin_router
 from api.city_admin import router as city_admin_router
 from api.department import router as department_router
 from api.report import router as report_router
+from api.dashboard import router as dashboard_router
+
+
+
 
 router = APIRouter()
 
@@ -18,3 +22,4 @@ router.include_router(assignment_router,prefix="/api/v1",)
 router.include_router(resolution_router,prefix="/api/v1",)
 router.include_router(department_router)
 router.include_router(report_router)
+router.include_router(dashboard_router)
