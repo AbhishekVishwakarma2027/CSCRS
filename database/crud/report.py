@@ -2,7 +2,9 @@ from sqlalchemy.orm import Session
 
 from database.models.report import Report
 from schemas.report import ReportCreateInternal
-
+from sqlalchemy import and_
+from sqlalchemy import or_
+from math import ceil
 
 def create_report(
     db: Session,
@@ -109,3 +111,187 @@ def get_reports_by_department(
         )
         .all()
     )
+def get_department_reports_filtered(
+    db: Session,
+    department_id: int,
+    status=None,
+    priority=None,
+    issue_type=None,
+):
+
+    query = db.query(Report).filter(
+        Report.department_id == department_id
+    )
+
+    if status is not None:
+
+        query = query.filter(
+            Report.status == status
+        )
+
+    if priority is not None:
+
+        query = query.filter(
+            Report.priority == priority
+        )
+
+    if issue_type is not None:
+
+        query = query.filter(
+            Report.issue_type == issue_type
+        )
+
+    return (
+        query.order_by(
+            Report.created_at.desc()
+        )
+        .all()
+    )
+def get_all_reports_filtered(
+    db: Session,
+    department_id=None,
+    status=None,
+    priority=None,
+    issue_type=None,
+):
+
+    query = db.query(Report)
+
+    if department_id is not None:
+
+        query = query.filter(
+            Report.department_id == department_id
+        )
+
+    if status is not None:
+
+        query = query.filter(
+            Report.status == status
+        )
+
+    if priority is not None:
+
+        query = query.filter(
+            Report.priority == priority
+        )
+
+    if issue_type is not None:
+
+        query = query.filter(
+            Report.issue_type == issue_type
+        )
+
+    return (
+        query.order_by(
+            Report.created_at.desc()
+        )
+        .all()
+    )
+def search_reports(
+    db: Session,
+    query: str,
+):
+
+    return (
+        db.query(Report)
+        .filter(
+            or_(
+                Report.report_number.ilike(f"%{query}%"),
+                Report.issue_type.ilike(f"%{query}%"),
+            )
+        )
+        .order_by(
+            Report.created_at.desc()
+        )
+        .all()
+    )
+def search_department_reports(
+    db: Session,
+    department_id: int,
+    query: str,
+):
+
+    return (
+        db.query(Report)
+        .filter(
+            Report.department_id == department_id
+        )
+        .filter(
+            or_(
+                Report.report_number.ilike(f"%{query}%"),
+                Report.issue_type.ilike(f"%{query}%"),
+            )
+        )
+        .order_by(
+            Report.created_at.desc()
+        )
+        .all()
+    )
+def search_citizen_reports(
+    db: Session,
+    citizen_id: int,
+    query: str,
+):
+
+    return (
+        db.query(Report)
+        .filter(
+            Report.citizen_id == citizen_id
+        )
+        .filter(
+            or_(
+                Report.report_number.ilike(f"%{query}%"),
+                Report.issue_type.ilike(f"%{query}%"),
+            )
+        )
+        .order_by(
+            Report.created_at.desc()
+        )
+        .all()
+    )
+
+def get_all_reports_paginated(
+    db: Session,
+    page: int,
+    page_size: int,
+    department_id=None,
+    status=None,
+    priority=None,
+    issue_type=None,
+):
+    query = db.query(Report)
+
+    if department_id is not None:
+        query = query.filter(
+            Report.department_id == department_id
+        )
+
+    if status is not None:
+        query = query.filter(
+            Report.status == status
+        )
+
+    if priority is not None:
+        query = query.filter(
+            Report.priority == priority
+        )
+
+    if issue_type is not None:
+        query = query.filter(
+            Report.issue_type == issue_type
+        )
+
+    total_items = query.count()
+
+    items = (
+        query.order_by(
+            Report.created_at.desc()
+        )
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+        .all()
+    )
+
+    total_pages = ceil(total_items / page_size) if total_items else 1
+
+    return items, total_items, total_pages

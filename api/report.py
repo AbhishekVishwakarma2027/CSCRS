@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session
 from authentication.dependencies import (
     require_citizen,
     require_department_admin,
+    require_city_admin
 )
 
 from database.dependencies import get_db
@@ -31,10 +32,17 @@ from services.assignment import AssignmentService
 
 from schemas.report import (
     CitizenReportListItem,
+    DepartmentReportListItem,
+    CityReportListItem,
     ReportResponse,
 )
-
+from schemas.report import PaginatedCityReports
 from utils.file_utils import generate_filename
+from database.enums import (
+    ReportStatus,
+    Priority,
+)
+
 
 
 router = APIRouter(
@@ -246,11 +254,45 @@ def get_my_reports(
     ).get_my_reports(
         current_user.id,
     )
+
+@router.get(
+    "/api/v1/reports",
+    response_model=PaginatedCityReports,
+)
+def get_all_reports(
+    page: int = 1,
+    page_size: int = 20,
+    department_id: int | None = None,
+    status: ReportStatus | None = None,
+    priority: Priority | None = None,
+    issue_type: str | None = None,
+    current_user: User = Depends(
+        require_city_admin(),
+    ),
+    db: Session = Depends(get_db),
+):
+
+    return ReportService(
+        db,
+    ).get_all_reports_paginated(
+        page,
+        page_size,
+        department_id,
+        status,
+        priority,
+        issue_type,
+    )
+
 @router.get(
     "/api/v1/reports/department",
-    response_model=list[CitizenReportListItem],
+    response_model=list[DepartmentReportListItem],
 )
+
+
 def get_department_reports(
+    status: ReportStatus | None = None,
+    priority: Priority | None = None,
+    issue_type: str | None = None,
     current_user: User = Depends(
         require_department_admin(),
     ),
@@ -261,7 +303,67 @@ def get_department_reports(
         db,
     ).get_department_reports(
         current_user.department_id,
+        status,
+        priority,
+        issue_type,
     )
+
+@router.get(
+    "/api/v1/reports/my/search",
+    response_model=list[CitizenReportListItem],
+)
+def search_my_reports(
+    query: str,
+    current_user: User = Depends(
+        require_citizen(),
+    ),
+    db: Session = Depends(get_db),
+):
+
+    return ReportService(
+        db,
+    ).search_my_reports(
+        current_user.id,
+        query,
+    )
+
+@router.get(
+    "/api/v1/reports/search",
+    response_model=list[CityReportListItem],
+)
+def search_reports(
+    query: str,
+    current_user: User = Depends(
+        require_city_admin(),
+    ),
+    db: Session = Depends(get_db),
+):
+
+    return ReportService(
+        db,
+    ).search_reports(
+        query,
+    )
+
+@router.get(
+    "/api/v1/reports/department/search",
+    response_model=list[DepartmentReportListItem],
+)
+def search_department_reports(
+    query: str,
+    current_user: User = Depends(
+        require_department_admin(),
+    ),
+    db: Session = Depends(get_db),
+):
+
+    return ReportService(
+        db,
+    ).search_department_reports(
+        current_user.department_id,
+        query,
+    )
+
 @router.get(
     "/api/v1/reports/{report_number}",
     response_model=ReportResponse,

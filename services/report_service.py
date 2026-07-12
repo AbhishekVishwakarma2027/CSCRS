@@ -119,9 +119,94 @@ class ReportService:
     def get_department_reports(
         self,
         department_id: int,
+        status=None,
+        priority=None,
+        issue_type=None,
     ):
 
-        return report_crud.get_reports_by_department(
+        return report_crud.get_department_reports_filtered(
             self.db,
             department_id,
+            status,
+            priority,
+            issue_type,
         )
+    def get_all_reports(
+        self,
+        department_id=None,
+        status=None,
+        priority=None,
+        issue_type=None,
+    ):
+
+        return report_crud.get_all_reports_filtered(
+            self.db,
+            department_id,
+            status,
+            priority,
+            issue_type,
+        )
+    def search_reports(
+        self,
+        query: str,
+    ):
+
+        return report_crud.search_reports(
+            self.db,
+            query,
+        )
+    def search_department_reports(
+        self,
+        department_id: int,
+        query: str,
+    ):
+
+        return report_crud.search_department_reports(
+            self.db,
+            department_id,
+            query,
+        )
+    def search_my_reports(
+        self,
+        citizen_id: int,
+        query: str,
+    ):
+
+        return report_crud.search_citizen_reports(
+            self.db,
+            citizen_id,
+            query,
+        )
+    def get_all_reports_paginated(
+        self,
+        page: int,
+        page_size: int,
+        department_id=None,
+        status=None,
+        priority=None,
+        issue_type=None,
+    ):
+
+        items, total_items, total_pages = (
+            report_crud.get_all_reports_paginated(
+                self.db,
+                page,
+                page_size,
+                department_id,
+                status,
+                priority,
+                issue_type,
+            )
+        )
+
+        return {
+            "items": items,
+            "pagination": {
+                "page": page,
+                "page_size": page_size,
+                "total_items": total_items,
+                "total_pages": total_pages,
+                "has_next": page < total_pages,
+                "has_previous": page > 1,
+            },
+        }
