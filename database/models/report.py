@@ -106,6 +106,12 @@ class Report(Base):
         server_default=func.now(),
     )
 
+    support_count = Column(
+        Integer,
+        nullable=False,
+        default=0,
+    )
+
     updated_at = Column(
         DateTime(timezone=True),
         server_default=func.now(),
@@ -159,5 +165,10 @@ class Report(Base):
         "ResolutionAIResult",
         back_populates="report",
         uselist=False,
+        cascade="all, delete-orphan",
+    )
+    supports = relationship(
+        "ReportSupport",
+        back_populates="report",
         cascade="all, delete-orphan",
     )

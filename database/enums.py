@@ -42,7 +42,7 @@ class VerificationDecision(str, Enum):
 class AssignmentStatus(str, Enum):
     ASSIGNED = "Assigned"
     ACCEPTED = "Accepted"
-    # IN_PROGRESS = "In Progress"
+    IN_PROGRESS = "In Progress"
     REJECTED = "Rejected"
     COMPLETED = "Completed"
     CANCELLED = "Cancelled"

@@ -33,6 +33,10 @@ from database.crud.assignment import AssignmentCRUD
 from database.crud.worker import WorkerCRUD
 import database.crud.report as report_crud
 from services.notification_service import NotificationService
+from services.audit_log_service import AuditLogService
+
+
+
 
 logger = logging.getLogger(__name__)
 class ResolutionService:
@@ -198,6 +202,12 @@ class ResolutionService:
                 assignment.report_id,
             )
 
+            AuditLogService(self.db).log(
+                report_id=assignment.report_id,
+                user_id=worker_id,
+                action="RESOLUTION_SUBMITTED",
+                details="Worker uploaded resolution image.",
+            )
 
             ResolutionAttemptCRUD.update_attempt(
                 self.db,
@@ -291,6 +301,21 @@ class ResolutionService:
                         self.db,
                         worker_profile,
                     )
+                    AuditLogService(self.db).log(
+                        report_id=assignment.report_id,
+                        user_id=worker_id,
+                        action="RESOLUTION_VERIFIED",
+                        details=(
+                            f"AI verification result: "
+                            f"{resolution.verification_decision.value}"
+                        ),
+                    )
+            AuditLogService(self.db).log(
+                report_id=assignment.report_id,
+                user_id=worker_id,
+                action="REPORT_COMPLETED",
+                details="Report marked as resolved.",
+            )
 
             self.db.commit()
             self.db.refresh(resolution)

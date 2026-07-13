@@ -5,6 +5,7 @@ from sqlalchemy import (
     ForeignKey,
     Integer,
     Text,
+    Float,
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -48,6 +49,21 @@ class Assignment(Base):
 
     completed_at = Column(
         DateTime(timezone=True),
+        nullable=True,
+    )
+
+    work_started_at = Column(
+    DateTime(timezone=True),
+    nullable=True,
+    )
+
+    work_started_latitude = Column(
+        Float,
+        nullable=True,
+    )
+
+    work_started_longitude = Column(
+        Float,
         nullable=True,
     )
 

@@ -83,3 +83,8 @@ class User(Base):
     "EmailVerification",
     cascade="all, delete-orphan",
     )
+    supported_reports = relationship(
+        "ReportSupport",
+        back_populates="citizen",
+        cascade="all, delete-orphan",
+    )

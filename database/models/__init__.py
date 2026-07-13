@@ -12,3 +12,4 @@ from .worker_invitation import WorkerInvitation
 from .report_detection import ReportDetection
 from .resolution_ai_result import ResolutionAIResult
 from .resolution_attempt import ResolutionAttempt
+from .report_support import ReportSupport

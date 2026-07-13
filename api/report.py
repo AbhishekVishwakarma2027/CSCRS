@@ -42,6 +42,10 @@ from database.enums import (
     ReportStatus,
     Priority,
 )
+from services.duplicate_detection_service import DuplicateDetectionService
+from services.report_support_service import ReportSupportService
+from utils.gps import exif_to_decimal
+from services.audit_log_service import AuditLogService
 
 
 
@@ -65,6 +69,9 @@ async def report_issue(
     report_service = ReportService(db)
     department_service = DepartmentService(db)
     assignment_service = AssignmentService(db)
+
+    duplicate_service = DuplicateDetectionService(db)
+    support_service = ReportSupportService(db)
 
     stored_filename = generate_filename(file.filename)
     image_path = UPLOAD_DIR / stored_filename
@@ -117,10 +124,98 @@ async def report_issue(
             issue_type
         )
 
+        verification_exif = result["verification"]["exif"]
+
+        latitude = exif_to_decimal(
+            verification_exif["gps_latitude"]
+        )
+
+        longitude = exif_to_decimal(
+            verification_exif["gps_longitude"]
+        )
+
+        duplicate = duplicate_service.find_duplicate(
+            issue_type=issue_type,
+            latitude=latitude,
+            longitude=longitude,
+            uploaded_image=str(image_path),
+        )
+
+        
+        if duplicate:
+
+            report = duplicate["report"]
+            # Same citizen already reported/supported this issue
+
+            if support_service.already_supported(
+                report.id,
+                current_user.id,
+            ):
+                raise HTTPException(
+                    status_code=409,
+                    detail={
+                        "success": False,
+                        "message": "You have already reported/supported this civic issue.",
+                        "report_id": report.id,
+                        "report_number": report.report_number,
+                        "status": report.status.value,
+                        "priority": report.priority.value,
+                        "support_count": report.support_count,
+                    },
+                )
+
+            support_service.add_support(
+                report.id,
+                current_user.id,
+            )
+            AuditLogService(db).log(
+                report_id=report.id,
+                user_id=current_user.id,
+                action="DUPLICATE_SUPPORTED",
+                details="Citizen supported an existing report.",
+            )
+            db.commit()
+            # Temporary upload cleanup disabled for now
+            # until StorageManager is implemented.
+
+            # if image_path.exists():
+            #     image_path.unlink()
+
+            annotated_path = Path(
+                result["ai"]["annotated_image"].lstrip("/")
+            )
+
+            if annotated_path.exists():
+                annotated_path.unlink()
+            self_report = (
+                report.citizen_id == current_user.id
+            )
+
+            return {
+                "success": True,
+                "duplicate": True,
+                "supported_existing_report": True,
+                "already_supported": False,
+                "report_id": report.id,
+                "report_number": report.report_number,
+                "status": report.status.value,
+                "priority": report.priority.value,
+                "department": report.department.name,
+                "issue_type": report.issue_type,
+                "created_at": report.created_at,
+                "support_count": report.support_count,
+                "distance": duplicate["distance"],
+                "scene_similarity": duplicate["scene_similarity"],
+                "message": (
+                    "Existing civic issue found. "
+                    "Your report has been added as citizen support."
+                ),
+            }
+
         report_data = ReportBuilder.build(
             inference_result=result,
 
-            citizen_id=current_user.id,  
+            citizen_id=current_user.id,
 
             department_id=department.id,
 
@@ -132,8 +227,6 @@ async def report_issue(
         report = report_service.create_report(
             report_data
         )
-
-
 
         report_service.save_image(
             report_id=report.id,
@@ -195,9 +288,9 @@ async def report_issue(
                 remarks="Auto assigned by system",
             )
 
-        except HTTPException:
-
-            pass
+        except Exception as e:
+            traceback.print_exc()
+            raise
         public_detections = []
 
         for detection in result["ai"]["detections"]:

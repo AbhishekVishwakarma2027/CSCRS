@@ -8,6 +8,7 @@ from database.models.user import User
 from schemas.assignment import (
     AssignmentCreate,
     AssignmentResponse,
+    StartWorkRequest,
 )
 
 from services.assignment import AssignmentService
@@ -58,4 +59,22 @@ def my_assignments(
 
     return service.get_my_assignments(
         worker_id=current_user.id,
+    )
+@router.post(
+    "/{assignment_id}/start",
+)
+def start_work(
+    assignment_id: int,
+    request: StartWorkRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_worker()),
+):
+
+    service = AssignmentService(db)
+
+    return service.start_work(
+        assignment_id=assignment_id,
+        worker_id=current_user.id,
+        latitude=request.latitude,
+        longitude=request.longitude,
     )

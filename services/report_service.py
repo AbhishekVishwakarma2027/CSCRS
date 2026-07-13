@@ -8,6 +8,11 @@ from schemas.report import ReportCreateInternal
 from utils.report_number import generate_report_number
 from database.crud import report_detection as report_detection_crud
 from database.enums import ImageType
+from services.duplicate_detection_service import DuplicateDetectionService
+from services.report_support_service import ReportSupportService
+from services.priority_engine import PriorityEngine
+from database.crud import report as report_crud
+from services.audit_log_service import AuditLogService
 
 class ReportService:
 
@@ -20,11 +25,28 @@ class ReportService:
     ):
         report_number = generate_report_number()
 
-        return report_crud.create_report(
+        report = report_crud.create_report(
             self.db,
             report_data,
             report_number,
         )
+
+        report.priority = PriorityEngine.calculate(
+            risk_score=report.risk_score,
+            support_count=report.support_count,
+        )
+
+        report = report_crud.update_report(
+            self.db,
+            report,
+        )
+        AuditLogService(self.db).log(
+            report_id=report.id,
+            user_id=report.citizen_id,
+            action="REPORT_CREATED",
+            details="Citizen report created.",
+        )
+        return report
 
     def save_image(
         self,

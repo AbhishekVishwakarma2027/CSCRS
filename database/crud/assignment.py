@@ -154,3 +154,39 @@ class AssignmentCRUD:
         db.flush()
 
         return assignment
+    @staticmethod
+    def get_assignment_by_id(
+        db: Session,
+        assignment_id: int,
+    ) -> Assignment | None:
+
+        return (
+            db.query(Assignment)
+            .filter(
+                Assignment.id == assignment_id,
+            )
+            .first()
+        )
+
+    @staticmethod
+    def update_assignment(
+        db: Session,
+        assignment: Assignment,
+    ) -> Assignment:
+
+        db.flush()
+
+        return assignment
+
+    @staticmethod
+    def update_assignment_status(
+        db: Session,
+        assignment: Assignment,
+        status: AssignmentStatus,
+    ) -> Assignment:
+
+        assignment.status = status
+
+        db.flush()
+
+        return assignment

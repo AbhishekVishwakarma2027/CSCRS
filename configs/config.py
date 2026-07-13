@@ -48,3 +48,14 @@ APP_BASE_URL = "http://localhost:8000"
 FRONTEND_BASE_URL = "http://localhost:3000"
 
 WORKER_INVITATION_EXPIRY_HOURS = 24
+
+# Duplicate report detection
+DUPLICATE_REPORT_RADIUS_METERS = 8.0
+
+# Duplicate scene detection
+DUPLICATE_ENABLE_SCENE_CHECK = True
+
+# OpenCLIP cosine similarity threshold
+DUPLICATE_SCENE_THRESHOLD = 0.82
+
+START_WORK_RADIUS_METERS = 30

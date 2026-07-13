@@ -1,13 +1,15 @@
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
-
+from datetime import datetime, timezone
 from database.crud.assignment import AssignmentCRUD
 from database.enums import (
     AssignmentStatus,
     ReportStatus,
 )
 from database.models.assignment import Assignment
-
+from utils.gps import calculate_distance
+from configs.config import START_WORK_RADIUS_METERS
+from services.audit_log_service import AuditLogService
 
 class AssignmentService:
 
@@ -87,6 +89,13 @@ class AssignmentService:
             self.db,
             report,
             ReportStatus.ASSIGNED,
+        )
+
+        AuditLogService(self.db).log(
+            report_id=report.id,
+            user_id=assigned_by,
+            action="AUTO_ASSIGNED",
+            details=f"Automatically assigned to worker #{worker.id}.",
         )
 
         self.db.commit()
@@ -185,6 +194,98 @@ class AssignmentService:
                     "google_maps_url": google_maps_url,
                     "image_url": image_url,
                     "assigned_at": assignment.assigned_at,
+                    "work_started_at": assignment.work_started_at,
                 }
             )
         return response
+    
+    def start_work(
+        self,
+        *,
+        assignment_id: int,
+        worker_id: int,
+        latitude: float,
+        longitude: float,
+    ):
+
+        assignment = AssignmentCRUD.get_assignment_by_id(
+            self.db,
+            assignment_id,
+        )
+
+        if assignment is None:
+
+            raise HTTPException(
+                status_code=404,
+                detail="Assignment not found.",
+            )
+
+        if assignment.worker_id != worker_id:
+
+            raise HTTPException(
+                status_code=403,
+                detail="You are not assigned to this report.",
+            )
+
+        if assignment.status == AssignmentStatus.IN_PROGRESS:
+
+            raise HTTPException(
+                status_code=409,
+                detail="Work already started.",
+            )
+
+        report = assignment.report
+
+        distance = calculate_distance(
+            latitude,
+            longitude,
+            report.latitude,
+            report.longitude,
+        )
+
+        if distance > START_WORK_RADIUS_METERS:
+
+            raise HTTPException(
+                status_code=403,
+                detail=(
+                    f"You are not at the report location. "
+                    f"Current distance: {distance:.2f} meters."
+                ),
+            )
+
+        assignment.status = AssignmentStatus.IN_PROGRESS
+
+        assignment.work_started_at = datetime.now(
+            timezone.utc,
+        )
+
+        assignment.work_started_latitude = latitude
+
+        assignment.work_started_longitude = longitude
+
+        AssignmentCRUD.update_assignment(
+            self.db,
+            assignment,
+        )
+
+        AssignmentCRUD.update_report_status(
+            self.db,
+            assignment.report,
+            ReportStatus.IN_PROGRESS,
+        )
+
+        AuditLogService(self.db).log(
+            report_id=assignment.report.id,
+            user_id=worker_id,
+            action="WORK_STARTED",
+            details=(
+                f"Worker started work "
+                f"at ({latitude:.6f}, {longitude:.6f})."
+            ),
+        )
+
+        self.db.commit()
+
+        self.db.refresh(assignment)
+
+        return assignment

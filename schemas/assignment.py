@@ -60,3 +60,11 @@ class WorkerAssignmentResponse(BaseModel):
     image_url: str | None
 
     assigned_at: datetime
+
+    work_started_at: datetime | None
+    
+class StartWorkRequest(BaseModel):
+
+    latitude: float
+
+    longitude: float
