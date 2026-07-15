@@ -179,6 +179,20 @@ class WorkerService:
 
         user.is_email_verified = True
 
+        profile = WorkerCRUD.get_worker_profile(
+            self.db,
+            user.id,
+        )
+
+        if profile is None:
+
+            raise HTTPException(
+                status_code=404,
+                detail="Worker profile not found.",
+            )
+
+        profile.is_available = True
+
         invitation.used = True
 
         self.db.commit()
@@ -331,6 +345,8 @@ class WorkerService:
 
         user.is_active = False
 
+        profile.is_available = False
+
         self.db.commit()
 
         return {
@@ -373,6 +389,8 @@ class WorkerService:
             }
 
         user.is_active = True
+        
+        profile.is_available = True
 
         self.db.commit()
 

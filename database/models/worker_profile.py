@@ -48,7 +48,8 @@ class WorkerProfile(Base):
 
     is_available = Column(
         Boolean,
-        default=True,
+        default=False,
+        nullable=False,
     )
 
     joined_at = Column(
