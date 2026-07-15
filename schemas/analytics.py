@@ -100,3 +100,57 @@ class DashboardInsightItem(BaseModel):
     title: str
 
     message: str
+class DepartmentDashboardResponse(BaseModel):
+
+    total_reports: int
+
+    pending_reports: int
+
+    in_progress_reports: int
+
+    resolved_reports: int
+
+    available_workers: int
+
+    average_resolution_time_hours: float
+
+    ai_accepted: int
+
+    manual_review: int
+
+    automation_rate: float
+
+    busy_workers : int
+class TopWorkerItem(BaseModel):
+
+    worker_id: int
+
+    worker_name: str
+
+    completed_reports: int
+
+    in_progress_reports: int
+class TopWorkerItem(BaseModel):
+
+    worker_id: int
+
+    worker_name: str
+
+    completed_reports: int
+
+    in_progress_reports: int
+
+    completion_rate: float
+class WorkerDashboardResponse(BaseModel):
+
+    assigned_reports: int
+
+    in_progress_reports: int
+
+    pending_review_reports: int
+
+    completed_reports: int
+
+    today_completed_reports: int
+
+    average_resolution_time_hours: float

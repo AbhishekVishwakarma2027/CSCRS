@@ -18,6 +18,15 @@ class AnalyticsService:
         return analytics_crud.get_dashboard_summary(
             self.db,
         )
+    def get_department_dashboard_summary(
+        self,
+        department_id: int,
+    ):
+
+        return analytics_crud.get_department_dashboard_summary(
+            self.db,
+            department_id,
+        )
     def get_department_statistics(
         self,
     ):
@@ -140,3 +149,23 @@ class AnalyticsService:
                 }
             )
         return insights
+    def get_top_workers(
+        self,
+        department_id: int,
+        limit: int = 5,
+    ):
+
+        return analytics_crud.get_top_workers(
+            self.db,
+            department_id,
+            limit,
+        )
+    def get_worker_dashboard_summary(
+        self,
+        worker_id: int,
+    ):
+
+        return analytics_crud.get_worker_dashboard_summary(
+            self.db,
+            worker_id,
+        )

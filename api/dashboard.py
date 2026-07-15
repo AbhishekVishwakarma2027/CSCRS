@@ -17,9 +17,10 @@ from schemas.analytics import (
     HighPriorityReportItem,
 )
 from schemas.analytics import DashboardInsightItem
-
-
-
+from schemas.analytics import DepartmentDashboardResponse
+from schemas.analytics import TopWorkerItem
+from schemas.analytics import WorkerDashboardResponse
+from authentication.dependencies import require_worker
 
 router = APIRouter(
     prefix="/dashboard",
@@ -169,3 +170,57 @@ def dashboard_insights(
     return AnalyticsService(
         db,
     ).get_dashboard_insights()
+@router.get(
+    "/department/dashboard",
+    response_model=DepartmentDashboardResponse,
+)
+def department_dashboard_summary(
+    current_user: User = Depends(
+        require_city_admin(),
+    ),
+    db: Session = Depends(
+        get_db,
+    ),
+):
+
+    return AnalyticsService(
+        db,
+    ).get_department_dashboard_summary(
+        current_user.department_id,
+    )
+@router.get(
+    "/top-workers",
+    response_model=list[TopWorkerItem],
+)
+def top_workers(
+    department_id: int,
+    limit: int = 5,
+    current_user: User = Depends(
+        require_city_admin(),
+    ),
+    db: Session = Depends(get_db),
+):
+
+    return AnalyticsService(
+        db,
+    ).get_top_workers(
+        department_id,
+        limit,
+    )
+@router.get(
+    "/worker/dashboard",
+    response_model=WorkerDashboardResponse,
+)
+def worker_dashboard_summary(
+  
+    current_user: User = Depends(
+        require_worker(),
+    ),
+    db: Session = Depends(get_db),
+):
+
+    return AnalyticsService(
+        db,
+    ).get_worker_dashboard_summary(
+        current_user.id,
+    )

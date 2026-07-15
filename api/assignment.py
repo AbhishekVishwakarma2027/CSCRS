@@ -14,7 +14,7 @@ from schemas.assignment import (
 from services.assignment import AssignmentService
 from authentication.dependencies import require_worker
 from schemas.assignment import WorkerAssignmentResponse
-
+from schemas.assignment import StartWorkResponse
 router = APIRouter(
     prefix="/assignments",
     tags=["Assignments"],
@@ -62,6 +62,7 @@ def my_assignments(
     )
 @router.post(
     "/{assignment_id}/start",
+    response_model=StartWorkResponse,
 )
 def start_work(
     assignment_id: int,

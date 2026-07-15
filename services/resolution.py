@@ -34,7 +34,9 @@ from database.crud.worker import WorkerCRUD
 import database.crud.report as report_crud
 from services.notification_service import NotificationService
 from services.audit_log_service import AuditLogService
-
+from services.in_app_notification_service import (
+    InAppNotificationService,
+)
 
 
 
@@ -310,16 +312,48 @@ class ResolutionService:
                             f"{resolution.verification_decision.value}"
                         ),
                     )
-            AuditLogService(self.db).log(
-                report_id=assignment.report_id,
-                user_id=worker_id,
-                action="REPORT_COMPLETED",
-                details="Report marked as resolved.",
-            )
+                AuditLogService(self.db).log(
+                    report_id=assignment.report_id,
+                    user_id=worker_id,
+                    action="REPORT_COMPLETED",
+                    details="Report marked as resolved.",
+                )
 
             self.db.commit()
             self.db.refresh(resolution)
 
+            if resolution.verification_passed:
+
+                InAppNotificationService(
+                    self.db,
+                ).create_notification(
+                    user_id=assignment.worker_id,
+                    report_id=assignment.report_id,
+                    title="Resolution Approved",
+                    message="Your submitted resolution has been approved.",
+                    notification_type="RESOLUTION_APPROVED",
+                )
+                InAppNotificationService(
+                    self.db,
+                ).create_notification(
+                    user_id=report.citizen_id,
+                    report_id=report.id,
+                    title="Issue Resolved",
+                    message="Your reported civic issue has been successfully resolved.",
+                    notification_type="REPORT_RESOLVED",
+                )
+
+            elif resolution.manual_review:
+
+                InAppNotificationService(
+                    self.db,
+                ).create_notification(
+                    user_id=assignment.worker_id,
+                    report_id=assignment.report_id,
+                    title="Manual Review Required",
+                    message="Your submitted resolution requires manual review.",
+                    notification_type="MANUAL_REVIEW",
+                )
             if resolution.verification_passed:
 
                 try:
@@ -379,6 +413,12 @@ class ResolutionService:
             raise HTTPException(
                 status_code=409,
                 detail="This assignment has already been completed.",
+            )
+        
+        if assignment.status != AssignmentStatus.IN_PROGRESS:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Please start work before uploading the resolution.",
             )
 
         return assignment
@@ -445,3 +485,246 @@ class ResolutionService:
         )
 
         return image_path
+    
+    def get_pending_manual_reviews(
+        self,
+        *,
+        department_id: int,
+    ):
+
+        return ResolutionCRUD.get_pending_manual_reviews(
+            self.db,
+            department_id,
+        )
+    def get_manual_review_details(
+        self,
+        *,
+        report_id: int,
+    ):
+
+        return ResolutionCRUD.get_manual_review_details(
+            self.db,
+            report_id,
+        )
+    
+    def approve_manual_review(
+        self,
+        *,
+        report_id: int,
+    ):
+
+        resolution = ResolutionCRUD.get_resolution_by_report(
+            self.db,
+            report_id,
+        )
+
+        if resolution is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Resolution not found.",
+            )
+
+        if not resolution.manual_review:
+            raise HTTPException(
+                status_code=400,
+                detail="Resolution is not pending manual review.",
+            )
+
+        report = report_crud.get_report_by_id(
+            self.db,
+            report_id,
+        )
+
+        if report is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Report not found.",
+            )
+
+        assignment = AssignmentCRUD.get_assignment_by_report(
+            self.db,
+            report_id,
+        )
+
+        if assignment is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Assignment not found.",
+            )
+        resolution.manual_review = False
+        resolution.verification_passed = True
+        resolution.verification_decision = VerificationDecision.PASS
+        resolution.verified_at = datetime.utcnow()
+
+        report.status = ReportStatus.RESOLVED
+
+        assignment.status = AssignmentStatus.COMPLETED
+        assignment.completed_at = datetime.utcnow()
+
+        worker_profile = WorkerCRUD.get_worker_profile(
+            self.db,
+            assignment.worker_id,
+        )
+
+        if worker_profile is not None:
+            worker_profile.is_available = True
+            WorkerCRUD.save_worker_profile(
+                self.db,
+                worker_profile,
+            )
+
+        AssignmentCRUD.save_assignment(
+            self.db,
+            assignment,
+        )
+
+        self.db.commit()
+
+        self.db.refresh(resolution)
+        AuditLogService(self.db).log(
+            report_id=report.id,
+            user_id=assignment.worker_id,
+            action="MANUAL_REVIEW_APPROVED",
+            details="Department Admin approved the manually reviewed resolution.",
+        )
+
+        
+        AuditLogService(self.db).log(
+            report_id=report.id,
+            user_id=assignment.worker_id,
+            action="REPORT_COMPLETED",
+            details="Report marked as resolved after manual approval.",
+        )
+
+        notification_service = InAppNotificationService(self.db)
+
+        notification_service.create_notification(
+            user_id=assignment.worker_id,
+            report_id=report.id,
+            title="Resolution Approved",
+            message="Your submitted resolution has been approved by the Department Admin.",
+            notification_type="RESOLUTION_APPROVED",
+        )
+
+        notification_service.create_notification(
+            user_id=report.citizen_id,
+            report_id=report.id,
+            title="Issue Resolved",
+            message="Your reported civic issue has been successfully resolved.",
+            notification_type="REPORT_RESOLVED",
+        )
+
+        try:
+
+            self.notification_service.send_resolution_completed_email(
+                citizen_name=report.citizen.name,
+                citizen_email=report.citizen.email,
+                report_number=report.report_number,
+                issue_type=report.issue_type,
+                department_name=report.department.name,
+                resolved_at=str(resolution.resolved_at),
+            )
+
+        except Exception:
+            logger.exception(
+                "Failed to send citizen resolution email after manual approval."
+            )
+        return resolution
+    def reject_manual_review(
+        self,
+        *,
+        report_id: int,
+        reason: str,
+    ):
+
+        resolution = ResolutionCRUD.get_resolution_by_report(
+            self.db,
+            report_id,
+        )
+
+        if resolution is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Resolution not found.",
+            )
+
+        if not resolution.manual_review:
+            raise HTTPException(
+                status_code=400,
+                detail="Resolution is not pending manual review.",
+            )
+
+        report = report_crud.get_report_by_id(
+            self.db,
+            report_id,
+        )
+
+        if report is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Report not found.",
+            )
+
+        assignment = AssignmentCRUD.get_assignment_by_report(
+            self.db,
+            report_id,
+        )
+
+        if assignment is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Assignment not found.",
+            )
+
+        resolution.manual_review = False
+        resolution.verification_passed = False
+        resolution.verification_decision = VerificationDecision.REJECT
+
+        report.status = ReportStatus.IN_PROGRESS
+
+        assignment.status = AssignmentStatus.IN_PROGRESS
+        assignment.completed_at = None
+
+        worker_profile = WorkerCRUD.get_worker_profile(
+            self.db,
+            assignment.worker_id,
+        )
+
+        if worker_profile is not None:
+            worker_profile.is_available = False
+
+            WorkerCRUD.save_worker_profile(
+                self.db,
+                worker_profile,
+            )
+
+        AssignmentCRUD.save_assignment(
+            self.db,
+            assignment,
+        )
+
+        self.db.commit()
+
+        self.db.refresh(resolution)
+
+        AuditLogService(self.db).log(
+            report_id=report.id,
+            user_id=assignment.worker_id,
+            action="MANUAL_REVIEW_REJECTED",
+            details=reason,
+        )
+
+        InAppNotificationService(
+            self.db,
+        ).create_notification(
+            user_id=assignment.worker_id,
+            report_id=report.id,
+            title="Resolution Rejected",
+            message=(
+                f"Your submitted resolution was rejected.\n"
+                f"Reason: {reason}"
+            ),
+            notification_type="RESOLUTION_REJECTED",
+        )
+
+        return resolution

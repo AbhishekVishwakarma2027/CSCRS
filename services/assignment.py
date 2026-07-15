@@ -10,6 +10,9 @@ from database.models.assignment import Assignment
 from utils.gps import calculate_distance
 from configs.config import START_WORK_RADIUS_METERS
 from services.audit_log_service import AuditLogService
+from services.in_app_notification_service import (
+    InAppNotificationService,
+)
 
 class AssignmentService:
 
@@ -99,8 +102,15 @@ class AssignmentService:
         )
 
         self.db.commit()
-
         self.db.refresh(assignment)
+        InAppNotificationService(self.db).create_notification(
+            user_id=assignment.worker_id,
+            report_id=assignment.report_id,
+            title="New Assignment",
+            message="You have been assigned a new civic issue.",
+            notification_type="NEW_ASSIGNMENT",
+        )
+
 
         return assignment
 
@@ -287,5 +297,15 @@ class AssignmentService:
         self.db.commit()
 
         self.db.refresh(assignment)
+
+        InAppNotificationService(
+            self.db,
+        ).create_notification(
+            user_id=assignment.report.citizen_id,
+            report_id=assignment.report.id,
+            title="Work Started",
+            message="Repair work on your reported civic issue has started.",
+            notification_type="WORK_STARTED",
+        )
 
         return assignment

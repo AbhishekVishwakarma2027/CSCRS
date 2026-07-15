@@ -190,3 +190,16 @@ class AssignmentCRUD:
         db.flush()
 
         return assignment
+    @staticmethod
+    def get_assignment_by_report(
+        db: Session,
+        report_id: int,
+    ):
+
+        return (
+            db.query(Assignment)
+            .filter(
+                Assignment.report_id == report_id,
+            )
+            .first()
+        )

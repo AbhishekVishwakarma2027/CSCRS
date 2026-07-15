@@ -46,6 +46,8 @@ class AssignmentStatus(str, Enum):
     REJECTED = "Rejected"
     COMPLETED = "Completed"
     CANCELLED = "Cancelled"
+    REWORK_REQUIRED = "Rework Required"
+
 class ResolutionDecision(str, Enum):
     FULLY_RESOLVED = "Fully Resolved"
     PARTIALLY_RESOLVED = "Partially Resolved"

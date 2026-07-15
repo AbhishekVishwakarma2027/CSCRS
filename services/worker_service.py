@@ -16,7 +16,8 @@ from configs.config import (
 from database.models.user import User
 from database.models.worker_profile import WorkerProfile
 from services.notification_service import NotificationService
-
+from services.in_app_notification_service import InAppNotificationService
+from database.models.report import Report
 
 class WorkerService:
 

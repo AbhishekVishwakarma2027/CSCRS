@@ -28,6 +28,35 @@ class AssignmentResponse(BaseModel):
     status: AssignmentStatus
 
     remarks: str | None
+class StartWorkResponse(BaseModel):
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+    id: int
+
+    report_id: int
+
+    worker_id: int
+
+    assigned_by: int
+
+    assigned_at: datetime
+
+    accepted_at: datetime | None
+
+    completed_at: datetime | None
+
+    work_started_at: datetime | None
+
+    work_started_latitude: float | None
+
+    work_started_longitude: float | None
+
+    status: AssignmentStatus
+
+    remarks: str | None
 
 class AssignmentCreate(BaseModel):
 
