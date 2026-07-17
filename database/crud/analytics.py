@@ -179,6 +179,8 @@ def get_dashboard_summary(
     "resolution_rate": resolution_rate,
 
     "automation_rate": automation_rate,
+    
+    "city_name": "Lucknow",
 }
 def get_department_statistics(
     db: Session,
@@ -339,9 +341,10 @@ def apply_dashboard_filters(
 def get_recent_reports(
     db: Session,
     limit: int = 10,
+    department_id: int | None = None,
 ):
 
-    return (
+    query = (
         db.query(
             Report.report_number,
             Report.issue_type,
@@ -354,7 +357,16 @@ def get_recent_reports(
             Department,
             Department.id == Report.department_id,
         )
-        .order_by(
+    )
+
+    if department_id is not None:
+
+        query = query.filter(
+            Report.department_id == department_id,
+        )
+
+    return (
+        query.order_by(
             Report.created_at.desc(),
         )
         .limit(limit)
@@ -363,9 +375,10 @@ def get_recent_reports(
 def get_high_priority_reports(
     db: Session,
     limit: int = 10,
+    department_id: int | None = None,
 ):
 
-    return (
+    query = (
         db.query(
             Report.report_number,
             Report.issue_type,
@@ -391,7 +404,6 @@ def get_high_priority_reports(
             User,
             User.id == Assignment.worker_id,
         )
-        
         .filter(
             Report.priority.in_(
                 [
@@ -409,7 +421,16 @@ def get_high_priority_reports(
                 ]
             )
         )
-        .order_by(
+    )
+
+    if department_id is not None:
+
+        query = query.filter(
+            Report.department_id == department_id,
+        )
+
+    return (
+        query.order_by(
             Report.risk_score.desc(),
             Report.created_at.asc(),
         )
@@ -605,6 +626,13 @@ def get_department_dashboard_summary(
     department_id: int,
 ):
 
+    department = (
+        db.query(Department)
+        .filter(
+            Department.id == department_id,
+        )
+        .first()
+    )
     total_reports = (
         db.query(Report)
         .filter(
@@ -714,6 +742,13 @@ def get_department_dashboard_summary(
             db,
             department_id,
         ),
+        "department_name": (
+            department.name
+            if department
+            else f"Department #{department_id}"
+        ),
+
+        "city_name": "Lucknow",
     }
 def get_top_workers(
     db: Session,
