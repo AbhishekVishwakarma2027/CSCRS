@@ -116,6 +116,7 @@ class AssignmentCRUD:
     ) -> Assignment | None:
 
         return (
+            
             db.query(Assignment)
             .filter(
                 Assignment.report_id == report_id,
@@ -123,7 +124,7 @@ class AssignmentCRUD:
                     [
                         AssignmentStatus.ASSIGNED,
                         AssignmentStatus.ACCEPTED,
-                        # AssignmentStatus.IN_PROGRESS,
+                        AssignmentStatus.IN_PROGRESS,
                     ]
                 ),
             )

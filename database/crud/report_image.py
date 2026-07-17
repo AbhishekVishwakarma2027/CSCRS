@@ -42,7 +42,19 @@ def get_original_image(
         )
         .first()
     )
+def get_annotated_image(
+    db,
+    report_id: int,
+):
 
+    return (
+        db.query(ReportImage)
+        .filter(
+            ReportImage.report_id == report_id,
+            ReportImage.image_type == ImageType.ANNOTATED,
+        )
+        .first()
+    )
 def get_latest_resolution_image(
     db: Session,
     report_id: int,

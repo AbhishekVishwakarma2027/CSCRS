@@ -35,6 +35,9 @@ from schemas.report import (
     DepartmentReportListItem,
     CityReportListItem,
     ReportResponse,
+    ReportForwardRequest,
+    ReportCancellationRequest,
+    ReportReopenRequest,
 )
 from schemas.report import PaginatedCityReports
 from utils.file_utils import generate_filename
@@ -484,3 +487,41 @@ def get_my_report(
             status_code=404,
             detail=str(e),
         )
+@router.post(
+    "/api/v1/reports/{report_id}/cancel",
+)
+def cancel_report(
+    report_id: int,
+    request: ReportCancellationRequest,
+    current_user: User = Depends(
+        require_department_admin(),
+    ),
+    db: Session = Depends(get_db),
+):
+
+    return ReportService(
+        db,
+    ).cancel_report(
+        report_id=report_id,
+        department_admin=current_user,
+        request=request,
+    )
+@router.post(
+    "/api/v1/reports/{report_id}/reopen",
+)
+def reopen_report(
+    report_id: int,
+    request: ReportReopenRequest,
+    current_user: User = Depends(
+        require_department_admin(),
+    ),
+    db: Session = Depends(get_db),
+):
+
+    return ReportService(
+        db,
+    ).reopen_report(
+        report_id=report_id,
+        department_admin=current_user,
+        request=request,
+    )

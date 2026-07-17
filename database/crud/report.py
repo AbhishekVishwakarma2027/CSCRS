@@ -295,3 +295,44 @@ def get_all_reports_paginated(
     total_pages = ceil(total_items / page_size) if total_items else 1
 
     return items, total_items, total_pages
+
+def update_report_department(
+    db: Session,
+    report: Report,
+    department_id: int,
+):
+
+    report.department_id = department_id
+
+    db.add(report)
+
+    return report
+
+def increment_forward_count(
+    db: Session,
+    report: Report,
+):
+
+    report.forward_count += 1
+
+    db.add(report)
+
+    return report
+
+def get_forward_count(
+    report: Report,
+) -> int:
+
+    return report.forward_count
+def get_next_forward_number(
+    db: Session,
+    report_id: int,
+) -> int:
+
+    return (
+        get_last_forward_number(
+            db,
+            report_id,
+        )
+        + 1
+    )

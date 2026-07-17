@@ -11,13 +11,49 @@ from database.enums import ImageType
 from services.duplicate_detection_service import DuplicateDetectionService
 from services.report_support_service import ReportSupportService
 from services.priority_engine import PriorityEngine
-from database.crud import report as report_crud
 from services.audit_log_service import AuditLogService
+from fastapi import HTTPException, status
+
+from database.enums import (
+    ReportStatus,
+    UserRole,
+    ForwardRequestStatus,
+    AssignmentStatus,
+)
+
+from database.crud.report_forward_history import (
+    ReportForwardHistoryCRUD,
+)
+from database.crud import assignment as assignment_crud
+from database.crud.assignment import AssignmentCRUD
+
+from database.crud.worker import WorkerCRUD
+
+from database.enums import AssignmentStatus
+from database.crud import worker as worker_crud
+
+from schemas.report import (
+    ReportCreateRequest,
+    ReportForwardRequest,
+    ReportCancellationRequest,
+    ReportReopenRequest,
+)
+from services.in_app_notification_service import (
+    InAppNotificationService,
+)
+from services.assignment import AssignmentService
+from database.crud.department_forward_request import (
+    DepartmentForwardRequestCRUD,
+)
+from database.crud.user import UserCRUD
+
 
 class ReportService:
 
     def __init__(self, db: Session):
         self.db = db
+        self.notification = InAppNotificationService(db)
+        self.audit_log = AuditLogService(db)
 
     def create_report(
         self,
@@ -231,4 +267,503 @@ class ReportService:
                 "has_next": page < total_pages,
                 "has_previous": page > 1,
             },
+        }
+    def forward_report(
+        self,
+        report_id: int,
+        department_admin,
+        request,
+    ):
+        report = report_crud.get_report_by_id(
+            self.db,
+            report_id,
+        )
+
+        if report is None:
+
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Report not found.",
+            )
+        
+        if department_admin.role != UserRole.DEPARTMENT_ADMIN:
+
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only Department Admin can forward reports.",
+            )
+        if report.department_id != department_admin.department_id:
+
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=(
+                    "You can forward only reports "
+                    "belonging to your department."
+                ),
+            )
+        
+        if report.status not in [
+
+            ReportStatus.PENDING,
+
+            ReportStatus.ASSIGNED,
+
+            ReportStatus.IN_PROGRESS,
+
+        ]:
+
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="This report cannot be forwarded.",
+            )
+        
+        if report.department_id is None:
+
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Report is not assigned to any department.",
+            )
+        
+        if report.department_id == request.department_id:
+
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Report already belongs to this department.",
+            )
+        
+        if department_admin.department_id == request.department_id:
+
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot forward to your own department.",
+            )
+
+        old_department_id = report.department_id
+
+        assignment = AssignmentCRUD.get_active_assignment_for_report(
+            self.db,
+            report.id,
+        )
+        if assignment is not None:
+
+            AssignmentCRUD.update_assignment_status(
+                self.db,
+                assignment,
+                AssignmentStatus.CANCELLED,
+            )
+            worker_profile = WorkerCRUD.get_worker_profile(
+                self.db,
+                assignment.worker_id,
+            )
+
+            if worker_profile is not None:
+
+                worker_profile.is_available = True
+
+                WorkerCRUD.save_worker_profile(
+                    self.db,
+                    worker_profile,
+                )
+            self.notification.create_notification(
+                user_id=assignment.worker_id,
+                report_id=report.id,
+                title="Assignment Cancelled",
+                message=(
+                    "Your assignment has been cancelled because "
+                    "the report has been forwarded to another department."
+                ),
+                notification_type="ASSIGNMENT_CANCELLED",
+            )
+        forward_number = (
+            ReportForwardHistoryCRUD.get_next_forward_number(
+                self.db,
+                report.id,
+            )
+        )
+        ReportForwardHistoryCRUD.create(
+            self.db,
+
+            report_id=report.id,
+
+            forward_number=forward_number,
+
+            from_department_id=old_department_id,
+
+            to_department_id=request.department_id,
+
+            forwarded_by=department_admin.id,
+
+            issue_type=report.issue_type,
+
+            reason_type=request.reason_type,
+
+            remarks=request.remarks,
+        )
+        report.status = ReportStatus.PENDING
+
+        # Ownership transfer will happen only after
+        # destination department accepts the request.
+        # ---------------------------------------------------------
+        # IMPORTANT
+        #
+        # Ownership is NOT transferred here.
+        #
+        # Department change and forward counter will be updated
+        # only after the destination department accepts the request.
+        # ---------------------------------------------------------
+        # report_crud.increment_forward_count(
+        #     self.db,
+        #     report,
+        # )# this block can be remove
+        self.audit_log.log(
+            report_id=report.id,
+            user_id=department_admin.id,
+            action="FORWARD_SENT_TO_DESTINATION",
+            details=(
+                f"Forward request sent from department "
+                f"{old_department_id} "
+                f"to department "
+                f"{request.department_id}."
+            ),
+        )
+        self.audit_log.log(
+            report_id=report.id,
+            user_id=department_admin.id,
+            action="REPORT_FORWARDED_TO_DEPARTMENT",
+            details=(
+                f"Your report has been forwarded to "
+                f"Department ID {request.department_id} "
+                f"for review."
+            ),
+        )
+        InAppNotificationService(
+            self.db,
+        ).create_notification(
+            user_id=department_admin.id,
+            report_id=report.id,
+            title="Forward Request Sent",
+            message=(
+                "The forwarding request has been "
+                "sent to the destination department "
+                "for review."
+            ),
+            notification_type="FORWARD_SENT",
+        )
+        destination_admins = (
+            UserCRUD.get_department_admins(
+                self.db,
+                request.department_id,
+            )
+        )
+
+        for admin in destination_admins:
+
+            InAppNotificationService(
+                self.db,
+            ).create_notification(
+                user_id=admin.id,
+                report_id=report.id,
+                title="Incoming Forward Request",
+                message=(
+                    "A report has been forwarded "
+                    "to your department for review."
+                ),
+                notification_type="FORWARD_REQUEST",
+            )
+        InAppNotificationService(
+            self.db,
+        ).create_notification(
+            user_id=assignment.worker_id,
+            report_id=report.id,
+            title="Forward Request Approved",
+            message=(
+                "Your forwarding request has been approved "
+                "and sent to the destination department."
+            ),
+            notification_type="FORWARD_APPROVED",
+        )
+        # Assignment will be created after
+        # destination department accepts.
+        # TODO:
+        # Assignment will be moved after
+        # Destination Department accepts
+        # the forwarded report.
+
+        forward_request = (
+            DepartmentForwardRequestCRUD
+            .get_pending_request_for_report(
+                self.db,
+                report.id,
+            )
+        )
+
+        if forward_request is not None:
+
+            forward_request.destination_department_id = (
+                request.department_id
+            )
+
+            forward_request.status = (
+                ForwardRequestStatus.WAITING_DESTINATION
+            )
+
+            DepartmentForwardRequestCRUD.save(
+                self.db,
+                forward_request,
+            )
+        
+        return report
+    def cancel_report(
+        self,
+        report_id: int,
+        department_admin,
+        request: ReportCancellationRequest,
+    ):
+        report = report_crud.get_report_by_id(
+            self.db,
+            report_id,
+        )
+
+        if report is None:
+
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Report not found.",
+            )
+
+        if department_admin.role != UserRole.DEPARTMENT_ADMIN:
+
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only Department Admin can cancel reports.",
+            )
+
+        if report.department_id != department_admin.department_id:
+
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=(
+                    "You can cancel only reports "
+                    "belonging to your department."
+                ),
+            )
+        if report.status == ReportStatus.CANCELLED:
+
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Report has already been cancelled.",
+            )
+
+        if report.status not in [
+
+            ReportStatus.PENDING,
+
+            ReportStatus.ASSIGNED,
+
+            ReportStatus.IN_PROGRESS,
+
+        ]:
+
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="This report cannot be cancelled.",
+            )
+
+        assignment = (
+            AssignmentCRUD.get_active_assignment_for_report(
+                self.db,
+                report.id,
+            )
+        )
+
+        report.status = ReportStatus.CANCELLED
+        self.db.add(report)
+        
+        if assignment is not None:
+
+            AssignmentCRUD.update_assignment_status(
+                self.db,
+                assignment,
+                AssignmentStatus.CANCELLED,
+            )
+            assignment.remarks = (
+                "Cancelled by Department Admin"
+                f" | Reason: {request.reason_type.value}"
+                + (
+                    f" | Remarks: {request.remarks}"
+                    if request.remarks
+                    else ""
+                )
+            )
+
+            AssignmentCRUD.save_assignment(
+                self.db,
+                assignment,
+            )
+            worker_profile = WorkerCRUD.get_worker_profile(
+                self.db,
+                assignment.worker_id,
+            )
+
+            if worker_profile is not None:
+
+                worker_profile.is_available = True
+
+                WorkerCRUD.save_worker_profile(
+                    self.db,
+                    worker_profile,
+                )
+
+        if assignment is not None:
+
+            self.notification.create_notification(
+                user_id=assignment.worker_id,
+                report_id=report.id,
+                title="Assignment Cancelled",
+                message=(
+                    "Your assignment has been cancelled by "
+                    "Department Admin.\n\n"
+                    f"Reason: {request.reason_type.value}"
+                    + (
+                        f"\nRemarks: {request.remarks}"
+                        if request.remarks
+                        else ""
+                    )
+                ),
+                notification_type="ASSIGNMENT_CANCELLED",
+            )
+
+        self.notification.create_notification(
+            user_id=report.citizen_id,
+            report_id=report.id,
+            title="Report Cancelled",
+            message=(
+                "Your report has been cancelled after "
+                "administrative review.\n\n"
+                f"Reason: {request.reason_type.value}"
+                + (
+                    f"\nRemarks: {request.remarks}"
+                    if request.remarks
+                    else ""
+                )
+            ),
+            notification_type="REPORT_CANCELLED",
+        )
+
+        self.audit_log.log(
+            report_id=report.id,
+            user_id=department_admin.id,
+            action="REPORT_CANCELLED_BY_DEPARTMENT",
+            details=(
+                f"Reason: {request.reason_type.value}"
+                + (
+                    f", Remarks: {request.remarks}"
+                    if request.remarks
+                    else ""
+                )
+            ),
+        )
+
+        self.db.commit()
+
+        return {
+            "success": True,
+            "message": "Report cancelled successfully.",
+            "report_id": report.id,
+            "report_number": report.report_number,
+            "status": report.status.value,
+            "reason": request.reason_type.value,
+        }
+    def reopen_report(
+        self,
+        report_id: int,
+        department_admin,
+        request: ReportReopenRequest,
+    ):
+
+        report = report_crud.get_report_by_id(
+            self.db,
+            report_id,
+        )
+
+        if report is None:
+
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Report not found.",
+            )
+
+        if department_admin.role != UserRole.DEPARTMENT_ADMIN:
+
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only Department Admin can reopen reports.",
+            )
+
+        if report.department_id != department_admin.department_id:
+
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=(
+                    "You can reopen only reports "
+                    "belonging to your department."
+                ),
+            )
+
+        if report.status != ReportStatus.CANCELLED:
+
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Only cancelled reports can be reopened.",
+            )
+
+        report.status = ReportStatus.PENDING
+
+        self.db.add(report)
+
+        self.audit_log.log(
+            report_id=report.id,
+            user_id=department_admin.id,
+            action="REPORT_REOPENED",
+            details=(
+                "Report reopened by Department Admin."
+                + (
+                    f" Reason: {request.reason}"
+                    if request.reason
+                    else ""
+                )
+            ),
+        )
+
+        self.notification.create_notification(
+            user_id=report.citizen_id,
+            report_id=report.id,
+            title="Report Reopened",
+            message=(
+                "Your report has been reopened "
+                "after administrative review."
+                + (
+                    f"\n\nReason: {request.reason}"
+                    if request.reason
+                    else ""
+                )
+            ),
+            notification_type="REPORT_REOPENED",
+        )
+
+        AssignmentService(
+            self.db,
+        ).assign_worker(
+            report_id=report.id,
+            assigned_by=department_admin.id,
+            remarks="Automatic assignment after report reopening."
+
+        )
+
+        return {
+            "success": True,
+            "message": "Report reopened successfully.",
+            "report_id": report.id,
+            "report_number": report.report_number,
+            "status": report.status.value,
         }

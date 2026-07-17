@@ -28,6 +28,7 @@ class AssignmentService:
         report_id: int,
         assigned_by: int,
         remarks: str | None = None,
+        is_forward_assignment: bool = False,
     ):
 
         report = AssignmentCRUD.get_report(
@@ -94,10 +95,16 @@ class AssignmentService:
             ReportStatus.ASSIGNED,
         )
 
+        action = (
+            "FORWARDED_WORKER_ASSIGNED"
+            if is_forward_assignment
+            else "AUTO_ASSIGNED"
+        )
+
         AuditLogService(self.db).log(
             report_id=report.id,
             user_id=assigned_by,
-            action="AUTO_ASSIGNED",
+            action=action,
             details=f"Automatically assigned to worker #{worker.id}.",
         )
 

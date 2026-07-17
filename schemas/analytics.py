@@ -154,3 +154,58 @@ class WorkerDashboardResponse(BaseModel):
     today_completed_reports: int
 
     average_resolution_time_hours: float
+
+class CitizenDashboardSummary(BaseModel):
+
+    total_reports: int
+
+    active_reports: int
+
+    resolved_reports: int
+
+    cancelled_reports: int
+
+    reopened_reports: int
+
+
+class CitizenStatusStatistics(BaseModel):
+
+    pending: int
+
+    assigned: int
+
+    in_progress: int
+
+    resolved: int
+
+    cancelled: int
+
+
+class CitizenRecentReport(BaseModel):
+
+    report_id: int
+
+    report_number: str
+
+    issue_type: str
+
+    priority: str
+
+    status: str
+
+    department_name: str | None = None
+
+    created_at: datetime
+
+
+class CitizenDashboardResponse(BaseModel):
+
+    summary: CitizenDashboardSummary
+
+    status_distribution: CitizenStatusStatistics
+
+    recent_reports: list[CitizenRecentReport]
+
+    recent_notifications: list[dict]
+
+    recent_timeline: list[dict]

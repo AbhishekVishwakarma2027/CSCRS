@@ -14,3 +14,7 @@ from .resolution_ai_result import ResolutionAIResult
 from .resolution_attempt import ResolutionAttempt
 from .report_support import ReportSupport
 from .in_app_notification import InAppNotification
+from .report_forward_history import ReportForwardHistory
+from .department_forward_request import (
+    DepartmentForwardRequest,
+)

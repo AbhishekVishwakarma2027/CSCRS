@@ -74,6 +74,12 @@ class Report(Base):
         nullable=False,
     )
 
+    forward_count = Column(
+        Integer,
+        nullable=False,
+        default=0,
+    )
+
     ai_confidence = Column(
         Float,
         nullable=False,

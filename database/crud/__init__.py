@@ -6,3 +6,6 @@ from . import report_detection
 from . import resolution_ai
 from . import resolution_attempt
 from . import report_support
+from .department_forward_request import (
+    DepartmentForwardRequestCRUD,
+)

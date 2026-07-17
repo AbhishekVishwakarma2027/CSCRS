@@ -23,6 +23,32 @@ class TimelineService:
             "Issue Resolved",
             "The civic issue has been resolved.",
         ),
+        "FORWARD_SENT_TO_DESTINATION": (
+            "Report Forwarded",
+            "Your report has been forwarded to another department for review.",
+        ),
+
+        "REPORT_ACCEPTED_BY_DESTINATION": (
+            "Forward Request Accepted",
+            "The destination department accepted your report.",
+        ),
+
+        "REPORT_RETURNED_TO_SOURCE": (
+            "Returned to Source Department",
+            "The destination department declined the request. The report has been returned to the source department.",
+        ),
+        "FORWARDED_WORKER_ASSIGNED": (
+            "New Worker Assigned",
+            "A new worker from the destination department has been assigned.",
+        ),
+        "REPORT_CANCELLED_BY_DEPARTMENT": (
+            "Report Cancelled",
+            "Department cancelled this report after review.",
+        ),
+        "REPORT_REOPENED": (
+            "Report Reopened",
+            "Department reopened this report.",
+        ),
     }
 
     def __init__(

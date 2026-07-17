@@ -10,6 +10,7 @@ from api.report import router as report_router
 from api.dashboard import router as dashboard_router
 from api import timeline
 from api import in_app_notification
+from api.forward_request import router as forward_request_router
 
 
 
@@ -26,3 +27,4 @@ router.include_router(report_router)
 router.include_router(dashboard_router)
 router.include_router(timeline.router,prefix="/api/v1",)
 router.include_router(in_app_notification.router,prefix="/api/v1",)
+router.include_router(forward_request_router)

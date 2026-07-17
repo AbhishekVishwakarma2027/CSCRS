@@ -41,6 +41,21 @@ class UserCRUD:
             .filter(User.id == user_id)
             .first()
         )
+    @staticmethod
+    def get_department_admins(
+        db: Session,
+        department_id: int,
+    ) -> list[User]:
+
+        return (
+            db.query(User)
+            .filter(
+                User.role == UserRole.DEPARTMENT_ADMIN,
+                User.department_id == department_id,
+                User.is_active.is_(True),
+            )
+            .all()
+        )
 
     @staticmethod
     def create(

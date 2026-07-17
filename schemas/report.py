@@ -2,13 +2,15 @@ from typing import Optional
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict
 from schemas.common import PaginationMetadata
+from database.enums import ForwardReasonType
 
 from database.enums import (
     Priority,
     ReportStatus,
     VerificationDecision,
+    ReportCancellationReason,
 )
-
+from pydantic import Field
 
 # =====================================================
 # Client Request
@@ -153,3 +155,22 @@ class PaginatedCityReports(BaseModel):
     items: list[CityReportListItem]
 
     pagination: PaginationMetadata
+
+class ReportForwardRequest(BaseModel):
+
+    department_id: int
+
+    reason_type: ForwardReasonType
+
+    remarks: Optional[str] = None
+class ReportCancellationRequest(BaseModel):
+
+    reason_type: ReportCancellationReason
+
+    remarks: Optional[str] = None
+class ReportReopenRequest(BaseModel):
+
+    reason: Optional[str] = Field(
+        default=None,
+        max_length=500,
+    )
