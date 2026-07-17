@@ -43,3 +43,22 @@ class AuditLogCRUD:
             )
             .all()
         )
+    def get_logs_for_reports(
+        db: Session,
+        report_ids: list[int],
+        limit: int,
+    ):
+
+        return (
+            db.query(
+                AuditLog,
+            )
+            .filter(
+                AuditLog.report_id.in_(report_ids),
+            )
+            .order_by(
+                AuditLog.created_at.desc(),
+            )
+            .limit(limit)
+            .all()
+        )

@@ -22,7 +22,7 @@ from schemas.admin import (
 from authentication.dependencies import require_roles
 from database.enums import UserRole
 from services.analytics_service import AnalyticsService
-from schemas.analytics import DashboardSummaryResponse
+from schemas.analytics import CityDashboardSummaryResponse
 
 
 router = APIRouter(

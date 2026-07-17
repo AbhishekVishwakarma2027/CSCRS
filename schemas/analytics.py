@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from datetime import date
 from pydantic import BaseModel
 
-class DashboardSummaryResponse(BaseModel):
+class CityDashboardSummaryResponse(BaseModel):
 
     total_reports: int
 
@@ -17,6 +17,18 @@ class DashboardSummaryResponse(BaseModel):
     closed_reports: int
 
     rejected_reports: int
+
+    cancelled_reports: int
+
+    total_departments: int
+
+    total_workers: int
+
+    total_citizens: int
+
+    resolution_rate: float
+
+    automation_rate: float
 
 class DepartmentStatisticsItem(BaseModel):
     department_id: int
@@ -93,6 +105,10 @@ class HighPriorityReportItem(BaseModel):
 
     created_at: datetime
 
+    age_hours: float
+    
+    assigned_worker: str | None = None
+
 class DashboardInsightItem(BaseModel):
 
     type: str
@@ -106,21 +122,27 @@ class DepartmentDashboardResponse(BaseModel):
 
     pending_reports: int
 
+    assigned_reports: int
+
     in_progress_reports: int
 
     resolved_reports: int
 
+    cancelled_reports: int
+
     available_workers: int
+
+    busy_workers: int
+
+    forward_requests_pending: int
+
+    forward_requests_accepted: int
+
+    forward_requests_rejected: int
 
     average_resolution_time_hours: float
 
-    ai_accepted: int
-
-    manual_review: int
-
     automation_rate: float
-
-    busy_workers : int
 class TopWorkerItem(BaseModel):
 
     worker_id: int
@@ -205,7 +227,3 @@ class CitizenDashboardResponse(BaseModel):
     status_distribution: CitizenStatusStatistics
 
     recent_reports: list[CitizenRecentReport]
-
-    recent_notifications: list[dict]
-
-    recent_timeline: list[dict]

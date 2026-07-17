@@ -2,10 +2,11 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from authentication.dependencies import (
     require_city_admin,
+    require_department_admin,
 )
 from database.models.user import User
 from database.dependencies import get_db
-from schemas.analytics import DashboardSummaryResponse
+from schemas.analytics import CityDashboardSummaryResponse
 from services.analytics_service import AnalyticsService
 from schemas.analytics import DepartmentStatisticsItem
 from schemas.analytics import IssueStatisticsItem
@@ -21,6 +22,8 @@ from schemas.analytics import DepartmentDashboardResponse
 from schemas.analytics import TopWorkerItem
 from schemas.analytics import WorkerDashboardResponse
 from authentication.dependencies import require_worker
+from schemas.analytics import CitizenDashboardResponse
+from authentication.dependencies import require_citizen
 
 router = APIRouter(
     prefix="/dashboard",
@@ -29,7 +32,7 @@ router = APIRouter(
 
 @router.get(
     "/summary",
-    response_model=DashboardSummaryResponse,
+    response_model=CityDashboardSummaryResponse,
 )
 def dashboard_summary(
     current_user: User = Depends(
@@ -176,7 +179,8 @@ def dashboard_insights(
 )
 def department_dashboard_summary(
     current_user: User = Depends(
-        require_city_admin(),
+        # require_city_admin(),
+        require_department_admin(),
     ),
     db: Session = Depends(
         get_db,
@@ -222,5 +226,22 @@ def worker_dashboard_summary(
     return AnalyticsService(
         db,
     ).get_worker_dashboard_summary(
+        current_user.id,
+    )
+@router.get(
+    "/citizen/dashboard",
+    response_model=CitizenDashboardResponse,
+)
+def citizen_dashboard_summary(
+
+    current_user: User = Depends(
+        require_citizen(),
+    ),
+    db: Session = Depends(get_db),
+):
+
+    return AnalyticsService(
+        db,
+    ).get_citizen_dashboard_summary(
         current_user.id,
     )

@@ -336,3 +336,20 @@ def get_next_forward_number(
         )
         + 1
     )
+def get_reports_by_citizen(
+    db: Session,
+    citizen_id: int,
+):
+
+    return (
+        db.query(
+            Report,
+        )
+        .filter(
+            Report.citizen_id == citizen_id,
+        )
+        .order_by(
+            Report.created_at.desc(),
+        )
+        .all()
+    )

@@ -1,13 +1,10 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-
 from database.models.department import Department
 from database.models.report import Report
-from database.enums import ReportStatus
 from sqlalchemy import extract
 from sqlalchemy.orm import Query
 from schemas.analytics import DashboardFilter
-from database.models.department import Department
 from database.enums import (
     Priority,
     ReportStatus,
@@ -17,41 +14,171 @@ from database.models.resolution_ai_result import ResolutionAIResult
 from database.enums import ResolutionDecision
 from database.models.assignment import Assignment
 from database.models.user import User
+from database.enums import UserRole
 from database.enums import AssignmentStatus
 from datetime import date
-
-from database.models.assignment import Assignment
+from configs.config import (
+    DASHBOARD_RECENT_REPORT_LIMIT,
+)
 from database.models.resolution import Resolution
+from database.models.department_forward_request import DepartmentForwardRequest
+from database.enums import ForwardRequestStatus
+from datetime import datetime, timezone
+
+
+
+
+def _calculate_automation_rate(
+    db: Session,
+    department_id: int | None = None,
+):
+
+    query = db.query(
+        ResolutionAIResult,
+    )
+
+    if department_id is not None:
+
+        query = (
+            query.join(
+                Report,
+                Report.id == ResolutionAIResult.report_id,
+            )
+            .filter(
+                Report.department_id == department_id,
+            )
+        )
+
+    total_ai_results = query.count()
+
+    if total_ai_results == 0:
+        return 0.0
+
+    auto_verified = (
+        query.filter(
+            ResolutionAIResult.ai_decision == ResolutionDecision.PASS,
+        )
+        .count()
+    )
+
+    return round(
+        (auto_verified / total_ai_results) * 100,
+        2,
+    )
+
 
 def get_dashboard_summary(
     db: Session,
 ):
+    
+
+    status_counts = dict(
+        db.query(
+            Report.status,
+            func.count(Report.id),
+        )
+        .group_by(
+            Report.status,
+        )
+        .all()
+    )
+
+    pending_reports = status_counts.get(
+        ReportStatus.PENDING,
+        0,
+    )
+
+    assigned_reports = status_counts.get(
+        ReportStatus.ASSIGNED,
+        0,
+    )
+
+    in_progress_reports = status_counts.get(
+        ReportStatus.IN_PROGRESS,
+        0,
+    )
+
+    resolved_reports = status_counts.get(
+        ReportStatus.RESOLVED,
+        0,
+    )
+
+    closed_reports = status_counts.get(
+        ReportStatus.CLOSED,
+        0,
+    )
+
+    rejected_reports = status_counts.get(
+        ReportStatus.REJECTED,
+        0,
+    )
+
+    cancelled_reports = status_counts.get(
+        ReportStatus.CANCELLED,
+        0,
+    )
+    total_departments = (
+        db.query(Department)
+        .count()
+    )
+
+    total_workers = (
+        db.query(User)
+        .filter(
+            User.role == UserRole.WORKER,
+        )
+        .count()
+    )
+
+    total_citizens = (
+        db.query(User)
+        .filter(
+            User.role == UserRole.CITIZEN,
+        )
+        .count()
+    )
+    resolution_rate = (
+        round(
+            (
+                (resolved_reports + closed_reports)
+                / db.query(Report).count()
+            ) * 100,
+            2,
+        )
+        if db.query(Report).count()
+        else 0.0
+    )
+
+    automation_rate = _calculate_automation_rate(
+        db,
+    )
     return {
+
     "total_reports": db.query(Report).count(),
 
-    "pending_reports": db.query(Report).filter(
-        Report.status == ReportStatus.PENDING
-    ).count(),
+    "pending_reports": pending_reports,
 
-    "assigned_reports": db.query(Report).filter(
-        Report.status == ReportStatus.ASSIGNED
-    ).count(),
+    "assigned_reports": assigned_reports,
 
-    "in_progress_reports": db.query(Report).filter(
-        Report.status == ReportStatus.IN_PROGRESS
-    ).count(),
+    "in_progress_reports": in_progress_reports,
 
-    "resolved_reports": db.query(Report).filter(
-        Report.status == ReportStatus.RESOLVED
-    ).count(),
+    "resolved_reports": resolved_reports,
 
-    "closed_reports": db.query(Report).filter(
-        Report.status == ReportStatus.CLOSED
-    ).count(),
+    "closed_reports": closed_reports,
 
-    "rejected_reports": db.query(Report).filter(
-        Report.status == ReportStatus.REJECTED
-    ).count(),
+    "rejected_reports": rejected_reports,
+
+    "cancelled_reports": cancelled_reports,
+
+    "total_departments": total_departments,
+
+    "total_workers": total_workers,
+
+    "total_citizens": total_citizens,
+
+    "resolution_rate": resolution_rate,
+
+    "automation_rate": automation_rate,
 }
 def get_department_statistics(
     db: Session,
@@ -249,11 +376,22 @@ def get_high_priority_reports(
             ),
             Report.risk_score,
             Report.created_at,
+            Assignment.worker_id.label("assigned_worker_id"),
+            User.name.label("assigned_worker"),
         )
         .join(
             Department,
             Department.id == Report.department_id,
         )
+        .outerjoin(
+            Assignment,
+            Assignment.report_id == Report.id,
+        )
+        .outerjoin(
+            User,
+            User.id == Assignment.worker_id,
+        )
+        
         .filter(
             Report.priority.in_(
                 [
@@ -281,6 +419,7 @@ def get_high_priority_reports(
 def get_dashboard_insight_data(
     db: Session,
 ):
+    
     return {
         "total_reports": db.query(Report).count(),
 
@@ -328,6 +467,138 @@ def get_dashboard_insight_data(
             )
             .first()
         ),
+        "highest_cancelled_department": (
+            db.query(
+                Department.name,
+                func.count(Report.id).label("count"),
+            )
+            .join(
+                Report,
+                Report.department_id == Department.id,
+            )
+            .filter(
+                Report.status == ReportStatus.CANCELLED,
+            )
+            .group_by(
+                Department.name,
+            )
+            .order_by(
+                func.count(Report.id).desc(),
+            )
+            .first()
+        ),
+
+        "top_worker": (
+            db.query(
+                User.name,
+                func.count(Assignment.id).label("completed"),
+            )
+            .join(
+                Assignment,
+                Assignment.worker_id == User.id,
+            )
+            .filter(
+                Assignment.status == AssignmentStatus.COMPLETED,
+            )
+            .group_by(
+                User.name,
+            )
+            .order_by(
+                func.count(Assignment.id).desc(),
+            )
+            .first()
+        ),
+
+        "most_delayed_report": (
+            db.query(
+                Report.report_number,
+                Report.created_at,
+            )
+            .filter(
+                Report.status.in_(
+                    [
+                        ReportStatus.PENDING,
+                        ReportStatus.ASSIGNED,
+                        ReportStatus.IN_PROGRESS,
+                    ]
+                )
+            )
+            .order_by(
+                Report.created_at.asc(),
+            )
+            .first()
+        ),
+
+        "most_delayed_department": (
+            db.query(
+                Department.name,
+                func.min(Report.created_at).label("oldest"),
+            )
+            .join(
+                Report,
+                Report.department_id == Department.id,
+            )
+            .filter(
+                Report.status.in_(
+                    [
+                        ReportStatus.PENDING,
+                        ReportStatus.ASSIGNED,
+                        ReportStatus.IN_PROGRESS,
+                    ]
+                )
+            )
+            .group_by(
+                Department.name,
+            )
+            .order_by(
+                func.min(Report.created_at).asc(),
+            )
+            .first()
+        ),
+
+        "high_priority_waiting": (
+            db.query(Report)
+            .filter(
+                Report.priority.in_(
+                    [
+                        Priority.HIGH,
+                        Priority.CRITICAL,
+                    ]
+                ),
+                Report.status.in_(
+                    [
+                        ReportStatus.PENDING,
+                        ReportStatus.ASSIGNED,
+                        ReportStatus.IN_PROGRESS,
+                    ]
+                ),
+            )
+            .count()
+        ),
+
+        "available_workers": (
+            db.query(WorkerProfile)
+            .filter(
+                WorkerProfile.is_available.is_(True),
+            )
+            .count()
+        ),
+
+        "busy_workers": (
+            db.query(WorkerProfile)
+            .filter(
+                WorkerProfile.is_available.is_(False),
+            )
+            .count()
+        ),
+
+        "pending_forward_requests": (
+            db.query(DepartmentForwardRequest)
+            .filter(
+                DepartmentForwardRequest.status == ForwardRequestStatus.PENDING,
+            )
+            .count()
+        ),
     }
 def get_department_dashboard_summary(
     db: Session,
@@ -341,34 +612,45 @@ def get_department_dashboard_summary(
         )
         .count()
     )
-
-    pending_reports = (
-        db.query(Report)
+    status_counts = dict(
+        db.query(
+            Report.status,
+            func.count(Report.id),
+        )
         .filter(
             Report.department_id == department_id,
-            Report.status == ReportStatus.PENDING,
         )
-        .count()
+        .group_by(
+            Report.status,
+        )
+        .all()
     )
 
-    in_progress_reports = (
-        db.query(Report)
-        .filter(
-            Report.department_id == department_id,
-            Report.status == ReportStatus.IN_PROGRESS,
-        )
-        .count()
+    pending_reports = status_counts.get(
+        ReportStatus.PENDING,
+        0,
     )
 
-    resolved_reports = (
-        db.query(Report)
-        .filter(
-            Report.department_id == department_id,
-            Report.status == ReportStatus.RESOLVED,
-        )
-        .count()
+    assigned_reports = status_counts.get(
+        ReportStatus.ASSIGNED,
+        0,
     )
 
+    in_progress_reports = status_counts.get(
+        ReportStatus.IN_PROGRESS,
+        0,
+    )
+
+    resolved_reports = status_counts.get(
+        ReportStatus.RESOLVED,
+        0,
+    )
+
+    cancelled_reports = status_counts.get(
+        ReportStatus.CANCELLED,
+        0,
+    )
+    
     available_workers = (
         db.query(WorkerProfile)
         .filter(
@@ -386,57 +668,52 @@ def get_department_dashboard_summary(
         )
         .count()
     )
+    forward_status_counts = dict(
+        db.query(
+            DepartmentForwardRequest.status,
+            func.count(DepartmentForwardRequest.id),
+        )
+        .filter(
+            DepartmentForwardRequest.current_department_id == department_id,
+        )
+        .group_by(
+            DepartmentForwardRequest.status,
+        )
+        .all()
+    )
 
-    # ai_accepted = (
-    #     db.query(ResolutionAIResult)
-    #     .join(
-    #         Report,
-    #         Report.id == ResolutionAIResult.report_id,
-    #     )
-    #     .filter(
-    #         Report.department_id == department_id,
-    #         ResolutionAIResult.ai_decision
-    #         == ResolutionDecision.PASS,
-    #     )
-    #     .count()
-    # )
+    forward_requests_pending = forward_status_counts.get(
+        ForwardRequestStatus.PENDING,
+        0,
+    )
 
-    # manual_review = (
-    #     db.query(ResolutionAIResult)
-    #     .join(
-    #         Report,
-    #         Report.id == ResolutionAIResult.report_id,
-    #     )
-    #     .filter(
-    #         Report.department_id == department_id,
-    #         ResolutionAIResult.ai_decision
-    #         == ResolutionDecision.REVIEW,
-    #     )
-    #     .count()
-    # )
+    forward_requests_accepted = forward_status_counts.get(
+        ForwardRequestStatus.ACCEPTED,
+        0,
+    )
 
-    # total_reviewed = ai_accepted + manual_review
-
-    # automation_rate = (
-    #     round(
-    #         (ai_accepted / total_reviewed) * 100,
-    #         2,
-    #     )
-    #     if total_reviewed
-    #     else 0.0
-    # )
+    forward_requests_rejected = forward_status_counts.get(
+        ForwardRequestStatus.REJECTED,
+        0,
+    )
 
     return {
         "total_reports": total_reports,
         "pending_reports": pending_reports,
+        "assigned_reports": assigned_reports,
         "in_progress_reports": in_progress_reports,
         "resolved_reports": resolved_reports,
+        "cancelled_reports": cancelled_reports,
         "available_workers": available_workers,
         "busy_workers": busy_workers,
+        "forward_requests_pending": forward_requests_pending,
+        "forward_requests_accepted": forward_requests_accepted,
+        "forward_requests_rejected": forward_requests_rejected,
         "average_resolution_time_hours": 0.0,
-        "ai_accepted":0,
-        "manual_review": 0,
-        "automation_rate": 0,
+        "automation_rate": _calculate_automation_rate(
+            db,
+            department_id,
+        ),
     }
 def get_top_workers(
     db: Session,
@@ -570,3 +847,145 @@ def get_worker_dashboard_summary(
         "today_completed_reports": today_completed_reports,
         "average_resolution_time_hours": 0.0,
     }
+def get_citizen_dashboard_summary(
+    db: Session,
+    citizen_id: int,
+):
+
+    total_reports = (
+        db.query(Report)
+        .filter(
+            Report.citizen_id == citizen_id,
+        )
+        .count()
+    )
+
+    active_reports = (
+        db.query(Report)
+        .filter(
+            Report.citizen_id == citizen_id,
+            Report.status.in_(
+                [
+                    ReportStatus.PENDING,
+                    ReportStatus.ASSIGNED,
+                    ReportStatus.IN_PROGRESS,
+                ]
+            ),
+        )
+        .count()
+    )
+
+    resolved_reports = (
+        db.query(Report)
+        .filter(
+            Report.citizen_id == citizen_id,
+            Report.status.in_(
+                [
+                    ReportStatus.RESOLVED,
+                    ReportStatus.CLOSED,
+                ]
+            ),
+        )
+        .count()
+    )
+
+    cancelled_reports = (
+        db.query(Report)
+        .filter(
+            Report.citizen_id == citizen_id,
+            Report.status == ReportStatus.CANCELLED,
+        )
+        .count()
+    )
+
+    reopened_reports = (
+        db.query(Report)
+        .filter(
+            Report.citizen_id == citizen_id,
+            Report.status.in_(
+                [
+                    ReportStatus.PENDING,
+                    ReportStatus.ASSIGNED,
+                    ReportStatus.IN_PROGRESS,
+                ]
+            ),
+            Report.audit_logs.any(
+                action="REPORT_REOPENED",
+            ),
+        )
+        .count()
+    )
+
+    pending_reports = (
+        db.query(Report)
+        .filter(
+            Report.citizen_id == citizen_id,
+            Report.status == ReportStatus.PENDING,
+        )
+        .count()
+    )
+
+    assigned_reports = (
+        db.query(Report)
+        .filter(
+            Report.citizen_id == citizen_id,
+            Report.status == ReportStatus.ASSIGNED,
+        )
+        .count()
+    )
+
+    in_progress_reports = (
+        db.query(Report)
+        .filter(
+            Report.citizen_id == citizen_id,
+            Report.status == ReportStatus.IN_PROGRESS,
+        )
+        .count()
+    )
+
+    recent_reports = (
+        db.query(
+            Report.id.label(
+                "report_id",
+            ),
+            Report.report_number,
+            Report.issue_type,
+            Report.priority,
+            Report.status,
+            Department.name.label(
+                "department_name",
+            ),
+            Report.created_at,
+        )
+        .outerjoin(
+            Department,
+            Department.id == Report.department_id,
+        )
+        .filter(
+            Report.citizen_id == citizen_id,
+        )
+        .order_by(
+            Report.created_at.desc(),
+        )
+        .limit(
+            DASHBOARD_RECENT_REPORT_LIMIT,
+        )
+        .all()
+    )
+    return {
+    "summary": {
+        "total_reports": total_reports,
+        "active_reports": active_reports,
+        "resolved_reports": resolved_reports,
+        "cancelled_reports": cancelled_reports,
+        "reopened_reports": reopened_reports,
+    },
+    "status_distribution": {
+    "pending": pending_reports,
+    "assigned": assigned_reports,
+    "in_progress": in_progress_reports,
+    "resolved": resolved_reports,
+    "cancelled": cancelled_reports,
+    },
+    "recent_reports": recent_reports,
+}

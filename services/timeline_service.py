@@ -2,6 +2,9 @@ from sqlalchemy.orm import Session
 
 from database.crud.audit_log import AuditLogCRUD
 import database.crud.report as report_crud
+from configs.config import (
+    DASHBOARD_RECENT_TIMELINE_LIMIT,
+)
 
 
 class TimelineService:
@@ -105,3 +108,50 @@ class TimelineService:
             "status": report.status.value,
             "timeline": timeline,
         }
+    def get_recent_citizen_timeline(
+        self,
+        *,
+        citizen_id: int,
+        limit: int = DASHBOARD_RECENT_TIMELINE_LIMIT,
+    ):
+
+        reports = report_crud.get_reports_by_citizen(
+            self.db,
+            citizen_id,
+        )
+
+        if not reports:
+            return []
+
+        report_ids = [
+            report.id
+            for report in reports
+        ]
+
+        logs = AuditLogCRUD.get_logs_for_reports(
+            self.db,
+            report_ids,
+            limit,
+        )
+
+        timeline = []
+
+        for log in logs:
+
+            if log.action not in self.EVENT_MAPPING:
+                continue
+
+            title, description = self.EVENT_MAPPING[
+                log.action
+            ]
+
+            timeline.append(
+                {
+                    "report_id": log.report_id,
+                    "title": title,
+                    "description": description,
+                    "created_at": log.created_at,
+                }
+            )
+
+        return timeline
