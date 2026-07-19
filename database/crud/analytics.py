@@ -24,7 +24,7 @@ from database.models.resolution import Resolution
 from database.models.department_forward_request import DepartmentForwardRequest
 from database.enums import ForwardRequestStatus
 from datetime import datetime, timezone
-
+from database.models.audit_log import AuditLog
 
 
 
@@ -65,7 +65,70 @@ def _calculate_automation_rate(
         (auto_verified / total_ai_results) * 100,
         2,
     )
+def get_reopened_report_count(
+    db: Session,
+    department_id: int | None = None,
+):
+    query = (
+        db.query(
+            func.count(AuditLog.id),
+        )
+        .join(
+            Report,
+            Report.id == AuditLog.report_id,
+        )
+        .filter(
+            AuditLog.action == "REPORT_REOPENED",
+        )
+    )
 
+    if department_id is not None:
+
+        query = query.filter(
+            Report.department_id == department_id,
+        )
+
+    return query.scalar() or 0
+
+
+def get_reopened_report_statistics(
+    db: Session,
+):
+
+    return (
+        db.query(
+            Department.name.label(
+                "department_name",
+            ),
+            func.count(
+                AuditLog.id,
+            ).label(
+                "reopened_reports",
+            ),
+        )
+        .join(
+            Report,
+            Report.id == AuditLog.report_id,
+        )
+        .join(
+            Department,
+            Department.id == Report.department_id,
+        )
+        .filter(
+            AuditLog.action == "REPORT_REOPENED",
+        )
+        .group_by(
+            Department.id,
+            Department.name,
+        )
+        .order_by(
+            func.count(
+                AuditLog.id,
+            ).desc(),
+            Department.name.asc(),
+        )
+        .all()
+    )
 
 def get_dashboard_summary(
     db: Session,
@@ -152,6 +215,9 @@ def get_dashboard_summary(
     automation_rate = _calculate_automation_rate(
         db,
     )
+    reopened_reports = get_reopened_report_count(
+        db=db,
+    )
     return {
 
     "total_reports": db.query(Report).count(),
@@ -179,6 +245,8 @@ def get_dashboard_summary(
     "resolution_rate": resolution_rate,
 
     "automation_rate": automation_rate,
+
+    "reopened_reports": reopened_reports,
     
     "city_name": "Lucknow",
 }
@@ -439,17 +507,37 @@ def get_high_priority_reports(
     )
 def get_dashboard_insight_data(
     db: Session,
+    department_id: int | None =None,
 ):
+    def apply_department_filter(query):
+
+        if department_id is not None:
+
+            query = query.filter(
+                Report.department_id == department_id,
+            )
+
+        return query
     
     return {
-        "total_reports": db.query(Report).count(),
+        "total_reports": (
+            apply_department_filter(
+                db.query(Report)
+            ).count()
+        ),
 
-        "resolved_reports": db.query(Report).filter(
-            Report.status == ReportStatus.RESOLVED
-        ).count(),
+        "resolved_reports": (
+            apply_department_filter(
+                db.query(Report)
+            )
+            .filter(
+                Report.status == ReportStatus.RESOLVED,
+            )
+            .count()
+        ),
 
         "pending_by_department": (
-            db.query(
+                db.query(
                 Department.name,
                 func.count(Report.id).label("count"),
             )
@@ -476,9 +564,11 @@ def get_dashboard_insight_data(
         ),
 
         "most_common_issue": (
-            db.query(
-                Report.issue_type,
-                func.count(Report.id).label("count"),
+            apply_department_filter(
+                db.query(
+                    Report.issue_type,
+                    func.count(Report.id).label("count"),
+                )
             )
             .group_by(
                 Report.issue_type,
@@ -531,9 +621,11 @@ def get_dashboard_insight_data(
         ),
 
         "most_delayed_report": (
-            db.query(
-                Report.report_number,
-                Report.created_at,
+            apply_department_filter(
+                db.query(
+                    Report.report_number,
+                    Report.created_at,
+                )
             )
             .filter(
                 Report.status.in_(
@@ -578,7 +670,9 @@ def get_dashboard_insight_data(
         ),
 
         "high_priority_waiting": (
-            db.query(Report)
+            apply_department_filter(
+                db.query(Report)
+            )
             .filter(
                 Report.priority.in_(
                     [
@@ -678,6 +772,11 @@ def get_department_dashboard_summary(
         ReportStatus.CANCELLED,
         0,
     )
+
+    reopened_reports = get_reopened_report_count(
+        db=db,
+        department_id=department_id,
+    )
     
     available_workers = (
         db.query(WorkerProfile)
@@ -742,6 +841,7 @@ def get_department_dashboard_summary(
             db,
             department_id,
         ),
+        "reopened_reports": reopened_reports,
         "department_name": (
             department.name
             if department

@@ -12,7 +12,7 @@ from api import timeline
 from api import in_app_notification
 from api.forward_request import router as forward_request_router
 from api import generate_report
-
+from api import profile
 
 
 router = APIRouter()
@@ -30,3 +30,4 @@ router.include_router(timeline.router,prefix="/api/v1",)
 router.include_router(in_app_notification.router,prefix="/api/v1",)
 router.include_router(forward_request_router)
 router.include_router(generate_report.router)
+router.include_router(profile.router)

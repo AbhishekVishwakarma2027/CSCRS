@@ -18,6 +18,7 @@ from database.models.worker_profile import WorkerProfile
 from services.notification_service import NotificationService
 from services.in_app_notification_service import InAppNotificationService
 from database.models.report import Report
+from schemas.worker import BlockWorkerRequest
 
 class WorkerService:
 
@@ -396,4 +397,163 @@ class WorkerService:
 
         return {
             "message": "Worker activated successfully."
+        }
+    def block_worker(
+        self,
+        *,
+        worker_id: int,
+        current_user: User,
+        block_type,
+        reason: str,
+    ):
+
+        profile = WorkerCRUD.get_worker_by_id(
+            self.db,
+            worker_id,
+        )
+
+        if profile is None:
+
+            raise HTTPException(
+                status_code=404,
+                detail="Worker not found.",
+            )
+
+        if (
+            current_user.role == UserRole.DEPARTMENT_ADMIN
+            and current_user.department_id
+            != profile.department_id
+        ):
+
+            raise HTTPException(
+                status_code=403,
+                detail=(
+                    "You can only block workers "
+                    "from your own department."
+                ),
+            )
+
+        user = UserCRUD.get_by_id(
+            self.db,
+            profile.user_id,
+        )
+
+        if user is None:
+
+            raise HTTPException(
+                status_code=404,
+                detail="User not found.",
+            )
+
+        if user.is_blocked:
+
+            raise HTTPException(
+                status_code=409,
+                detail="Worker account is already blocked.",
+            )
+
+        WorkerCRUD.block_worker(
+            self.db,
+            user=user,
+            blocked_by=current_user.id,
+            block_type=block_type,
+            reason=reason,
+        )
+
+        self.db.commit()
+
+        try:
+
+            NotificationService().send_account_blocked(
+                user_name=user.name,
+                user_email=user.email,
+                block_type=block_type.value,
+                reason=reason,
+            )
+
+        except Exception as e:
+
+            print(
+                f"Failed to send worker blocked email: {e}"
+            )
+
+        return {
+            "message": "Worker blocked successfully."
+        }
+
+
+    def unblock_worker(
+        self,
+        *,
+        worker_id: int,
+        current_user: User,
+    ):
+
+        profile = WorkerCRUD.get_worker_by_id(
+            self.db,
+            worker_id,
+        )
+
+        if profile is None:
+
+            raise HTTPException(
+                status_code=404,
+                detail="Worker not found.",
+            )
+
+        if (
+            current_user.role == UserRole.DEPARTMENT_ADMIN
+            and current_user.department_id
+            != profile.department_id
+        ):
+
+            raise HTTPException(
+                status_code=403,
+                detail=(
+                    "You can only unblock workers "
+                    "from your own department."
+                ),
+            )
+
+        user = UserCRUD.get_by_id(
+            self.db,
+            profile.user_id,
+        )
+
+        if user is None:
+
+            raise HTTPException(
+                status_code=404,
+                detail="User not found.",
+            )
+
+        if not user.is_blocked:
+
+            raise HTTPException(
+                status_code=409,
+                detail="Worker account is already active.",
+            )
+
+        WorkerCRUD.unblock_worker(
+            self.db,
+            user=user,
+        )
+
+        self.db.commit()
+
+        try:
+
+            NotificationService().send_account_unblocked(
+                user_name=user.name,
+                user_email=user.email,
+            )
+
+        except Exception as e:
+
+            print(
+                f"Failed to send worker unblocked email: {e}"
+            )
+
+        return {
+            "message": "Worker unblocked successfully."
         }

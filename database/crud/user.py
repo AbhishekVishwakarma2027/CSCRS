@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 
 from authentication.security import hash_password
-
+from datetime import datetime, timezone
 from database.enums import UserRole
 from database.models.user import User
 
@@ -94,7 +94,11 @@ class UserCRUD:
     ):
 
         user.password_hash = password_hash
-        db.flush()
+        db.add(user)
+
+        db.commit()
+
+        db.refresh(user)
 
         return user
     @staticmethod
@@ -114,3 +118,40 @@ class UserCRUD:
             password_hash=hash_password(password),
             role=role,
         )
+    @staticmethod
+    def block_user(
+        db: Session,
+        user,
+        blocked_by: int,
+        block_type,
+        reason: str,
+    ):
+
+        user.is_blocked = True
+        user.block_type = block_type.value
+        user.blocked_by = blocked_by
+        user.blocked_at = datetime.now(timezone.utc)
+        user.block_reason = reason
+
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
+        return user
+    @staticmethod
+    def unblock_user(
+        db: Session,
+        user,
+    ):
+
+        user.is_blocked = False
+        user.blocked_by = None
+        user.block_type= None
+        user.blocked_at = None
+        user.block_reason = None
+
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
+        return user

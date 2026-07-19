@@ -63,10 +63,6 @@ class MessageResponse(BaseModel):
 class ResendOTPRequest(BaseModel):
     email: EmailStr
 
-
-class MessageResponse(BaseModel):
-    message: str
-
 class ForgotPasswordRequest(BaseModel):
     email: EmailStr
 
@@ -80,6 +76,19 @@ class ResetPasswordRequest(BaseModel):
     email: EmailStr
     otp: str
     new_password: str = Field(
+        min_length=8,
+        max_length=128,
+    )
+class ChangePasswordRequest(BaseModel):
+
+    old_password: str
+
+    new_password: str = Field(
+        min_length=8,
+        max_length=128,
+    )
+
+    confirm_password: str = Field(
         min_length=8,
         max_length=128,
     )

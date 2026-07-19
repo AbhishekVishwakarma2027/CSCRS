@@ -182,4 +182,45 @@ class NotificationService:
             subject=subject,
             body=body,
         )
-    
+    def send_account_blocked(
+        self,
+        *,
+        user_name: str,
+        user_email: str,
+        block_type: str,
+        reason: str,
+    ):
+
+        subject, body = (
+            EmailTemplates.account_blocked(
+                user_name=user_name,
+                block_type=block_type,
+                reason=reason,
+            )
+        )
+
+        EmailService().send_email(
+            to_email=user_email,
+            subject=subject,
+            body=body,
+        )
+
+
+    def send_account_unblocked(
+        self,
+        *,
+        user_name: str,
+        user_email: str,
+    ):
+
+        subject, body = (
+            EmailTemplates.account_unblocked(
+                user_name=user_name,
+            )
+        )
+
+        EmailService().send_email(
+            to_email=user_email,
+            subject=subject,
+            body=body,
+        )

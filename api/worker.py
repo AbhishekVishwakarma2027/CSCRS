@@ -21,7 +21,7 @@ from authentication.dependencies import require_worker
 from schemas.worker import WorkerProfileUpdate
 from schemas.worker import WorkerProfileResponse
 from schemas.worker import WorkerStatusResponse
-
+from schemas.worker import BlockWorkerRequest
 
 router = APIRouter(
     prefix="/workers",
@@ -156,4 +156,45 @@ def activate_worker_account(
 
     return service.activate_worker_account(
         worker_id=worker_id,
+    )
+@router.patch(
+    "/{worker_id}/block",
+    response_model=WorkerStatusResponse,
+)
+def block_worker(
+    worker_id: int,
+    request: BlockWorkerRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        require_roles(
+            UserRole.DEPARTMENT_ADMIN,
+        )
+    ),
+):
+
+    return WorkerService(db).block_worker(
+        worker_id=worker_id,
+        current_user=current_user,
+        block_type=request.block_type,
+        reason=request.reason,
+    )
+
+
+@router.patch(
+    "/{worker_id}/unblock",
+    response_model=WorkerStatusResponse,
+)
+def unblock_worker(
+    worker_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        require_roles(
+            UserRole.DEPARTMENT_ADMIN,
+        )
+    ),
+):
+
+    return WorkerService(db).unblock_worker(
+        worker_id=worker_id,
+        current_user=current_user,
     )

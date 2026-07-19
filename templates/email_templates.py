@@ -209,4 +209,84 @@ class EmailTemplates:
         """
 
         return subject, body
-    
+    @staticmethod
+    def account_blocked(
+        *,
+        user_name: str,
+        block_type: str,
+        reason: str,
+    ):
+
+        subject = (
+            "Your CSCRS Account Has Been Blocked"
+        )
+
+        body = f"""
+        Hello {user_name},
+
+        Your CSCRS account has been blocked by the City Administration.
+
+        Status:
+        ------------------------------------------------
+        {block_type}
+        ------------------------------------------------
+
+        Reason:
+        ------------------------------------------------
+        {reason}
+        ------------------------------------------------
+
+        As a result:
+
+        • You cannot sign in to your account.
+        • Access to the CSCRS platform has been temporarily disabled.
+
+        If you believe this action was taken in error, please contact CSCRS Support.
+
+        Support Email:
+        support@cscrs.gov.in
+
+        Helpline:
+        1800-XXXX-XXX
+
+        Regards,
+
+        Crowdsourced Civic Issue Reporting & Resolution System (CSCRS)
+        Government of Uttar Pradesh
+        """
+
+        return subject, body
+
+
+    @staticmethod
+    def account_unblocked(
+        *,
+        user_name: str,
+    ):
+
+        subject = (
+            "Your CSCRS Account Has Been Restored"
+        )
+
+        body = f"""
+        Hello {user_name},
+
+        Your CSCRS account has been restored by the City Administration.
+
+        You can now sign in and continue using the Crowdsourced Civic Issue Reporting & Resolution System (CSCRS).
+
+        If you continue experiencing any issues, please contact CSCRS Support.
+
+        Support Email:
+        support@cscrs.gov.in
+
+        Helpline:
+        1800-XXXX-XXX
+
+        Regards,
+
+        Crowdsourced Civic Issue Reporting & Resolution System (CSCRS)
+        Government of Uttar Pradesh
+        """
+
+        return subject, body

@@ -12,6 +12,10 @@ from sqlalchemy.sql import func
 from database.enums import UserRole
 from database.base import Base
 from sqlalchemy.orm import relationship
+from database.enums import (
+    UserRole,
+    BlockType,
+)
 
 
 class User(Base):
@@ -24,6 +28,8 @@ class User(Base):
     email = Column(String(255), unique=True, nullable=False, index=True)
 
     phone = Column(String(20), unique=True, nullable=True)
+
+    profile_image = Column(String(500),nullable=True,)
 
     password_hash = Column(String(255), nullable=False)
 
@@ -39,11 +45,39 @@ class User(Base):
         default=False,
     )
 
+    is_blocked = Column(
+        Boolean,
+        nullable=False,
+        default=False,
+    )
+
+    blocked_at = Column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
+    blocked_by = Column(
+        Integer,
+        ForeignKey("users.id"),
+        nullable=True,
+    )
+
+    block_reason = Column(
+        String(500),
+        nullable=True,
+    )
+
+    block_type = Column(
+        String(20),
+        nullable=True,
+    )
+
     role = Column(
         Enum(UserRole),
         nullable=False,
         default=UserRole.CITIZEN,
     )
+    
     department_id = Column(
         Integer,
         ForeignKey("departments.id"),

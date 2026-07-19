@@ -1,5 +1,5 @@
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
-
+from database.enums import BlockType
 
 class CityAdminCreate(BaseModel):
 
@@ -41,3 +41,34 @@ class CityAdminActivationRequest(BaseModel):
 class CityAdminActivationResponse(BaseModel):
 
     message: str
+
+class BlockCitizenRequest(BaseModel):
+
+    block_type: BlockType
+
+    reason: str = Field(
+        ...,
+        min_length=5,
+        max_length=500,
+        description="Reason for blocking the citizen account.",
+    )
+class BlockDepartmentAdminRequest(BaseModel):
+
+    block_type: BlockType
+
+    reason: str = Field(
+        ...,
+        min_length=5,
+        max_length=500,
+        description="Reason for blocking the department admin account.",
+    )
+class BlockCityAdminRequest(BaseModel):
+
+    block_type: BlockType
+
+    reason: str = Field(
+        ...,
+        min_length=5,
+        max_length=500,
+        description="Reason for blocking the city admin account.",
+    )

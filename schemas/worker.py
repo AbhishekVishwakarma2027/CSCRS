@@ -1,5 +1,7 @@
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from datetime import datetime
+from database.enums import BlockType
+
 
 class WorkerCreate(BaseModel):
     name: str = Field(min_length=2, max_length=100)
@@ -121,3 +123,12 @@ class WorkerProfileResponse(BaseModel):
 class WorkerStatusResponse(BaseModel):
 
     message: str
+
+class BlockWorkerRequest(BaseModel):
+
+    block_type: BlockType
+
+    reason: str = Field(
+        min_length=5,
+        max_length=500,
+    )

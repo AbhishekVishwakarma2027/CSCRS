@@ -19,6 +19,8 @@ class CityDashboardSummaryResponse(BaseModel):
     rejected_reports: int
 
     cancelled_reports: int
+    
+    reopened_reports: int
 
     total_departments: int
 
@@ -29,6 +31,7 @@ class CityDashboardSummaryResponse(BaseModel):
     resolution_rate: float
 
     automation_rate: float
+
 
 class DepartmentStatisticsItem(BaseModel):
     department_id: int
@@ -130,6 +133,8 @@ class DepartmentDashboardResponse(BaseModel):
 
     cancelled_reports: int
 
+    reopened_reports: int
+
     available_workers: int
 
     busy_workers: int
@@ -143,6 +148,8 @@ class DepartmentDashboardResponse(BaseModel):
     average_resolution_time_hours: float
 
     automation_rate: float
+
+
 class TopWorkerItem(BaseModel):
 
     worker_id: int

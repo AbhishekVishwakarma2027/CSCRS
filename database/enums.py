@@ -103,3 +103,14 @@ class ForwardRequestStatus(str, Enum):
 
     # Request cancelled.
     CANCELLED = "Cancelled"
+class BlockType(str, Enum):
+
+    RETIRED = "RETIRED"
+
+    TRANSFERRED = "TRANSFERRED"
+
+    SUSPENDED = "SUSPENDED"
+
+    TERMINATED = "TERMINATED"
+
+    DISMISSED = "DISMISSED"

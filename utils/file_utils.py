@@ -6,7 +6,11 @@ from fastapi import UploadFile
 
 
 UPLOAD_DIR = Path("uploads")
-UPLOAD_DIR.mkdir(exist_ok=True)
+UPLOAD_DIR = Path("uploads")
+UPLOAD_DIR.mkdir(
+    parents=True,
+    exist_ok=True,
+)
 
 
 def generate_filename(filename: str):
@@ -18,14 +22,22 @@ def generate_filename(filename: str):
     return stored
 def save_uploaded_file(
     file: UploadFile,
+    folder: str = "",
 ):
 
     stored_filename = generate_filename(
         file.filename,
     )
 
+    upload_folder = UPLOAD_DIR / folder
+
+    upload_folder.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
     destination = (
-        UPLOAD_DIR
+        upload_folder
         / stored_filename
     )
 

@@ -136,7 +136,12 @@ class AuthService:
                 status_code=403,
                 detail="Account is inactive. Please contact the administrator.",
             )
+        if user.is_blocked:
 
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Your account has been blocked. Please contact the city administration.",
+            )
 
         token = create_access_token(
             {
@@ -498,4 +503,50 @@ class AuthService:
 
         return {
             "message": "Password reset successfully."
+        }
+    def change_password(
+        self,
+        current_user,
+        old_password: str,
+        new_password: str,
+        confirm_password: str,
+    ):
+
+        if not verify_password(
+            old_password,
+            current_user.password_hash,
+        ):
+
+            raise HTTPException(
+                status_code=400,
+                detail="Current password is incorrect.",
+            )
+
+        if new_password != confirm_password:
+
+            raise HTTPException(
+                status_code=400,
+                detail="New password and confirm password do not match.",
+            )
+
+        if verify_password(
+            new_password,
+            current_user.password_hash,
+        ):
+
+            raise HTTPException(
+                status_code=400,
+                detail="New password must be different from the current password.",
+            )
+
+        UserCRUD.update_password(
+            self.db,
+            current_user,
+            hash_password(
+                new_password,
+            ),
+        )
+
+        return {
+            "message": "Password changed successfully.",
         }

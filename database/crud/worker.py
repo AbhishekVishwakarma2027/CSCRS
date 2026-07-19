@@ -4,7 +4,7 @@ from database.models.department import Department
 from database.models.user import User
 from database.models.worker_profile import WorkerProfile
 from database.models.worker_invitation import WorkerInvitation
-
+from datetime import datetime, timezone
 
 class WorkerCRUD:
 
@@ -157,3 +157,37 @@ class WorkerCRUD:
         db.flush()
 
         return worker_profile
+    @staticmethod
+    def block_worker(
+        db: Session,
+        *,
+        user: User,
+        blocked_by: int,
+        reason: str,
+    ):
+
+        user.is_blocked = True
+        user.blocked_at = datetime.now(timezone.utc)
+        user.blocked_by = blocked_by
+        user.block_reason = reason
+
+        db.flush()
+
+        return user
+
+
+    @staticmethod
+    def unblock_worker(
+        db: Session,
+        *,
+        user: User,
+    ):
+
+        user.is_blocked = False
+        user.blocked_at = None
+        user.blocked_by = None
+        user.block_reason = None
+
+        db.flush()
+
+        return user

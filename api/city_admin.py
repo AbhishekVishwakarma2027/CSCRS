@@ -16,8 +16,10 @@ from schemas.city_admin import (
     CityAdminActivationRequest,
     CityAdminActivationResponse,
 )
-
+from authentication.dependencies import require_city_admin
 from services.city_admin_service import CityAdminService
+from schemas.city_admin import BlockCitizenRequest
+from schemas.city_admin import BlockDepartmentAdminRequest,BlockCityAdminRequest
 
 router = APIRouter(
     prefix="/city-admins",
@@ -85,3 +87,102 @@ def activate_city_admin(
             status_code=400,
             detail=str(e),
         )
+@router.patch(
+    "/citizens/{citizen_id}/block",
+    summary="Block Citizen",
+)
+def block_citizen(
+    citizen_id: int,
+    request: BlockCitizenRequest,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_city_admin()),
+):
+
+    service = CityAdminService(db)
+
+    return service.block_citizen(
+        citizen_id=citizen_id,
+        current_user=current_user,
+        block_type=request.block_type,
+        reason=request.reason,
+    ) 
+@router.patch(
+    "/citizens/{citizen_id}/unblock",
+    summary="Unblock Citizen",
+)
+def unblock_citizen(
+    citizen_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_city_admin()),
+):
+
+    service = CityAdminService(db)
+
+    return service.unblock_citizen(
+        citizen_id=citizen_id,
+    )
+@router.patch(
+    "/department-admins/{admin_id}/block",
+    summary="Block Department Admin",
+)
+def block_department_admin(
+    admin_id: int,
+    request: BlockDepartmentAdminRequest,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_city_admin()),
+):
+
+    return CityAdminService(db).block_department_admin(
+        admin_id=admin_id,
+        current_user=current_user,
+        block_type=request.block_type,
+        reason=request.reason,
+    )
+
+@router.patch(
+    "/department-admins/{admin_id}/unblock",
+    summary="Unblock Department Admin",
+)
+def unblock_department_admin(
+    admin_id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(require_city_admin()),
+):
+
+    return CityAdminService(db).unblock_department_admin(
+        admin_id=admin_id,
+        current_user=current_user,
+    )
+@router.patch(
+    "/admins/{admin_id}/block",
+    summary="Block City Admin",
+)
+def block_city_admin(
+    admin_id: int,
+    request: BlockCityAdminRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_super_admin()),
+):
+
+    return CityAdminService(db).block_city_admin(
+        admin_id=admin_id,
+        current_user=current_user,
+        block_type=request.block_type,
+        reason=request.reason,
+    )
+
+
+@router.patch(
+    "/admins/{admin_id}/unblock",
+    summary="Unblock City Admin",
+)
+def unblock_city_admin(
+    admin_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_super_admin()),
+):
+
+    return CityAdminService(db).unblock_city_admin(
+        admin_id=admin_id,
+        current_user=current_user,
+    )

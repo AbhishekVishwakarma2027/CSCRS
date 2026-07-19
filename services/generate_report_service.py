@@ -71,6 +71,7 @@ class ReportGenerationService:
 
         insights = analytics_crud.get_dashboard_insight_data(
             db=self.db,
+            department_id=department_id,
         )
 
         document, buffer, story = self._create_document()
@@ -137,6 +138,10 @@ class ReportGenerationService:
                 [
                     "Cancelled Reports",
                     summary["cancelled_reports"],
+                ],
+                [
+                    "Reopened Reports",
+                    summary["reopened_reports"],
                 ],
                 [
                     "Available Workers",
@@ -215,7 +220,11 @@ class ReportGenerationService:
         department_statistics = analytics_crud.get_department_statistics(
             db=self.db,
         )
-
+        reopened_statistics = (
+            analytics_crud.get_reopened_report_statistics(
+                db=self.db,
+            )
+        )
         issue_statistics = analytics_crud.get_issue_statistics(
             db=self.db,
         )
@@ -318,6 +327,10 @@ class ReportGenerationService:
                     summary["cancelled_reports"],
                 ],
                 [
+                    "Reopened Reports",
+                    summary["reopened_reports"],
+                ],
+                [
                     "Departments",
                     summary["total_departments"],
                 ],
@@ -344,7 +357,10 @@ class ReportGenerationService:
             story,
             department_statistics,
         )
-
+        self._add_reopened_report_statistics_section(
+            story,
+            reopened_statistics,
+        )
         self._add_issue_statistics_section(
             story,
             issue_statistics,
@@ -1269,6 +1285,41 @@ class ReportGenerationService:
                 "each department. Departments with higher report counts "
                 "may require additional workforce or operational planning."
             ),
+        )
+    def _add_reopened_report_statistics_section(
+        self,
+        story,
+        statistics,
+    ):
+
+        rows = []
+
+        for row in statistics:
+
+            rows.append(
+                [
+                    row.department_name,
+                    row.reopened_reports,
+                ]
+            )
+
+        if not rows:
+
+            rows.append(
+                [
+                    "-",
+                    "-",
+                ]
+            )
+
+        self._add_table(
+            story=story,
+            title="Department-wise Reopened Reports",
+            headers=[
+                "Department",
+                "Reopened Reports",
+            ],
+            rows=rows,
         )
     def _add_issue_statistics_section(
         self,
