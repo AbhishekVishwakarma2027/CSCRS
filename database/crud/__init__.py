@@ -9,3 +9,8 @@ from . import report_support
 from .department_forward_request import (
     DepartmentForwardRequestCRUD,
 )
+from .feedback import FeedbackCRUD
+from .system_issue import SystemIssueCRUD
+from .system_issue_attachment import (
+    SystemIssueAttachmentCRUD,
+)

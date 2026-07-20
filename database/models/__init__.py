@@ -18,3 +18,8 @@ from .report_forward_history import ReportForwardHistory
 from .department_forward_request import (
     DepartmentForwardRequest,
 )
+from .feedback import Feedback
+from .system_issue import SystemIssue
+from .system_issue_attachment import (
+    SystemIssueAttachment,
+)

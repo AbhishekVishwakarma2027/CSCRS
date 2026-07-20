@@ -122,3 +122,13 @@ class User(Base):
         back_populates="citizen",
         cascade="all, delete-orphan",
     )
+    feedbacks = relationship(
+        "Feedback",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+    system_issues = relationship(
+        "SystemIssue",
+        back_populates="reporter",
+        cascade="all, delete-orphan",
+    )

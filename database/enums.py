@@ -114,3 +114,61 @@ class BlockType(str, Enum):
     TERMINATED = "TERMINATED"
 
     DISMISSED = "DISMISSED"
+
+class SystemIssueStatus(str, Enum):
+    OPEN = "OPEN"
+    IN_REVIEW = "IN_REVIEW"
+    RESOLVED = "RESOLVED"
+    REJECTED = "REJECTED"
+    
+class SystemIssueCategory(str, Enum):
+
+    AUTHENTICATION = "Authentication"
+
+    AUTHORIZATION = "Authorization"
+
+    REPORT_SUBMISSION = "Report Submission"
+
+    REPORT_VERIFICATION = "Report Verification"
+
+    DUPLICATE_DETECTION = "Duplicate Detection"
+
+    ASSIGNMENT = "Assignment"
+
+    WORKER = "Worker"
+
+    RESOLUTION_UPLOAD = "Resolution Upload"
+
+    RESOLUTION_VERIFICATION = "Resolution Verification"
+
+    TIMELINE = "Timeline"
+
+    NOTIFICATION = "Notification"
+
+    EMAIL = "Email"
+
+    DASHBOARD = "Dashboard"
+
+    SEARCH = "Search"
+
+    FILTER = "Filter"
+
+    PERFORMANCE = "Performance"
+
+    UI_UX = "UI / UX"
+
+    API = "API"
+
+    DATABASE = "Database"
+
+    AI_DETECTION = "AI Detection"
+
+    GPS_EXIF = "GPS / EXIF"
+
+    IMAGE_UPLOAD = "Image Upload"
+
+    VIDEO_UPLOAD = "Video Upload"
+
+    SECURITY = "Security"
+
+    OTHER = "Other"

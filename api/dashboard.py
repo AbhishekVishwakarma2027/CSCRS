@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends,HTTPException
 from sqlalchemy.orm import Session
 from authentication.dependencies import (
     require_city_admin,
@@ -24,6 +24,12 @@ from schemas.analytics import WorkerDashboardResponse
 from authentication.dependencies import require_worker
 from schemas.analytics import CitizenDashboardResponse
 from authentication.dependencies import require_citizen
+from schemas.feedback import (
+    FeedbackDashboardResponse,
+)
+from authentication.dependencies import get_current_user
+from services.feedback_service import FeedbackService
+from database.enums import UserRole
 
 router = APIRouter(
     prefix="/dashboard",
@@ -35,15 +41,39 @@ router = APIRouter(
     response_model=CityDashboardSummaryResponse,
 )
 def dashboard_summary(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    allowed_roles = {
+        UserRole.SUPER_ADMIN,
+        UserRole.CITY_ADMIN,
+        UserRole.DEPARTMENT_ADMIN,
+    }
+
+    if current_user.role not in allowed_roles:
+        raise HTTPException(
+            status_code=403,
+            detail="You are not authorized to export feedback.",
+        )
+    return AnalyticsService(
+        db,
+    ).get_dashboard_summary()
+
+@router.get(
+    "/feedback",
+    response_model=FeedbackDashboardResponse,
+)
+def get_feedback_dashboard(
     current_user: User = Depends(
-        require_city_admin(),
+        require_city_admin()
     ),
     db: Session = Depends(get_db),
 ):
 
-    return AnalyticsService(
-        db,
-    ).get_dashboard_summary()
+    return FeedbackService.get_dashboard(
+        db=db,
+    )
+
 @router.get(
     "/departments",
     response_model=list[DepartmentStatisticsItem],

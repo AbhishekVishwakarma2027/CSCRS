@@ -178,3 +178,7 @@ class Report(Base):
         back_populates="report",
         cascade="all, delete-orphan",
     )
+    system_issues = relationship(
+        "SystemIssue",
+        back_populates="related_report",
+    )
