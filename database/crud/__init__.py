@@ -14,3 +14,4 @@ from .system_issue import SystemIssueCRUD
 from .system_issue_attachment import (
     SystemIssueAttachmentCRUD,
 )
+from .ai_dataset import AIDatasetCRUD

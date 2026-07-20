@@ -7,6 +7,7 @@ from sqlalchemy import (
     String,
 )
 
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 from database.base import Base
@@ -73,4 +74,23 @@ class ReportForwardHistory(Base):
     created_at = Column(
         DateTime(timezone=True),
         server_default=func.now(),
+    )
+    report = relationship(
+        "Report",
+        back_populates="forward_histories",
+    )
+
+    from_department = relationship(
+        "Department",
+        foreign_keys=[from_department_id],
+    )
+
+    to_department = relationship(
+        "Department",
+        foreign_keys=[to_department_id],
+    )
+
+    forwarded_by_user = relationship(
+        "User",
+        foreign_keys=[forwarded_by],
     )

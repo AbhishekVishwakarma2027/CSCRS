@@ -182,3 +182,8 @@ class Report(Base):
         "SystemIssue",
         back_populates="related_report",
     )
+    forward_histories = relationship(
+        "ReportForwardHistory",
+        back_populates="report",
+        cascade="all, delete-orphan",
+    )

@@ -15,6 +15,9 @@ from api import generate_report
 from api import profile
 from api.feedback import router as feedback_router
 from api.system_issue import router as system_issue
+from api.ai_dataset import router as ai_dataset_router
+
+
 router = APIRouter()
 
 router.include_router(auth_router)
@@ -33,3 +36,4 @@ router.include_router(generate_report.router)
 router.include_router(profile.router)
 router.include_router(feedback_router)
 router.include_router(system_issue)
+router.include_router(ai_dataset_router)
