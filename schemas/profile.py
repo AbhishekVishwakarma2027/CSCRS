@@ -4,7 +4,7 @@ from pydantic import (
     EmailStr,
     Field,
 )
-
+from datetime import datetime
 from database.enums import UserRole
 
 
@@ -30,6 +30,17 @@ class ProfileResponse(BaseModel):
 
     is_active: bool
 
+    department_id: int | None = None
+
+    employee_code: str | None = None
+
+    designation: str | None = None
+
+    phone_extension: str | None = None
+
+    joined_at: datetime | None = None
+
+    is_available: bool | None = None
 
 class UpdateProfileRequest(BaseModel):
 

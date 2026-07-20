@@ -26,16 +26,6 @@ router = APIRouter(
     tags=["City Admin"],
 )
 
-
-@router.get("/health")
-def health():
-
-    return {
-        "success": True,
-        "message": "City Admin Module Ready",
-    }
-
-
 @router.post(
     "",
     response_model=CityAdminResponse,

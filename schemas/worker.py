@@ -83,43 +83,6 @@ class WorkerProfileResponse(BaseModel):
 
     joined_at: datetime
 
-class WorkerProfileUpdate(BaseModel):
-
-    phone: str | None = None
-
-    phone_extension: str | None = Field(
-        default=None,
-        max_length=20,
-    )
-
-class WorkerProfileResponse(BaseModel):
-
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
-
-    id: int
-
-    user_id: int
-
-    name: str
-
-    email: EmailStr
-
-    phone: str | None
-
-    department_id: int
-
-    employee_code: str
-
-    designation: str
-
-    phone_extension: str | None
-
-    is_available: bool
-
-    joined_at: datetime
-
 class WorkerStatusResponse(BaseModel):
 
     message: str

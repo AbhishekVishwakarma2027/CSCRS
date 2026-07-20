@@ -26,13 +26,7 @@ router = APIRouter(
     prefix="/departments",
     tags=["Departments"],
 )
-@router.get("/health")
-def health():
 
-    return {
-        "success": True,
-        "message": "Department Module Ready",
-    }
 @router.post(
     "",
     response_model=DepartmentResponse,

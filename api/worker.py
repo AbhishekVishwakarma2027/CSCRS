@@ -15,11 +15,6 @@ from schemas.worker import (
     WorkerActivationRequest,
     WorkerActivationResponse,
 )
-
-
-from authentication.dependencies import require_worker
-from schemas.worker import WorkerProfileUpdate
-from schemas.worker import WorkerProfileResponse
 from schemas.worker import WorkerStatusResponse
 from schemas.worker import BlockWorkerRequest
 
@@ -83,38 +78,9 @@ def activate_worker(
         password=request.password,
     )
 
-@router.get(
-    "/profile",
-    response_model=WorkerProfileResponse,
-)
-def worker_profile(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(require_worker()),
-):
 
-    service = WorkerService(db)
 
-    return service.get_profile(
-        user_id=current_user.id,
-    )
 
-@router.patch(
-    "/profile",
-    response_model=WorkerProfileResponse,
-)
-def update_worker_profile(
-    request: WorkerProfileUpdate,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(require_worker()),
-):
-
-    service = WorkerService(db)
-
-    return service.update_profile(
-        user_id=current_user.id,
-        phone=request.phone,
-        phone_extension=request.phone_extension,
-    )
 @router.patch(
     "/{worker_id}/deactivate",
     response_model=WorkerStatusResponse,

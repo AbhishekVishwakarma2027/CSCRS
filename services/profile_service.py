@@ -3,7 +3,9 @@ from sqlalchemy.orm import Session
 
 from database.crud.user import UserCRUD
 from pathlib import Path
-
+from database.enums import UserRole
+from database.crud.worker import WorkerCRUD
+from database.crud.department import DepartmentCRUD
 from fastapi import (
     HTTPException,
     UploadFile,
@@ -49,7 +51,7 @@ class ProfileService:
                 f"{APP_BASE_URL.rstrip('/')}/{normalized_path}"
             )
 
-        return {
+        profile_data = {
             "id": current_user.id,
             "name": current_user.name,
             "email": current_user.email,
@@ -58,7 +60,78 @@ class ProfileService:
             "profile_image": profile_image_url,
             "is_email_verified": current_user.is_email_verified,
             "is_active": current_user.is_active,
+            "department_id": None,
+            "department_name": None,
+            "employee_code": None,
+            "designation": None,
+            "phone_extension": None,
+            "joined_at": None,
+            "is_available": None,
         }
+
+        # Worker
+        if current_user.role == UserRole.WORKER:
+
+            worker = WorkerCRUD.get_worker_profile(
+                self.db,
+                current_user.id,
+            )
+
+            if worker:
+
+                department = DepartmentCRUD.get_by_id(
+                    self.db,
+                    worker.department_id,
+                )
+
+                profile_data.update(
+                    {
+                        "department_id": worker.department_id,
+                        "department_name": (
+                            department.name
+                            if department
+                            else None
+                        ),
+                        "employee_code": worker.employee_code,
+                        "designation": worker.designation,
+                        "phone_extension": worker.phone_extension,
+                        "joined_at": worker.joined_at,
+                        "is_available": worker.is_available,
+                    }
+                )
+
+        # Department Admin
+        elif current_user.role == UserRole.DEPARTMENT_ADMIN:
+
+            if current_user.department_id:
+
+                department = DepartmentCRUD.get_by_id(
+                    self.db,
+                    current_user.department_id,
+                )
+
+                profile_data.update(
+                    {
+                        "department_id": current_user.department_id,
+                        "department_name": (
+                            department.name
+                            if department
+                            else None
+                        ),
+                        "designation": "Department Administrator",
+                    }
+                )
+
+        # City Admin
+        elif current_user.role == UserRole.CITY_ADMIN:
+
+            profile_data.update(
+                {
+                    "designation": "City Administrator",
+                }
+            )
+
+        return profile_data
 
     def update_profile(
         self,

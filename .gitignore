@@ -55,3 +55,76 @@ __pycache__/
 
 # Logs
 *.log
+
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual Environments
+venv/
+env/
+.venv/
+cscrs/
+
+# Environment Variables
+.env
+.env.*
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+*.sqbpro
+
+# Uploads & Generated Files
+uploads/
+outputs/
+logs/
+runs/
+checkpoints/
+
+# Production Testing
+Production_Test/
+
+# Model Weights
+*.pt
+*.pth
+*.onnx
+*.engine
+*.tflite
+
+# Training Dataset
+Dataset/
+datasets/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Build
+build/
+dist/
+*.egg-info/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary
+*.tmp
+*.bak
+*.swp
+
+# Python Cache
+.mypy_cache/
+.ruff_cache/
