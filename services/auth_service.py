@@ -1,5 +1,6 @@
 from authentication.security import (
     create_access_token,
+    create_access_token_with_metadata,
     verify_password,
     hash_password,
 )
@@ -24,6 +25,11 @@ from database.crud.email_verification import (
 from database.crud.password_reset import (
     PasswordResetCRUD,
 )
+from fastapi import Request
+
+from services.security_service import SecurityService
+from datetime import datetime, timezone,timedelta
+from database.crud.login_audit import LoginAuditCRUD
 
 
 class AuthService:
@@ -98,6 +104,7 @@ class AuthService:
 
     def login(
         self,
+        request: Request,
         email: str,
         password: str,
     ) -> Token:
@@ -109,15 +116,110 @@ class AuthService:
 
         if not user:
 
+            security_service = SecurityService()
+
+            ip_address = security_service.get_client_ip(
+                request,
+            )
+
+            device_info = security_service.get_device_info(
+                request,
+            )
+
+            LoginAuditCRUD.create(
+                db=self.db,
+                user_id=None,
+                email=email,
+                role=None,
+                login_success=False,
+                failure_reason="USER_NOT_FOUND",
+                ip_address=ip_address,
+                user_agent=device_info["user_agent"],
+                browser=device_info["browser"],
+                browser_version=device_info["browser_version"],
+                operating_system=device_info["operating_system"],
+                os_version=device_info["os_version"],
+                device_type=device_info["device_type"],
+                platform=device_info["platform"],
+                request_path=request.url.path,
+                http_method=request.method,
+                login_source="Web",
+            )
+
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid email or password.",
             )
+        if (
+            user.account_locked_until
+            and user.account_locked_until > datetime.utcnow()
+        ):
 
+            remaining_minutes = (
+                int(
+                    (
+                        user.account_locked_until
+                        - datetime.utcnow()
+                    ).total_seconds() / 60
+                ) + 1
+            )
+
+            raise HTTPException(
+                status_code=status.HTTP_423_LOCKED,
+                detail=(
+                    f"Account is temporarily locked. "
+                    f"Try again in {remaining_minutes} minute(s)."
+                ),
+            )
         if not verify_password(
             password,
             user.password_hash,
         ):
+
+            security_service = SecurityService()
+
+            ip_address = security_service.get_client_ip(
+                request,
+            )
+
+            device_info = security_service.get_device_info(
+                request,
+            )
+
+            user.last_failed_login = datetime.utcnow()
+
+            user.failed_login_attempts += 1
+
+            if user.failed_login_attempts >= 5:
+
+                user.account_locked_until = (
+                    datetime.utcnow()
+                    + timedelta(
+                        minutes=30,
+                    )
+                )
+
+            self.db.commit()
+
+            LoginAuditCRUD.create(
+                db=self.db,
+                user_id=user.id,
+                email=user.email,
+                role=user.role.value,
+                login_success=False,
+                failure_reason="INVALID_PASSWORD",
+                ip_address=ip_address,
+                user_agent=device_info["user_agent"],
+                browser=device_info["browser"],
+                browser_version=device_info["browser_version"],
+                operating_system=device_info["operating_system"],
+                os_version=device_info["os_version"],
+                device_type=device_info["device_type"],
+                platform=device_info["platform"],
+                request_path=request.url.path,
+                http_method=request.method,
+                login_source="Web",
+            )
 
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -142,16 +244,56 @@ class AuthService:
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Your account has been blocked. Please contact the city administration.",
             )
+        security_service = SecurityService()
 
-        token = create_access_token(
+        ip_address = security_service.get_client_ip(
+            request,
+        )
+
+        device_info = security_service.get_device_info(
+            request,
+        )
+
+        token_data = create_access_token_with_metadata(
             {
                 "sub": str(user.id),
                 "role": user.role.value,
             }
         )
+        LoginAuditCRUD.create(
+            db=self.db,
+            user_id=user.id,
+            email=user.email,
+            login_success=True,
+            ip_address=ip_address,
+            user_agent=device_info["user_agent"],
+            browser=device_info["browser"],
+            browser_version=device_info["browser_version"],
+            operating_system=device_info["operating_system"],
+            os_version=device_info["os_version"],
+            device_type=device_info["device_type"],
+            platform=device_info["platform"],
+            role=user.role.value,
+            request_path=request.url.path,
+            http_method=request.method,
+            login_source="Web",
+            session_id=token_data["session_id"],
+            jwt_id=token_data["jwt_id"],
+        )
+
+
+        user.last_successful_login = datetime.utcnow()
+
+        user.failed_login_attempts = 0
+
+        user.account_locked_until = None
+        
+        self.db.commit()
+
+        self.db.refresh(user)
 
         return Token(
-            access_token=token,
+            access_token=token_data["access_token"],
         )
     
     def verify_email(

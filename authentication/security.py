@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-
+import uuid
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 
@@ -20,10 +20,6 @@ def hash_password(password: str) -> str:
     """
     Hash plain text password.
     """
-
-    # print("PASSWORD TYPE:", type(password))
-    # print("PASSWORD VALUE:", repr(password))
-    # print("PASSWORD LENGTH:", len(str(password)))
     return pwd_context.hash(password)
 
 
@@ -60,8 +56,26 @@ def create_access_token(
             )
         )
     )
+    issued_at = datetime.now(
+        timezone.utc,
+    )
 
-    to_encode.update({"exp": expire})
+    jwt_id = str(
+        uuid.uuid4(),
+    )
+
+    session_id = str(
+        uuid.uuid4(),
+    )
+
+    to_encode.update(
+        {
+            "iat": issued_at,
+            "exp": expire,
+            "jti": jwt_id,
+            "sid": session_id,
+        }
+    )
 
     return jwt.encode(
         to_encode,
@@ -90,3 +104,59 @@ def decode_access_token(
     except JWTError:
 
         return {}
+    
+    
+def create_access_token_with_metadata(
+    data: dict,
+    expires_delta: timedelta | None = None,
+) -> dict:
+    """
+    Generate JWT access token along with
+    session metadata for audit logging.
+    """
+
+    to_encode = data.copy()
+
+    expire = (
+        datetime.now(timezone.utc)
+        + (
+            expires_delta
+            if expires_delta
+            else timedelta(
+                minutes=ACCESS_TOKEN_EXPIRE_MINUTES,
+            )
+        )
+    )
+
+    issued_at = datetime.now(
+        timezone.utc,
+    )
+
+    jwt_id = str(
+        uuid.uuid4(),
+    )
+
+    session_id = str(
+        uuid.uuid4(),
+    )
+
+    to_encode.update(
+        {
+            "iat": issued_at,
+            "exp": expire,
+            "jti": jwt_id,
+            "sid": session_id,
+        }
+    )
+
+    access_token = jwt.encode(
+        to_encode,
+        SECRET_KEY,
+        algorithm=ALGORITHM,
+    )
+
+    return {
+        "access_token": access_token,
+        "jwt_id": jwt_id,
+        "session_id": session_id,
+    }

@@ -87,6 +87,29 @@ class User(Base):
         DateTime(timezone=True),
         server_default=func.now(),
     )
+    last_successful_login = Column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
+    last_failed_login = Column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
+    failed_login_attempts = Column(
+        Integer,
+        nullable=False,
+        default=0,
+    )
+
+    account_locked_until = Column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
+    #-------------------------------------------------------
+
     reports = relationship("Report", back_populates="citizen")
 
     department = relationship(
@@ -124,6 +147,11 @@ class User(Base):
     )
     feedbacks = relationship(
         "Feedback",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+    login_audits = relationship(
+        "LoginAudit",
         back_populates="user",
         cascade="all, delete-orphan",
     )
