@@ -58,7 +58,7 @@ def download_department_report(
     }
 },
 )
-@limiter.limit("20per hour")
+@limiter.limit("20 per hour")
 def download_city_report(
     request:Request,
     current_user: User = Depends(

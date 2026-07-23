@@ -250,10 +250,7 @@ class ProfileService:
                 detail="Profile photo not found.",
             )
 
-        safe_delete_file(
-            current_user.profile_image,
-        )
-
+        old_profile_image = current_user.profile_image
         current_user.profile_image = None
 
         self.db.add(
@@ -266,6 +263,9 @@ class ProfileService:
             current_user,
         )
 
+        safe_delete_file(
+            old_profile_image,
+        )
         return {
             "message": "Profile photo deleted successfully.",
         }

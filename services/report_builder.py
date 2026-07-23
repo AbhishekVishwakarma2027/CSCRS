@@ -35,6 +35,11 @@ class ReportBuilder:
             exif["gps_longitude"]
         )
 
+        if latitude is None or longitude is None:
+            raise ValueError(
+                "Image does not contain valid GPS coordinates."
+            )
+        
         return ReportCreateInternal(
 
             citizen_id=citizen_id,

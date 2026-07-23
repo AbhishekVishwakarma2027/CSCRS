@@ -28,7 +28,24 @@ services:
 
     networks:
       - cscrs-network
+  redis:
+    image: redis:7-alpine
+    container_name: cscrs-redis
+    restart: unless-stopped
 
+    ports:
+      - "6379:6379"
+
+    volumes:
+      - redis_data:/data
+
+    command: redis-server --appendonly yes
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   backend:
 
@@ -42,6 +59,8 @@ services:
 
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
 
     env_file:
@@ -81,6 +100,8 @@ services:
     depends_on:
       backend:
         condition: service_healthy
+      redis:
+        condition: service_healthy
 
     ports:
       - "80:80"
@@ -97,6 +118,8 @@ volumes:
 
   postgres_data:
 
+  redis_data:
+  
   uploads_data:
 
   logs_data:

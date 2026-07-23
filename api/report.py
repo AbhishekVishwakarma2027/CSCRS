@@ -165,13 +165,18 @@ async def report_issue(
         longitude = exif_to_decimal(
             verification_exif["gps_longitude"]
         )
+        duplicate = None
 
-        duplicate = duplicate_service.find_duplicate(
-            issue_type=issue_type,
-            latitude=latitude,
-            longitude=longitude,
-            uploaded_image=str(image_path),
-        )
+        if (
+            latitude is not None
+            and longitude is not None
+        ):
+            duplicate = duplicate_service.find_duplicate(
+                issue_type=issue_type,
+                latitude=latitude,
+                longitude=longitude,
+                uploaded_image=str(image_path),
+            )
 
         
         if duplicate:
@@ -385,13 +390,37 @@ async def report_issue(
             image_path.unlink()
         raise
 
-    except Exception:
-            if image_path.exists():
-                image_path.unlink()
-            raise HTTPException(
-                status_code=500,
-                detail="Failed to process report.", 
+    except ValueError as exc:
+
+        if image_path.exists():
+            image_path.unlink()
+
+        annotated = result.get("ai", {}).get(
+            "annotated_image"
+        )
+
+        if annotated:
+            annotated_path = Path(
+                annotated.lstrip("/")
             )
+
+            if annotated_path.exists():
+                annotated_path.unlink()
+
+        raise HTTPException(
+            status_code=400,
+            detail=str(exc),
+        )
+
+    except Exception:
+
+        if image_path.exists():
+            image_path.unlink()
+
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to process report.",
+        )
 @router.get(
     "/reports/my",
     response_model=list[CitizenReportListItem],

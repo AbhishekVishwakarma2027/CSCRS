@@ -1,4 +1,6 @@
 from pathlib import Path
+import torch
+
 
 # -------------------------------
 # Project Paths
@@ -30,4 +32,4 @@ CONFIDENCE = 0.25
 IOU = 0.50
 IMAGE_SIZE = 640
 
-DEVICE = 0        # GPU
+DEVICE = 0 if torch.cuda.is_available() else "cpu"      

@@ -11,6 +11,7 @@ from utils.logger import get_logger
 from api.routes import router
 from contextlib import asynccontextmanager
 from pathlib import Path
+from configs.config import FRONTEND_BASE_URL
 
 logger = get_logger("cscrs")
 
@@ -79,9 +80,9 @@ app.add_middleware(SlowAPIMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:3000",   # React
-        "http://localhost:5173",   # Vite
-        # Production frontend URL later
+        origin.strip()
+        for origin in FRONTEND_BASE_URL.split(",")
+        if origin.strip()
     ],
     allow_credentials=True,
     allow_methods=["*"],

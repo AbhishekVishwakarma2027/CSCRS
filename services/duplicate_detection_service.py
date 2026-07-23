@@ -34,7 +34,10 @@ class DuplicateDetectionService:
         longitude: float,
         uploaded_image: str,
     ) -> dict | None:
-
+        
+        if latitude is None or longitude is None:
+            return None
+        
         reports = (
             self.db.query(Report)
             .filter(

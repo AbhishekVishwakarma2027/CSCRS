@@ -41,6 +41,9 @@ from services.in_app_notification_service import (
 
 
 logger = logging.getLogger(__name__)
+
+
+
 class ResolutionService:
 
     def __init__(
@@ -63,23 +66,25 @@ class ResolutionService:
             .replace("-", " ")
         )
     
-    image_path = None
-    annotated_path = None
-    report_image = None
+
 
     # TODO:
     # Split create_resolution() into smaller private methods
     # after backend freeze.
-    try:
-        def create_resolution(
-            self,
-            *,
-            assignment_id: int,
-            worker_id: int,
-            image,
-            remarks: str | None = None,
-        ):
+    def create_resolution(
+        self,
+        *,
+        assignment_id: int,
+        worker_id: int,
+        image,
+        remarks: str | None = None,
+    ):
 
+        image_path = None
+        annotated_path = None
+        report_image = None
+
+        try:
             assignment = self._validate_assignment(
                 assignment_id,
                 worker_id,
@@ -377,12 +382,13 @@ class ResolutionService:
                     logger.exception("Failed to send citizen resolution email.")
 
             return resolution
-    except Exception:
-        if image_path:
-            safe_delete_file(image_path)
-        if annotated_path:
-            safe_delete_file(annotated_path)
-        raise
+        except Exception:
+            self.db.rollback()
+            if image_path:
+                safe_delete_file(image_path)
+            if annotated_path:
+                safe_delete_file(annotated_path)
+            raise
 
     def _validate_assignment(
         self,

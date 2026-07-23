@@ -55,9 +55,14 @@ def dashboard_summary(
             status_code=403,
             detail="You are not authorized to export feedback.",
         )
-    return AnalyticsService(
-        db,
-    ).get_dashboard_summary()
+    service = AnalyticsService(db)
+
+    if current_user.role == UserRole.DEPARTMENT_ADMIN:
+        return service.get_department_dashboard_summary(
+            current_user.department_id,
+        )
+
+    return service.get_dashboard_summary()
 
 @router.get(
     "/feedback",
