@@ -67,12 +67,15 @@ class SystemIssue(Base):
         nullable=False,
 
         default=SystemIssueCategory.OTHER,
+
+        index=True,
     )
     
     status = Column(
         Enum(SystemIssueStatus),
         nullable=False,
         default=SystemIssueStatus.OPEN,
+        index=True,
     )
 
     created_at = Column(

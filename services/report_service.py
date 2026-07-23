@@ -401,20 +401,6 @@ class ReportService:
         )
         report.status = ReportStatus.PENDING
 
-        # Ownership transfer will happen only after
-        # destination department accepts the request.
-        # ---------------------------------------------------------
-        # IMPORTANT
-        #
-        # Ownership is NOT transferred here.
-        #
-        # Department change and forward counter will be updated
-        # only after the destination department accepts the request.
-        # ---------------------------------------------------------
-        # report_crud.increment_forward_count(
-        #     self.db,
-        #     report,
-        # )# this block can be remove
         self.audit_log.log(
             report_id=report.id,
             user_id=department_admin.id,
@@ -470,18 +456,18 @@ class ReportService:
                 ),
                 notification_type="FORWARD_REQUEST",
             )
-        InAppNotificationService(
-            self.db,
-        ).create_notification(
-            user_id=assignment.worker_id,
-            report_id=report.id,
-            title="Forward Request Approved",
-            message=(
-                "Your forwarding request has been approved "
-                "and sent to the destination department."
-            ),
-            notification_type="FORWARD_APPROVED",
-        )
+            InAppNotificationService(
+                self.db,
+            ).create_notification(
+                user_id=assignment.worker_id,
+                report_id=report.id,
+                title="Forward Request Approved",
+                message=(
+                    "Your forwarding request has been approved "
+                    "and sent to the destination department."
+                ),
+                notification_type="FORWARD_APPROVED",
+            )
         # Assignment will be created after
         # destination department accepts.
         # TODO:

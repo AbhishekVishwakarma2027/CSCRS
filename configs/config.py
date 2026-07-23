@@ -3,11 +3,25 @@ from dotenv import load_dotenv
 load_dotenv()
 DATABASE_URL = os.getenv("DATABASE_URL")
 
+REDIS_URL = os.getenv(
+    "REDIS_URL",
+    "redis://localhost:6379/0",
+)
+
+if not DATABASE_URL:
+    raise RuntimeError(
+        "DATABASE_URL environment variable is not configured."
+    )
+
 # ==========================
 # JWT Configuration
 # ==========================
 
 SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    raise RuntimeError(
+        "SECRET_KEY environment variable is not configured."
+    )
 
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
 
@@ -17,6 +31,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(
         60,
     )
 )
+REFRESH_TOKEN_EXPIRE_DAYS = 30
 
 # ==========================
 # Email Configuration
@@ -37,7 +52,17 @@ SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
 
 MAIL_FROM = os.getenv("MAIL_FROM")
 
-SMTP_PORT = 587
+required_email_settings = [
+    SMTP_HOST,
+    SMTP_USERNAME,
+    SMTP_PASSWORD,
+    MAIL_FROM,
+]
+
+if not all(required_email_settings):
+    raise RuntimeError(
+        "SMTP configuration is incomplete."
+    )
 # ==========================
 # OTP Configuration
 # ==========================
@@ -78,6 +103,16 @@ APP_BASE_URL = os.getenv("APP_BASE_URL")
 
 FRONTEND_BASE_URL = os.getenv("FRONTEND_BASE_URL")
 
+if not APP_BASE_URL:
+    raise RuntimeError(
+        "APP_BASE_URL is not configured."
+    )
+
+if not FRONTEND_BASE_URL:
+    raise RuntimeError(
+        "FRONTEND_BASE_URL is not configured."
+    )
+
 WORKER_INVITATION_EXPIRY_HOURS = int(
     os.getenv(
         "WORKER_INVITATION_EXPIRY_HOURS",
@@ -110,6 +145,7 @@ DUPLICATE_SCENE_THRESHOLD = float(
     )
 )
 
+
 START_WORK_RADIUS_METERS = float(
     os.getenv(
         "START_WORK_RADIUS_METERS",
@@ -133,3 +169,21 @@ DEFAULT_AUTOMATION_RATE = 0.0
 DEFAULT_AI_ACCEPTED = 0
 
 DEFAULT_MANUAL_REVIEW = 0
+
+MAX_PAGE_SIZE_LIMIT=100
+
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
+
+LOG_MAX_SIZE_MB = int(
+    os.getenv(
+        "LOG_MAX_SIZE_MB",
+        10,
+    )
+)
+
+LOG_BACKUP_COUNT = int(
+    os.getenv(
+        "LOG_BACKUP_COUNT",
+        5,
+    )
+)

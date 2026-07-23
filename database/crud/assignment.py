@@ -6,7 +6,7 @@ from database.models.user import User
 from database.models.worker_profile import WorkerProfile
 from database.enums import UserRole
 from sqlalchemy import func
-
+from sqlalchemy.orm import joinedload
 from database.enums import AssignmentStatus
 
 class AssignmentCRUD:
@@ -138,6 +138,10 @@ class AssignmentCRUD:
 
         return (
             db.query(Assignment)
+            .options(
+                joinedload(Assignment.report)
+                .joinedload(Report.images)
+            )
             .filter(
                 Assignment.worker_id == worker_id,
             )

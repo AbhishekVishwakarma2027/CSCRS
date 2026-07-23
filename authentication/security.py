@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, timezone
 import uuid
+import hashlib
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 
@@ -8,6 +9,7 @@ from configs.config import (
     ALGORITHM,
     SECRET_KEY,
 )
+from configs.config import REFRESH_TOKEN_EXPIRE_DAYS
 
 # Password Hashing Context
 pwd_context = CryptContext(
@@ -74,6 +76,7 @@ def create_access_token(
             "exp": expire,
             "jti": jwt_id,
             "sid": session_id,
+            "type": "access",
         }
     )
 
@@ -146,6 +149,7 @@ def create_access_token_with_metadata(
             "exp": expire,
             "jti": jwt_id,
             "sid": session_id,
+            "type": "access",
         }
     )
 
@@ -160,3 +164,58 @@ def create_access_token_with_metadata(
         "jwt_id": jwt_id,
         "session_id": session_id,
     }
+def create_refresh_token(
+    data: dict,
+    session_id: str,
+    expires_delta: timedelta | None = None,
+) -> dict:
+    """
+    Generate JWT refresh token.
+    """
+
+    to_encode = data.copy()
+
+    expire = (
+        datetime.now(timezone.utc)
+        + (
+            expires_delta
+            if expires_delta
+            else timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+        )
+    )
+
+    issued_at = datetime.now(timezone.utc)
+
+    jwt_id = str(uuid.uuid4())
+
+    to_encode.update(
+        {
+            "iat": issued_at,
+            "exp": expire,
+            "jti": jwt_id,
+            "sid": session_id,
+            "type": "refresh",
+        }
+    )
+
+    refresh_token = jwt.encode(
+        to_encode,
+        SECRET_KEY,
+        algorithm=ALGORITHM,
+    )
+
+    return {
+        "refresh_token": refresh_token,
+        "jwt_id": jwt_id,
+        "session_id": session_id,
+    }
+def hash_refresh_token(
+    token: str,
+) -> str:
+    """
+    Returns SHA-256 hash of refresh token.
+    """
+
+    return hashlib.sha256(
+        token.encode("utf-8"),
+    ).hexdigest()

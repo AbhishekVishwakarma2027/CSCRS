@@ -27,43 +27,13 @@ class DuplicateDetectionService:
             else None
         )
 
-    # @staticmethod
-    # def calculate_distance(
-    #     lat1: float,
-    #     lon1: float,
-    #     lat2: float,
-    #     lon2: float,
-    # ) -> float:
-    #     """
-    #     Returns distance in meters using the Haversine formula.
-    #     """
-
-    #     earth_radius = 6371000
-
-    #     d_lat = radians(lat2 - lat1)
-    #     d_lon = radians(lon2 - lon1)
-
-    #     a = (
-    #         sin(d_lat / 2) ** 2
-    #         + cos(radians(lat1))
-    #         * cos(radians(lat2))
-    #         * sin(d_lon / 2) ** 2
-    #     )
-
-    #     c = 2 * atan2(
-    #         sqrt(a),
-    #         sqrt(1 - a),
-    #     )
-
-    #     return earth_radius * c
-
     def find_duplicate(
         self,
         issue_type: str,
         latitude: float,
         longitude: float,
         uploaded_image: str,
-    ) -> Report | None:
+    ) -> dict | None:
 
         reports = (
             self.db.query(Report)
@@ -123,13 +93,15 @@ class DuplicateDetectionService:
         original_image: str,
         uploaded_image: str,
     ):
-        if not DUPLICATE_ENABLE_SCENE_CHECK:
-            return True, 1.0
+        try:
 
-        score = self.scene_similarity.compare(
-            original_image,
-            uploaded_image,
-        )
+            score = self.scene_similarity.compare(
+                original_image,
+                uploaded_image,
+            )
+
+        except Exception:
+            return False, 0.0
 
         return (
             score >= DUPLICATE_SCENE_THRESHOLD,

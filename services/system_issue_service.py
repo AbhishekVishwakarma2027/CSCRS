@@ -14,7 +14,7 @@ from schemas.system_issue import (
 )
 from fastapi import UploadFile, HTTPException
 
-from utils.file_utils import save_uploaded_file
+from utils.file_utils import save_uploaded_file,validate_uploaded_file
 
 from database.crud import (
     SystemIssueAttachmentCRUD,
@@ -69,35 +69,31 @@ class SystemIssueService:
                     status_code=400,
                     detail="Maximum 5 attachments allowed.",
                 )
-        ALLOWED_TYPES = {
-
-            "image/jpeg",
-
-            "image/png",
-
-            "image/webp",
-
-            "image/jpg",
-
-            "video/mp4",
-
-            "video/quicktime",
-
-            "video/x-msvideo",
-
-            "video/x-matroska",
-        }
-
         for file in attachments:
 
-            if file.content_type not in ALLOWED_TYPES:
-
-                raise HTTPException(
-
-                    status_code=400,
-
-                    detail=f"Unsupported file type: {file.filename}",
-                )
+            validate_uploaded_file(
+                file=file,
+                allowed_extensions={
+                    ".jpg",
+                    ".jpeg",
+                    ".png",
+                    ".webp",
+                    ".mp4",
+                    ".mov",
+                    ".avi",
+                    ".mkv",
+                },
+                allowed_content_types={
+                    "image/jpeg",
+                    "image/png",
+                    "image/webp",
+                    "video/mp4",
+                    "video/quicktime",
+                    "video/x-msvideo",
+                    "video/x-matroska",
+                },
+                max_size=10 * 1024 * 1024,
+            )
             
         issue = SystemIssueCRUD.create(
             db=self.db,

@@ -14,7 +14,7 @@ try:
 
     existing = UserCRUD.get_by_email(
         db,
-        "admin@cscrs.local",
+        "superadmin@gmail.com",
     )
 
     if existing:
@@ -25,7 +25,7 @@ try:
         user = UserCRUD.create(
             db=db,
             name="System Owner",
-            email="admin@cscrs.local",
+            email="superadmin@gmail.com",
             phone=None,
             password="Admin@123",
             role=UserRole.SUPER_ADMIN,

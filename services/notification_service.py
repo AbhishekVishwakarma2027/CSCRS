@@ -181,7 +181,7 @@ class NotificationService:
             )
         )
 
-        EmailService().send_email(
+        self.email_service.send_email(
             to_email=user_email,
             subject=subject,
             body=body,
@@ -201,7 +201,7 @@ class NotificationService:
             )
         )
 
-        EmailService().send_email(
+        self.email_service.send_email(
             to_email=user_email,
             subject=subject,
             body=body,

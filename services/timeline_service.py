@@ -5,7 +5,7 @@ import database.crud.report as report_crud
 from configs.config import (
     DASHBOARD_RECENT_TIMELINE_LIMIT,
 )
-
+from fastapi import HTTPException
 
 class TimelineService:
 
@@ -73,10 +73,16 @@ class TimelineService:
         )
 
         if report is None:
-            return None
+            raise HTTPException(
+                status_code=404,
+                detail="Report not found."
+            )
         
         if report.citizen_id != citizen_id:
-            return None
+            raise HTTPException(
+                status_code=403,
+                detail="Access denied."
+            )
 
         logs = AuditLogCRUD.get_report_logs(
             self.db,

@@ -100,6 +100,7 @@ def deactivate_worker(
 
     return service.deactivate_worker(
         worker_id=worker_id,
+        current_user=current_user,
     )
 
 
@@ -122,6 +123,7 @@ def activate_worker_account(
 
     return service.activate_worker_account(
         worker_id=worker_id,
+        current_user=current_user,
     )
 @router.patch(
     "/{worker_id}/block",

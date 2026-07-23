@@ -10,6 +10,8 @@ from authentication.dependencies import (
 
 from database.models.user import User
 from services.generate_report_service import ReportGenerationService
+from fastapi import Request
+from utils.rate_limiter import limiter
 
 router = APIRouter(
     prefix="/reports",
@@ -19,7 +21,9 @@ router = APIRouter(
     "/department/download",
     summary="Download Department Performance Report",
 )
+@limiter.limit("20 per hour")
 def download_department_report(
+    request:Request,
     current_user: User = Depends(
         require_department_admin(),
     ),
@@ -48,8 +52,15 @@ def download_department_report(
 @router.get(
     "/city/download",
     summary="Download City Performance Report",
+    responses={
+    429: {
+        "description": "Rate limit exceeded."
+    }
+},
 )
+@limiter.limit("20per hour")
 def download_city_report(
+    request:Request,
     current_user: User = Depends(
         require_city_admin(),
     ),

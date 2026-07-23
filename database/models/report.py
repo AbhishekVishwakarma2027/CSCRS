@@ -36,12 +36,14 @@ class Report(Base):
         Integer,
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
+        index=True,
     )
 
     department_id = Column(
         Integer,
         ForeignKey("departments.id"),
         nullable=False,
+        index=True,
     )
 
     issue_type = Column(
@@ -99,12 +101,14 @@ class Report(Base):
         Enum(Priority),
         nullable=False,
         default=Priority.MEDIUM,
+        index=True,
     )
 
     status = Column(
         Enum(ReportStatus),
         nullable=False,
         default=ReportStatus.PENDING,
+        index=True,
     )
 
     created_at = Column(

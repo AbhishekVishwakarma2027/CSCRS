@@ -15,6 +15,8 @@ from schemas.feedback import (
 )
 from fastapi import Query
 from services.feedback_service import FeedbackService
+from fastapi import Request
+from utils.rate_limiter import limiter
 
 router = APIRouter(
     prefix="/feedback",
@@ -25,16 +27,23 @@ router = APIRouter(
 @router.post(
     "",
     response_model=FeedbackResponse,
+    responses={
+    429: {
+        "description": "Rate limit exceeded."
+    }
+},
 )
+@limiter.limit("10 per hour")
 def submit_feedback(
-    request: FeedbackCreate,
+    request:Request,
+    feedback: FeedbackCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     return FeedbackService.submit_feedback(
         db=db,
         current_user=current_user,
-        request=request,
+        request=feedback,
     )
 @router.get(
     "/export",

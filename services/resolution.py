@@ -7,7 +7,7 @@ from pathlib import Path
 import shutil
 import logging
 
-from utils.file_utils import generate_filename
+from utils.file_utils import generate_filename,validate_uploaded_file
 from utils.file_utils import safe_delete_file
 
 from database.enums import ImageType
@@ -22,7 +22,7 @@ from database.crud.resolution_ai import ResolutionAIResultCRUD
 from database.models.resolution_ai_result import ResolutionAIResult
 from database.enums import ResolutionDecision
 from database.enums import VerificationDecision
-from datetime import datetime
+from datetime import datetime,timezone
 
 from database.enums import (
     ReportStatus,
@@ -274,7 +274,7 @@ class ResolutionService:
                 resolution.verification_score = verification["risk_score"]
                 resolution.verification_decision = VerificationDecision.PASS
                 resolution.manual_review = False
-                resolution.verified_at = datetime.utcnow()
+                resolution.verified_at = datetime.now(timezone.utc)
 
                 report = report_crud.get_report_by_id(
                     self.db,
@@ -285,7 +285,7 @@ class ResolutionService:
                     report.status = ReportStatus.RESOLVED
 
                 assignment.status = AssignmentStatus.COMPLETED
-                assignment.completed_at = datetime.utcnow()
+                assignment.completed_at = datetime.now(timezone.utc)
 
                 AssignmentCRUD.save_assignment(
                     self.db,
@@ -447,7 +447,21 @@ class ResolutionService:
         assignment,
         image,
     ):
-
+        validate_uploaded_file(
+            file=image,
+            allowed_extensions={
+                ".jpg",
+                ".jpeg",
+                ".png",
+                ".webp",
+            },
+            allowed_content_types={
+                "image/jpeg",
+                "image/png",
+                "image/webp",
+            },
+            max_size=10 * 1024 * 1024,
+        )
         upload_dir = Path("uploads/resolution")
 
         upload_dir.mkdir(
@@ -496,21 +510,38 @@ class ResolutionService:
             self.db,
             department_id,
         )
+    
     def get_manual_review_details(
         self,
         *,
         report_id: int,
+        department_admin,
     ):
-
-        return ResolutionCRUD.get_manual_review_details(
+        details = ResolutionCRUD.get_manual_review_details(
             self.db,
             report_id,
+            department_admin.department_id,
         )
+
+        if details is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Manual review not found.",
+            )
+
+        if details.report.department_id != department_admin.department_id:
+            raise HTTPException(
+                status_code=403,
+                detail="You can view only your department reports.",
+            )
+
+        return details
     
     def approve_manual_review(
         self,
         *,
         report_id: int,
+        department_admin,
     ):
 
         resolution = ResolutionCRUD.get_resolution_by_report(
@@ -535,10 +566,18 @@ class ResolutionService:
             report_id,
         )
 
+
         if report is None:
             raise HTTPException(
                 status_code=404,
                 detail="Report not found.",
+            )
+        
+        if report.department_id != department_admin.department_id:
+
+            raise HTTPException(
+                status_code=403,
+                detail="You can review only your department reports.",
             )
 
         assignment = AssignmentCRUD.get_assignment_by_report(
@@ -554,12 +593,12 @@ class ResolutionService:
         resolution.manual_review = False
         resolution.verification_passed = True
         resolution.verification_decision = VerificationDecision.PASS
-        resolution.verified_at = datetime.utcnow()
+        resolution.verified_at = datetime.now(timezone.utc)
 
         report.status = ReportStatus.RESOLVED
 
         assignment.status = AssignmentStatus.COMPLETED
-        assignment.completed_at = datetime.utcnow()
+        assignment.completed_at = datetime.now(timezone.utc)
 
         worker_profile = WorkerCRUD.get_worker_profile(
             self.db,
@@ -630,11 +669,13 @@ class ResolutionService:
                 "Failed to send citizen resolution email after manual approval."
             )
         return resolution
+    
     def reject_manual_review(
         self,
         *,
         report_id: int,
         reason: str,
+        department_admin,
     ):
 
         resolution = ResolutionCRUD.get_resolution_by_report(
@@ -658,11 +699,17 @@ class ResolutionService:
             self.db,
             report_id,
         )
-
+        
         if report is None:
             raise HTTPException(
                 status_code=404,
                 detail="Report not found.",
+            )
+        if report.department_id != department_admin.department_id:
+
+            raise HTTPException(
+                status_code=403,
+                detail="You can review only your department reports.",
             )
 
         assignment = AssignmentCRUD.get_assignment_by_report(

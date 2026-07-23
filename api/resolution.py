@@ -24,7 +24,8 @@ from schemas.resolution import (
     ManualReviewDetail,
     ManualReviewRejectRequest,
 )
-
+from fastapi import Request
+from utils.rate_limiter import limiter
 
 router = APIRouter(
     prefix="/resolutions",
@@ -36,8 +37,16 @@ router = APIRouter(
     "",
     response_model=ResolutionResponse,
     status_code=status.HTTP_201_CREATED,
+    responses={
+    429: {
+        "description": "Rate limit exceeded."
+    }
+},
 )
+@limiter.limit("20 per hour")
 def upload_resolution(
+
+    request:Request,
 
     assignment_id: int = Form(...),
 
@@ -97,7 +106,9 @@ def manual_review_details(
 
     return service.get_manual_review_details(
         report_id=report_id,
+        department_admin=current_user,
     )
+
 @router.post(
     "/manual-review/{report_id}/approve",
     response_model=ResolutionResponse,
@@ -118,6 +129,7 @@ def approve_manual_review(
 
     return service.approve_manual_review(
         report_id=report_id,
+        department_admin=current_user,
     )
 @router.post(
     "/manual-review/{report_id}/reject",
@@ -142,4 +154,5 @@ def reject_manual_review(
     return service.reject_manual_review(
         report_id=report_id,
         reason=request.reason,
+        department_admin=current_user,
     )

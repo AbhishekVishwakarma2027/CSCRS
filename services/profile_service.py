@@ -16,6 +16,7 @@ from configs.config import APP_BASE_URL
 from utils.file_utils import (
     save_uploaded_file,
     safe_delete_file,
+    validate_uploaded_file,
 )
 
 
@@ -65,7 +66,7 @@ class ProfileService:
             "employee_code": None,
             "designation": None,
             "phone_extension": None,
-            "joined_at": None,
+            "joined_at": current_user.created_at,
             "is_available": None,
         }
 
@@ -176,41 +177,21 @@ class ProfileService:
         photo: UploadFile,
     ):
 
-        allowed_extensions = {
-            ".jpg",
-            ".jpeg",
-            ".png",
-            ".webp",
-        }
-
-        extension = (
-            Path(photo.filename)
-            .suffix
-            .lower()
+        validate_uploaded_file(
+            file=photo,
+            allowed_extensions={
+                ".jpg",
+                ".jpeg",
+                ".png",
+                ".webp",
+            },
+            allowed_content_types={
+                "image/jpeg",
+                "image/png",
+                "image/webp",
+            },
+            max_size=5 * 1024 * 1024,
         )
-
-        if extension not in allowed_extensions:
-
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Only JPG, JPEG, PNG and WEBP images are allowed.",
-            )
-
-        photo.file.seek(
-            0,
-            2,
-        )
-
-        size = photo.file.tell()
-
-        photo.file.seek(0)
-
-        if size > 5 * 1024 * 1024:
-
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Maximum image size is 5 MB.",
-            )
 
         uploaded = save_uploaded_file(
             photo,

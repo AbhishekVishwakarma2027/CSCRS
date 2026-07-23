@@ -63,22 +63,6 @@ def get_all_reports(
 ) -> list[Report]:
     return db.query(Report).all()
 
-def get_reports_by_citizen(
-    db: Session,
-    citizen_id: int,
-):
-
-    return (
-        db.query(Report)
-        .filter(
-            Report.citizen_id == citizen_id
-        )
-        .order_by(
-            Report.created_at.desc()
-        )
-        .all()
-    )
-
 def update_report(
     db: Session,
     report: Report,
@@ -324,6 +308,15 @@ def get_forward_count(
 ) -> int:
 
     return report.forward_count
+
+def get_last_forward_number(
+    db: Session,
+    report_id: int,
+) -> int:
+
+    report = get_report_by_id(db, report_id)
+    return report.forward_count if report else 0
+
 def get_next_forward_number(
     db: Session,
     report_id: int,

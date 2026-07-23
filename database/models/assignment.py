@@ -23,12 +23,14 @@ class Assignment(Base):
         Integer,
         ForeignKey("reports.id", ondelete="CASCADE"),
         nullable=False,
+        index=True,
     )
 
     worker_id = Column(
         Integer,
         ForeignKey("users.id"),
         nullable=False,
+        index=True,
     )
 
     assigned_by = Column(
@@ -71,6 +73,7 @@ class Assignment(Base):
         Enum(AssignmentStatus),
         nullable=False,
         default=AssignmentStatus.ASSIGNED,
+        index=True,
     )
 
     remarks = Column(

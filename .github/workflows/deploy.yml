@@ -1,0 +1,52 @@
+name: Deploy Backend
+
+on:
+
+  workflow_dispatch:
+
+jobs:
+
+  deploy:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Configure SSH
+
+        run: |
+
+          mkdir -p ~/.ssh
+
+          echo "${{ secrets.ORACLE_SSH_KEY }}" > ~/.ssh/id_rsa
+
+          chmod 600 ~/.ssh/id_rsa
+
+          ssh-keyscan -H ${{ secrets.ORACLE_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy
+
+        run: |
+
+          ssh ${{ secrets.ORACLE_USER }}@${{ secrets.ORACLE_HOST }} << 'EOF'
+
+          cd /home/${{ secrets.ORACLE_USER }}/CSCRS
+
+          git pull origin main
+
+          chmod +x update.sh
+
+          ./update.sh
+
+          EOF
+
+      - name: Health Check
+
+        run: |
+
+          sleep 20
+
+          curl --fail https://api.cscrs.in/health

@@ -8,7 +8,7 @@ from database.crud.assignment import AssignmentCRUD
 from database.enums import (ForwardRequestStatus,AssignmentStatus,ReportStatus)
 
 from services.audit_log_service import (AuditLogService,)
-from datetime import datetime
+from datetime import datetime,timezone
 
 from types import SimpleNamespace
 from services.assignment import AssignmentService
@@ -336,7 +336,7 @@ class ForwardRequestService:
         )
 
         forward_request.reviewed_at = (
-            datetime.utcnow()
+            datetime.now(timezone.utc)
         )
         forward_request.decision_reason = (
             request.remarks
@@ -431,7 +431,7 @@ class ForwardRequestService:
         )
 
         forward_request.reviewed_at = (
-            datetime.utcnow()
+            datetime.now(timezone.utc)
         )
 
         DepartmentForwardRequestCRUD.save(
@@ -567,7 +567,7 @@ class ForwardRequestService:
         )
 
         forward_request.reviewed_at = (
-            datetime.utcnow()
+            datetime.now(timezone.utc)
         )
 
         forward_request.decision_reason = reason
@@ -745,7 +745,7 @@ class ForwardRequestService:
         )
 
         forward_request.reviewed_at = (
-            datetime.utcnow()
+            datetime.now(timezone.utc)
         )
 
         forward_request.decision_reason = (

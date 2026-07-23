@@ -33,13 +33,22 @@ router = APIRouter(
     prefix="/issues",
     tags=["Report an Issue"],
 )
-
+from fastapi import Request
+from utils.rate_limiter import limiter
 
 @router.post(
     "",
     response_model=SystemIssueResponse,
+    responses={
+    429: {
+        "description": "Rate limit exceeded."
+    }
+},
 )
+@limiter.limit("20 per hour")
 def submit_issue(
+
+    request:Request,
 
     title: str = Form(...),
 

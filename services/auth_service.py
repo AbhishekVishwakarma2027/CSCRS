@@ -1,14 +1,15 @@
 from authentication.security import (
-    create_access_token,
+    create_refresh_token,
     create_access_token_with_metadata,
     verify_password,
     hash_password,
+    hash_refresh_token,
 )
-
+from schemas.user import TokenResponse
+from database.crud.refresh_token import RefreshTokenCRUD
 from database.crud.user import UserCRUD
 from database.enums import UserRole
 from schemas.user import (
-    Token,
     UserCreate,
 )
 
@@ -30,7 +31,7 @@ from fastapi import Request
 from services.security_service import SecurityService
 from datetime import datetime, timezone,timedelta
 from database.crud.login_audit import LoginAuditCRUD
-
+from configs.config import REFRESH_TOKEN_EXPIRE_DAYS
 
 class AuthService:
 
@@ -54,7 +55,18 @@ class AuthService:
                 status_code=status.HTTP_409_CONFLICT,
                 detail="Email already registered.",
             )
+        existing_phone = UserCRUD.get_by_phone(
+            self.db,
+            user_data.phone,
+        )
 
+        if existing_phone:
+
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Phone number already registered.",
+            )
+        
         user = UserCRUD.create(
             db=self.db,
 
@@ -107,7 +119,7 @@ class AuthService:
         request: Request,
         email: str,
         password: str,
-    ) -> Token:
+    ) -> TokenResponse:
 
         user = UserCRUD.get_by_email(
             self.db,
@@ -152,14 +164,14 @@ class AuthService:
             )
         if (
             user.account_locked_until
-            and user.account_locked_until > datetime.utcnow()
+            and user.account_locked_until > datetime.now(timezone.utc)
         ):
 
             remaining_minutes = (
                 int(
                     (
                         user.account_locked_until
-                        - datetime.utcnow()
+                        - datetime.now(timezone.utc)
                     ).total_seconds() / 60
                 ) + 1
             )
@@ -186,20 +198,20 @@ class AuthService:
                 request,
             )
 
-            user.last_failed_login = datetime.utcnow()
+            user.last_failed_login = datetime.now(timezone.utc)
 
             user.failed_login_attempts += 1
 
             if user.failed_login_attempts >= 5:
 
                 user.account_locked_until = (
-                    datetime.utcnow()
+                    datetime.now(timezone.utc)
                     + timedelta(
                         minutes=30,
                     )
                 )
 
-            self.db.commit()
+            
 
             LoginAuditCRUD.create(
                 db=self.db,
@@ -221,6 +233,7 @@ class AuthService:
                 login_source="Web",
             )
 
+            self.db.commit()
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid email or password.",
@@ -260,40 +273,71 @@ class AuthService:
                 "role": user.role.value,
             }
         )
-        LoginAuditCRUD.create(
-            db=self.db,
-            user_id=user.id,
-            email=user.email,
-            login_success=True,
-            ip_address=ip_address,
-            user_agent=device_info["user_agent"],
-            browser=device_info["browser"],
-            browser_version=device_info["browser_version"],
-            operating_system=device_info["operating_system"],
-            os_version=device_info["os_version"],
-            device_type=device_info["device_type"],
-            platform=device_info["platform"],
-            role=user.role.value,
-            request_path=request.url.path,
-            http_method=request.method,
-            login_source="Web",
+        refresh_data = create_refresh_token(
+            data={
+                "sub": str(user.id),
+                "role": user.role.value,
+            },
             session_id=token_data["session_id"],
-            jwt_id=token_data["jwt_id"],
         )
 
+        refresh_token_hash = hash_refresh_token(
+            refresh_data["refresh_token"],
+        )
+        try:
 
-        user.last_successful_login = datetime.utcnow()
+            LoginAuditCRUD.create(
+                db=self.db,
+                user_id=user.id,
+                email=user.email,
+                login_success=True,
+                ip_address=ip_address,
+                user_agent=device_info["user_agent"],
+                browser=device_info["browser"],
+                browser_version=device_info["browser_version"],
+                operating_system=device_info["operating_system"],
+                os_version=device_info["os_version"],
+                device_type=device_info["device_type"],
+                platform=device_info["platform"],
+                role=user.role.value,
+                request_path=request.url.path,
+                http_method=request.method,
+                login_source="Web",
+                session_id=token_data["session_id"],
+                jwt_id=token_data["jwt_id"],
+            )
 
-        user.failed_login_attempts = 0
 
-        user.account_locked_until = None
-        
-        self.db.commit()
+            user.last_successful_login = datetime.now(timezone.utc)
 
-        self.db.refresh(user)
+            user.failed_login_attempts = 0
 
-        return Token(
+            user.account_locked_until = None
+            
+            RefreshTokenCRUD.create(
+                db=self.db,
+                user_id=user.id,
+                token_hash=refresh_token_hash,
+                jwt_id=refresh_data["jwt_id"],
+                session_id=refresh_data["session_id"],
+                ip_address=ip_address,
+                device_type=device_info["device_type"],
+                browser=device_info["browser"],
+                operating_system=device_info["operating_system"],
+                expires_at=datetime.now(timezone.utc)+ timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS),
+            )
+            self.db.commit()
+            self.db.refresh(user)
+
+        except Exception:
+            self.db.rollback()
+            raise
+
+        return TokenResponse(
             access_token=token_data["access_token"],
+            refresh_token=refresh_data["refresh_token"],
+            token_type="bearer",
+            expires_in=1800,
         )
     
     def verify_email(
@@ -327,14 +371,7 @@ class AuthService:
             )
 
         if verification.verified:
-            if verification.attempts >= 5:
-                raise HTTPException(
-                    status_code=400,
-                    detail=(
-                        "Maximum OTP attempts exceeded. "
-                        "Please request a new OTP."
-                    ),
-                )
+
             raise HTTPException(
                 status_code=400,
                 detail="Email already verified.",
@@ -347,6 +384,16 @@ class AuthService:
             raise HTTPException(
                 status_code=400,
                 detail="OTP expired.",
+            )
+
+        if verification.attempts >= 5:
+
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "Maximum OTP attempts exceeded. "
+                    "Please request a new OTP."
+                ),
             )
 
         if not OTPService.verify_otp(

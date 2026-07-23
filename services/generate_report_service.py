@@ -239,7 +239,7 @@ class ReportGenerationService:
 
         monthly_trend = analytics_crud.get_monthly_trend(
             db=self.db,
-            year=datetime.now().year,
+            year=datetime.now(timezone.utc).year,
         )
 
         recent_reports = analytics_crud.get_recent_reports(
@@ -564,10 +564,10 @@ class ReportGenerationService:
         self._add_paragraph(
             story,
             f"<b>Generated On :</b> "
-            f"{datetime.now().strftime('%d %B %Y %I:%M %p')}",
+            f"{datetime.now(timezone.utc).strftime('%d %B %Y %I:%M %p')}",
         )
         report_id = (
-            f"RPT-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+            f"RPT-{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}"
         )
 
         self._add_paragraph(
@@ -1703,7 +1703,7 @@ class ReportGenerationService:
         canvas.drawString(
             40,
             15,
-            f"Generated: {datetime.now().strftime('%d-%m-%Y %H:%M')}",
+            f"Generated: {datetime.now(timezone.utc).strftime('%d-%m-%Y %H:%M')}",
         )
 
         canvas.drawRightString(

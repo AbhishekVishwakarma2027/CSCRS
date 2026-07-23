@@ -1,4 +1,5 @@
 import smtplib
+import ssl
 from email.message import EmailMessage
 import socket
 from configs.config import (
@@ -34,7 +35,7 @@ class EmailService:
             ) as smtp:
 
                 smtp.ehlo()
-                smtp.starttls()
+                smtp.starttls(context=ssl.create_default_context())
                 smtp.ehlo()
 
                 smtp.login(
@@ -46,6 +47,8 @@ class EmailService:
         except (
             smtplib.SMTPException,
             socket.timeout,
+            socket.gaierror,
+            OSError,
         ) as e:
 
             raise RuntimeError(

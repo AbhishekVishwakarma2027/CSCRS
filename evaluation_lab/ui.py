@@ -11,7 +11,7 @@ import logging
 import tempfile
 import shutil
 import json
-from datetime import datetime
+from datetime import datetime,timezone
 from pathlib import Path
 from typing import Any
 
@@ -49,7 +49,7 @@ class EvaluationUI:
         if image is None:
             raise gr.Error("No image available.")
 
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
 
         image_path = IMAGE_OUTPUT_DIR / f"{timestamp}.png"
 

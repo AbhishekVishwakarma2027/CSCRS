@@ -16,24 +16,72 @@ from api import profile
 from api.feedback import router as feedback_router
 from api.system_issue import router as system_issue
 from api.ai_dataset import router as ai_dataset_router
+from datetime import datetime, timezone
+from fastapi import HTTPException
+from sqlalchemy import text
 
+from database.connection import SessionLocal
 
 router = APIRouter()
 
+@router.get("/health", tags=["Health"])
+async def health():
+
+    return {
+        "status": "healthy",
+        "service": "CSCRS API",
+        "version": "1.0.0",
+        "timestamp": datetime.now(
+            timezone.utc
+        ).isoformat(),
+    }
+@router.get("/liveness", tags=["Health"])
+async def liveness():
+
+    return {
+        "status": "alive",
+    }
+@router.get("/readiness", tags=["Health"])
+async def readiness():
+
+    db = SessionLocal()
+
+    try:
+
+        db.execute(text("SELECT 1"))
+
+        return {
+            "status": "ready",
+            "database": "connected",
+        }
+
+    except Exception:
+
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "status": "not_ready",
+                "database": "disconnected",
+            },
+        )
+
+    finally:
+
+        db.close()
 router.include_router(auth_router)
-router.include_router(worker_router)
-router.include_router(admin_router)
-router.include_router(city_admin_router)
-router.include_router(assignment_router,prefix="/api/v1",)
-router.include_router(resolution_router,prefix="/api/v1",)
-router.include_router(department_router)
-router.include_router(report_router)
-router.include_router(dashboard_router)
-router.include_router(timeline.router,prefix="/api/v1",)
-router.include_router(in_app_notification.router,prefix="/api/v1",)
-router.include_router(forward_request_router)
-router.include_router(generate_report.router)
-router.include_router(profile.router)
-router.include_router(feedback_router)
-router.include_router(system_issue)
-router.include_router(ai_dataset_router)
+router.include_router(worker_router,prefix="/api/v1",)
+router.include_router(admin_router,prefix="/api/v1",)
+router.include_router(city_admin_router,prefix="/api/v1",)
+router.include_router(assignment_router,prefix="/api/v1",) #
+router.include_router(resolution_router,prefix="/api/v1",)#
+router.include_router(department_router,prefix="/api/v1",)
+router.include_router(report_router,prefix="/api/v1",)
+router.include_router(dashboard_router,prefix="/api/v1",)
+router.include_router(timeline.router,prefix="/api/v1",)#
+router.include_router(in_app_notification.router,prefix="/api/v1",) #
+router.include_router(forward_request_router,prefix="/api/v1",)
+router.include_router(generate_report.router,prefix="/api/v1",)
+router.include_router(profile.router,prefix="/api/v1",)
+router.include_router(feedback_router,prefix="/api/v1",)
+router.include_router(system_issue,prefix="/api/v1",)
+router.include_router(ai_dataset_router,prefix="/api/v1",)

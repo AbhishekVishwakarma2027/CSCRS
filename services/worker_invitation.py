@@ -72,7 +72,7 @@ class WorkerInvitationService:
         if invitation.used:
             return None
 
-        current_time = datetime.utcnow()
+        current_time = datetime.now(timezone.utc)
 
         expiry_time = invitation.expires_at
 

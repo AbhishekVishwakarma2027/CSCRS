@@ -57,7 +57,7 @@ class LoginAuditCRUD:
         )
 
         db.add(audit)
-        db.commit()
+        db.flush()
         db.refresh(audit)
 
         return audit

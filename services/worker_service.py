@@ -55,6 +55,7 @@ class WorkerService:
             email,
         )
 
+
         if existing_user is not None:
             raise ValueError(
                 "Email is already registered."
@@ -71,7 +72,18 @@ class WorkerService:
                 raise ValueError(
                     "Phone number is already registered."
                 )
-            
+        existing_employee = WorkerCRUD.get_by_employee_code(
+            self.db,
+            employee_code,
+        )
+
+        if existing_employee is not None:
+
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Employee code already exists.",
+            ) 
+          
         user = UserCRUD.build(
             name=name,
             email=email,
@@ -212,6 +224,7 @@ class WorkerService:
         self,
         *,
         worker_id: int,
+        current_user:User,
     ):
 
         profile = WorkerCRUD.get_worker_by_id(
@@ -225,7 +238,17 @@ class WorkerService:
                 status_code=404,
                 detail="Worker not found.",
             )
-
+        if (
+            current_user.role == UserRole.DEPARTMENT_ADMIN
+            and current_user.department_id != profile.department_id
+        ):
+            raise HTTPException(
+                status_code=403,
+                detail=(
+                    "You can only manage workers "
+                    "from your own department."
+                ),
+            )
         user = UserCRUD.get_by_id(
             self.db,
             profile.user_id,
@@ -257,8 +280,9 @@ class WorkerService:
         self,
         *,
         worker_id: int,
+        current_user:User,
     ):
-
+        
         profile = WorkerCRUD.get_worker_by_id(
             self.db,
             worker_id,
@@ -270,7 +294,17 @@ class WorkerService:
                 status_code=404,
                 detail="Worker not found.",
             )
-
+        if (
+            current_user.role == UserRole.DEPARTMENT_ADMIN
+            and current_user.department_id != profile.department_id
+        ):
+            raise HTTPException(
+                status_code=403,
+                detail=(
+                    "You can only manage workers "
+                    "from your own department."
+                ),
+            )
         user = UserCRUD.get_by_id(
             self.db,
             profile.user_id,

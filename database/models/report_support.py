@@ -24,7 +24,8 @@ class ReportSupport(Base):
 
     report_id = Column(
         Integer,
-        ForeignKey("reports.id"),
+        ForeignKey("reports.id",
+                   ondelete="CASCADE"), #THIS IS NOT IMPLEMENTED BECAUSE MIGRATION IS NOT DONE YET IN V1 CORRECTION
         nullable=False,
     )
 

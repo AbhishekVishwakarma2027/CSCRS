@@ -41,29 +41,37 @@ def get_current_user(
             detail="Invalid or expired token.",
         )
 
-    user_id = payload.get("sub")
-
-    if user_id is None:
-
+    try:
+        user_id = int(payload.get("sub"))
+    except (TypeError, ValueError):
         raise HTTPException(
-
             status_code=status.HTTP_401_UNAUTHORIZED,
-
             detail="Invalid token.",
         )
 
     user = UserCRUD.get_by_id(
         db,
-        int(user_id),
+        user_id,
     )
 
     if user is None:
-
         raise HTTPException(
-
             status_code=status.HTTP_401_UNAUTHORIZED,
-
             detail="User not found.",
+        )
+
+    # Account activation check
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Account is inactive.",
+        )
+
+    # Account blocked check
+    if user.is_blocked:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Account has been blocked.",
         )
 
     return user

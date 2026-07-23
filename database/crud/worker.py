@@ -29,7 +29,20 @@ class WorkerCRUD:
             .filter(User.email == email)
             .first()
         )
+    @staticmethod
+    def get_by_employee_code(
+        db: Session,
+        employee_code: str,
+    ) -> WorkerProfile | None:
 
+        return (
+            db.query(WorkerProfile)
+            .filter(
+                WorkerProfile.employee_code == employee_code
+            )
+            .first()
+        )
+    
     @staticmethod
     def create_worker(
         db: Session,

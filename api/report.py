@@ -1,7 +1,6 @@
 from pathlib import Path
 import shutil
-import traceback
-
+import asyncio
 from fastapi import (
     APIRouter,
     Depends,
@@ -40,7 +39,10 @@ from schemas.report import (
     ReportReopenRequest,
 )
 from schemas.report import PaginatedCityReports
-from utils.file_utils import generate_filename
+from utils.file_utils import (
+    generate_filename,
+    validate_uploaded_file,
+)
 from database.enums import (
     ReportStatus,
     Priority,
@@ -49,8 +51,9 @@ from services.duplicate_detection_service import DuplicateDetectionService
 from services.report_support_service import ReportSupportService
 from utils.gps import exif_to_decimal
 from services.audit_log_service import AuditLogService
-
-
+from configs.config import MAX_PAGE_SIZE_LIMIT,MAX_FILE_SIZE
+from fastapi import Request
+from utils.rate_limiter import limiter
 
 router = APIRouter(
     tags=["Reports"]
@@ -61,8 +64,16 @@ engine = InferenceEngine()
 UPLOAD_DIR = Path("uploads")
 UPLOAD_DIR.mkdir(exist_ok=True)
 
-@router.post("/api/v1/report")
+@router.post("/report",
+             responses={
+    429: {
+        "description": "Rate limit exceeded."
+    }
+},
+)
+@limiter.limit("60 per hour")
 async def report_issue(
+    request:Request,
     file: UploadFile = File(...),
     description: str | None = Form(None),
     current_user: User = Depends(require_citizen()),
@@ -76,6 +87,22 @@ async def report_issue(
     duplicate_service = DuplicateDetectionService(db)
     support_service = ReportSupportService(db)
 
+    file_size = validate_uploaded_file(
+        file=file,
+        allowed_extensions={
+            ".jpg",
+            ".jpeg",
+            ".png",
+            ".webp",
+        },
+        allowed_content_types={
+            "image/jpeg",
+            "image/png",
+            "image/webp",
+        },
+        max_size=MAX_FILE_SIZE,
+    )
+    
     stored_filename = generate_filename(file.filename)
     image_path = UPLOAD_DIR / stored_filename
 
@@ -84,14 +111,16 @@ async def report_issue(
         with open(image_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
-        file_size = image_path.stat().st_size
 
         mime_type = (
             file.content_type
             or "application/octet-stream"
         )
 
-        result = engine.predict(str(image_path))
+        result = await asyncio.to_thread(
+            engine.predict,
+            str(image_path),
+        )
 
         if not result.get("success", False):
 
@@ -149,7 +178,20 @@ async def report_issue(
 
             report = duplicate["report"]
             # Same citizen already reported/supported this issue
+            if report.citizen_id == current_user.id:
 
+                raise HTTPException(
+                    status_code=409,
+                    detail={
+                        "success": False,
+                        "message": "You have already reported this civic issue.",
+                        "report_id": report.id,
+                        "report_number": report.report_number,
+                        "status": report.status.value,
+                        "priority": report.priority.value,
+                        "support_count": report.support_count,
+                    },
+                )
             if support_service.already_supported(
                 report.id,
                 current_user.id,
@@ -181,8 +223,8 @@ async def report_issue(
             # Temporary upload cleanup disabled for now
             # until StorageManager is implemented.
 
-            # if image_path.exists():
-            #     image_path.unlink()
+            if image_path.exists():
+                image_path.unlink()
 
             annotated_path = Path(
                 result["ai"]["annotated_image"].lstrip("/")
@@ -282,18 +324,32 @@ async def report_issue(
                     result["processing_time"] * 1000
                 ),
             )
-        
+        assignment_message=None
         try:
 
             assignment_service.assign_worker(
                 report_id=report.id,
-                assigned_by=3,      # System Owner
+                assigned_by=current_user.id,      
                 remarks="Auto assigned by system",
             )
 
-        except Exception as e:
-            traceback.print_exc()
-            raise
+        except HTTPException as exc:
+
+            if (
+                exc.status_code == 404
+                and exc.detail == "No available workers found."
+            ):
+
+                assignment_message = (
+                    "Report submitted successfully. "
+                    "Currently no worker is available. "
+                    "and report will be assigned "
+                    "manually as soon as a worker becomes available."
+                )
+
+            else:
+                raise
+        
         public_detections = []
 
         for detection in result["ai"]["detections"]:
@@ -307,6 +363,8 @@ async def report_issue(
         return {
 
             "success": True,
+
+            "message": assignment_message or "Report Submitted Successfully.",
 
             "report_id": report.id,
 
@@ -327,15 +385,15 @@ async def report_issue(
             image_path.unlink()
         raise
 
-    except Exception as e:
-        traceback.print_exc() #temporary add
-        raise HTTPException(
-            status_code=500,
-            detail=f"{type(e).__name__}: {str(e)}", #temporary add
-            # detail=f"Failed to process report: {str(e)}",
-        )
+    except Exception:
+            if image_path.exists():
+                image_path.unlink()
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to process report.", 
+            )
 @router.get(
-    "/api/v1/reports/my",
+    "/reports/my",
     response_model=list[CitizenReportListItem],
 )
 def get_my_reports(
@@ -352,7 +410,7 @@ def get_my_reports(
     )
 
 @router.get(
-    "/api/v1/reports",
+    "/reports",
     response_model=PaginatedCityReports,
 )
 def get_all_reports(
@@ -367,6 +425,17 @@ def get_all_reports(
     ),
     db: Session = Depends(get_db),
 ):
+    if page < 1:
+        raise HTTPException(
+            status_code=400,
+            detail="Page must be at least 1.",
+        )
+
+    if page_size < 1 or page_size > MAX_PAGE_SIZE_LIMIT:
+        raise HTTPException(
+            status_code=400,
+            detail="page_size must be between 1 and 100.",
+        )
 
     return ReportService(
         db,
@@ -380,7 +449,7 @@ def get_all_reports(
     )
 
 @router.get(
-    "/api/v1/reports/department",
+    "/reports/department",
     response_model=list[DepartmentReportListItem],
 )
 
@@ -405,7 +474,7 @@ def get_department_reports(
     )
 
 @router.get(
-    "/api/v1/reports/my/search",
+    "/reports/my/search",
     response_model=list[CitizenReportListItem],
 )
 def search_my_reports(
@@ -424,7 +493,7 @@ def search_my_reports(
     )
 
 @router.get(
-    "/api/v1/reports/search",
+    "/reports/search",
     response_model=list[CityReportListItem],
 )
 def search_reports(
@@ -442,7 +511,7 @@ def search_reports(
     )
 
 @router.get(
-    "/api/v1/reports/department/search",
+    "/reports/department/search",
     response_model=list[DepartmentReportListItem],
 )
 def search_department_reports(
@@ -461,7 +530,7 @@ def search_department_reports(
     )
 
 @router.get(
-    "/api/v1/reports/{report_number}",
+    "/reports/{report_number}",
     response_model=ReportResponse,
 )
 def get_my_report(
@@ -488,7 +557,7 @@ def get_my_report(
             detail=str(e),
         )
 @router.post(
-    "/api/v1/reports/{report_id}/cancel",
+    "/reports/{report_id}/cancel",
 )
 def cancel_report(
     report_id: int,
@@ -507,7 +576,7 @@ def cancel_report(
         request=request,
     )
 @router.post(
-    "/api/v1/reports/{report_id}/reopen",
+    "/reports/{report_id}/reopen",
 )
 def reopen_report(
     report_id: int,

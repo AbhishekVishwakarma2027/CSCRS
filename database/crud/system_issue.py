@@ -2,7 +2,7 @@ from sqlalchemy.orm import (
     Session,
     joinedload,
 )
-from datetime import datetime
+from datetime import datetime,timezone
 from sqlalchemy import or_
 
 from database.models.user import User
@@ -153,7 +153,7 @@ class SystemIssueCRUD:
             SystemIssueStatus.REJECTED,
         ):
 
-            issue.closed_at = datetime.utcnow()
+            issue.closed_at = datetime.now(timezone.utc)
 
         else:
 

@@ -76,12 +76,14 @@ class User(Base):
         Enum(UserRole),
         nullable=False,
         default=UserRole.CITIZEN,
+        index=True,
     )
     
     department_id = Column(
         Integer,
         ForeignKey("departments.id"),
         nullable=True,
+        index=True,
     )
     created_at = Column(
         DateTime(timezone=True),
@@ -158,5 +160,10 @@ class User(Base):
     system_issues = relationship(
         "SystemIssue",
         back_populates="reporter",
+        cascade="all, delete-orphan",
+    )
+    refresh_tokens = relationship(
+        "RefreshToken",
+        back_populates="user",
         cascade="all, delete-orphan",
     )

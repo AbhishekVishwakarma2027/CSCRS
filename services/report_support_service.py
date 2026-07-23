@@ -31,7 +31,9 @@ class ReportSupportService:
         report_id: int,
         citizen_id: int,
     ):
-
+        if report is None:
+            raise ValueError("Report not found.")
+        
         support = report_support_crud.create_support(
             self.db,
             report_id,
@@ -54,12 +56,6 @@ class ReportSupportService:
         )
 
         return support
-
-        return report_support_crud.create_support(
-            self.db,
-            report_id,
-            citizen_id,
-        )
 
     def support_count(
         self,

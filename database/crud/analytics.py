@@ -200,15 +200,13 @@ def get_dashboard_summary(
         )
         .count()
     )
+    total_reports = db.query(Report).count()
     resolution_rate = (
         round(
-            (
-                (resolved_reports + closed_reports)
-                / db.query(Report).count()
-            ) * 100,
+            ((resolved_reports + closed_reports) / total_reports) * 100,
             2,
         )
-        if db.query(Report).count()
+        if total_reports
         else 0.0
     )
 
@@ -220,7 +218,7 @@ def get_dashboard_summary(
     )
     return {
 
-    "total_reports": db.query(Report).count(),
+    "total_reports": total_reports,
 
     "pending_reports": pending_reports,
 

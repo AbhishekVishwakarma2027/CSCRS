@@ -149,6 +149,7 @@ class ResolutionCRUD:
     def get_manual_review_details(
         db: Session,
         report_id: int,
+        department_id:int,
     ):
 
         row = (
@@ -187,6 +188,7 @@ class ResolutionCRUD:
             )
             .filter(
                 Resolution.report_id == report_id,
+                Report.department_id == department_id,
             )
             .first()
         )
