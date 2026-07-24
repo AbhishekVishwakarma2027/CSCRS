@@ -32,6 +32,7 @@ jobs:
       - name: Install Dependencies
         run: |
           pip install -r requirements-prod.txt
+          pip install pytest
 
       - name: Verify Project Imports
         run: |
