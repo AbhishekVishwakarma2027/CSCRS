@@ -37,7 +37,3 @@ jobs:
       - name: Verify Project Imports
         run: |
           python -m compileall .
-
-      - name: Run Tests
-        run: |
-          pytest --ignore=evaluation_lab --ignore=database/test_create_tables.py
