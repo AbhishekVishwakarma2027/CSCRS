@@ -97,17 +97,13 @@ class SystemIssueService:
             
         issue = SystemIssueCRUD.create(
             db=self.db,
-            issue_number="TEMP",
+            issue_number=generate_issue_number(0),
             reporter_id=reporter_id,
             related_report_id=related_report_id,
             title=data.title.strip(),
             description=data.description.strip(),
             category=data.category,
             status=SystemIssueStatus.OPEN,
-        )
-
-        issue.issue_number = generate_issue_number(
-            issue.id,
         )
 
         if attachments:
@@ -324,6 +320,17 @@ class SystemIssueService:
         rows = []
 
         for issue in issues:
+            created_at = (
+                issue.created_at.replace(tzinfo=None)
+                if issue.created_at
+                else None
+            )
+
+            closed_at = (
+                issue.closed_at.replace(tzinfo=None)
+                if issue.closed_at
+                else None
+            )
 
             rows.append([
 
@@ -345,9 +352,9 @@ class SystemIssueService:
                 if issue.related_report
                 else "",
 
-                issue.created_at,
+                created_at,
 
-                issue.closed_at,
+                closed_at,
             ])
 
         if format == "csv":

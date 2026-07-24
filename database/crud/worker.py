@@ -176,6 +176,7 @@ class WorkerCRUD:
         *,
         user: User,
         blocked_by: int,
+        block_type:str,
         reason: str,
     ):
 

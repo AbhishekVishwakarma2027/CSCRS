@@ -15,7 +15,7 @@ class SystemIssueCRUD:
     @staticmethod
     def create(
         db: Session,
-        issue_number: str,
+        issue_number: str ,
         reporter_id: int,
         related_report_id: int | None,
         title: str,

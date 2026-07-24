@@ -241,12 +241,16 @@ class ForwardRequestService:
                     "name": source_department.name,
                 },
 
-                "destination_department": {
+                "destination_department": (
+                    {
 
                     "id": destination_department.id,
 
                     "name": destination_department.name,
-                },
+                }
+                if destination_department is not None
+                else None
+                ),
             },
 
             "images": {

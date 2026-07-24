@@ -26,7 +26,7 @@ class SystemIssue(Base):
     )
 
     issue_number = Column(
-        String(20),
+        String(50),
         unique=True,
         nullable=False,
         index=True,

@@ -535,12 +535,6 @@ class ResolutionService:
                 detail="Manual review not found.",
             )
 
-        if details.report.department_id != department_admin.department_id:
-            raise HTTPException(
-                status_code=403,
-                detail="You can view only your department reports.",
-            )
-
         return details
     
     def approve_manual_review(

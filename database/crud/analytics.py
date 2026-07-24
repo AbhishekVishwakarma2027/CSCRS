@@ -56,7 +56,7 @@ def _calculate_automation_rate(
 
     auto_verified = (
         query.filter(
-            ResolutionAIResult.ai_decision == ResolutionDecision.PASS,
+            ResolutionAIResult.ai_decision == ResolutionDecision.FULLY_RESOLVED,
         )
         .count()
     )

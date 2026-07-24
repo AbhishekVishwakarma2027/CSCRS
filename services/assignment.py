@@ -60,14 +60,20 @@ class AssignmentService:
                 status_code=status.HTTP_409_CONFLICT,
                 detail=f"Cannot assign report with status '{report.status.value}'.",
             )
+        worker = self._select_best_worker(
+            department_id=report.department_id,
+        )
+
         if worker is None:
 
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="No suitable worker found.",
             )
-        worker = self._select_best_worker(
-            department_id=report.department_id,
+        
+        profile = AssignmentCRUD.get_worker_profile(
+            self.db,
+            worker.id,
         )
         
         if profile is None:
@@ -77,10 +83,6 @@ class AssignmentService:
                 detail="Worker profile not found.",
             )
 
-        profile = AssignmentCRUD.get_worker_profile(
-            self.db,
-            worker.id,
-        )
 
 
         assignment = Assignment(

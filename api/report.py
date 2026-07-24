@@ -412,8 +412,9 @@ async def report_issue(
             detail=str(exc),
         )
 
-    except Exception:
-
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
         if image_path.exists():
             image_path.unlink()
 

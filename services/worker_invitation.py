@@ -76,9 +76,6 @@ class WorkerInvitationService:
 
         expiry_time = invitation.expires_at
 
-        if expiry_time.tzinfo is not None:
-            expiry_time = expiry_time.replace(tzinfo=None)
-
         if expiry_time < current_time:
             return None
 

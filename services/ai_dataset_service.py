@@ -6,6 +6,12 @@ from database.models.resolution_ai_result import ResolutionAIResult
 from database.crud.ai_dataset import AIDatasetCRUD
 
 
+
+def excel_datetime(value):
+    if isinstance(value, datetime) and value.tzinfo is not None:
+        return value.replace(tzinfo=None)
+    return value
+
 class AIDatasetService:
 
     @staticmethod
@@ -68,8 +74,8 @@ class AIDatasetService:
 
             row["Description"] = report.description
 
-            row["Created At"] = report.created_at
-            row["Updated At"] = report.updated_at
+            row["Created At"] = excel_datetime(report.created_at)
+            row["Updated At"] = excel_datetime(report.updated_at)
 
             # --------------------------------------------------
             # TIME FEATURES
@@ -215,13 +221,9 @@ class AIDatasetService:
                     resolution.manual_review
                 )
 
-                row["Resolved At"] = (
-                    resolution.resolved_at
-                )
+                row["Resolved At"] = excel_datetime(resolution.resolved_at)
 
-                row["Verified At"] = (
-                    resolution.verified_at
-                )
+                row["Verified At"] = excel_datetime(resolution.verified_at)
 
             else:
 
@@ -262,19 +264,14 @@ class AIDatasetService:
                     latest_attempt.verification_decision
                 )
 
-                row["AI Decision"] = (
-                    latest_attempt.ai_decision.name
-                    if latest_attempt.ai_decision
-                    else None
-                )
+                row["AI Decision"] = latest_attempt.ai_decision
+                
 
                 row["Failure Reason"] = (
                     latest_attempt.failure_reason
                 )
 
-                row["Processing Time (ms)"] = (
-                    latest_attempt.processing_time_ms
-                )
+                row["Processing Time (ms)"] = None
 
                 row["Scene Similarity"] = (
                     latest_attempt.scene_similarity
@@ -319,21 +316,13 @@ class AIDatasetService:
                     else None
                 )
 
-                row["Assigned At"] = (
-                    assignment.assigned_at
-                )
+                row["Assigned At"] = excel_datetime(assignment.assigned_at)
 
-                row["Accepted At"] = (
-                    assignment.accepted_at
-                )
+                row["Accepted At"] = excel_datetime(assignment.accepted_at)
 
-                row["Work Started At"] = (
-                    assignment.work_started_at
-                )
+                row["Work Started At"] = excel_datetime(assignment.work_started_at)
 
-                row["Completed At"] = (
-                    assignment.completed_at
-                )
+                row["Completed At"] = excel_datetime(assignment.completed_at)
 
             else:
 
@@ -376,9 +365,7 @@ class AIDatasetService:
                     else None
                 )
 
-                row["Forwarded At"] = (
-                    latest_forward.created_at
-                )
+                row["Forwarded At"] = excel_datetime(latest_forward.created_at)
 
             else:
 

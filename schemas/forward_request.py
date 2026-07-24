@@ -109,7 +109,7 @@ class ForwardRequestDepartments(BaseModel):
 
     source_department: ForwardRequestDepartmentInfo
 
-    destination_department: ForwardRequestDepartmentInfo
+    destination_department: ForwardRequestDepartmentInfo | None = None
 
 class ForwardRequestImageInfo(BaseModel):
 
