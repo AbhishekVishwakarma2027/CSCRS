@@ -54,6 +54,7 @@ RUN pip install -r requirements-prod.txt
 
 COPY . .
 
+RUN chmod +x /app/docker-entrypoint.sh
 # ------------------------------------------------------------
 # Create non-root user
 # ------------------------------------------------------------
@@ -90,4 +91,5 @@ CMD curl -f http://localhost:8000/health || exit 1
 # Start FastAPI
 # ------------------------------------------------------------
 
-CMD ["uvicorn", "api.app:app", "--host", "0.0.0.0", "--port", "8000"]
+
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
