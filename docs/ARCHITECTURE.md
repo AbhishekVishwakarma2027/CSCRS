@@ -37,7 +37,7 @@ graph TD
     subgraph Data Access Layer
         Services --> CRUD[SQLAlchemy CRUD Layer]
         CRUD --> Models[SQLAlchemy Models]
-        Models --> DB[(cscrs.db SQLite)]
+        Models --> DB [(PostgreSQL / SQLite)]
     end
 
     subgraph External System Interfaces
@@ -153,7 +153,7 @@ sequenceDiagram
     participant AuthAPI as Auth Router
     participant AuthSvc as Auth Service
     participant OTPSvc as OTP Service
-    participant DB as SQLite DB
+    participant DB as Database
     participant Email as Email Service
 
     Citizen->>AuthAPI: POST /api/v1/auth/register
@@ -177,7 +177,9 @@ sequenceDiagram
     AuthSvc->>DB: Retrieve User
     AuthSvc->>AuthSvc: verify_password()
     AuthSvc->>AuthSvc: create_access_token()
-    AuthAPI-->>Citizen: 200 Access Token (JWT)
+    AuthSvc->>AuthSvc: create_refresh_token()
+    AuthSvc->>DB: Save RefreshToken record
+    AuthAPI-->>Citizen: 200 Access & Refresh Tokens (JWT)
 ```
 
 ---
@@ -272,7 +274,7 @@ sequenceDiagram
     actor Worker
     participant AssignAPI as Assignment API
     participant AssignSvc as Assignment Service
-    participant DB as SQLite DB
+    participant DB as Database
     participant Audit as Audit Log Service
     participant Notif as InApp Notification Service
 
@@ -331,7 +333,7 @@ sequenceDiagram
     participant ResSvc as Resolution Service
     participant Infer as Inference Engine
     participant CLIP as OpenCLIP Engine
-    participant DB as SQLite DB
+    participant DB as Database
     participant Notif as Notification Service
 
     Worker->>ResAPI: POST /api/v1/resolutions (Image file)
@@ -472,4 +474,49 @@ flowchart TD
     QueryLogs --> MapEvents[Map Internal Actions to Citizen-Facing Titles & Descriptions]
     MapEvents --> FormatTimeline[Format Timestamps & Timeline Items]
     FormatTimeline --> ReturnJson[Return JSON Array of Chronological Events]
+```
+
+---
+
+### Workflow 10: Refresh Token Session Management Flow
+
+This workflow handles rotation of refresh tokens to maintain long-lived sessions safely, revoke reused tokens (replay attack prevention), and execute logouts.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Client
+    participant AuthAPI as Auth Router
+    participant RefreshSvc as Refresh Token Service
+    participant DB as Database
+
+    Note over Client, DB: Token Refresh Workflow (POST /api/v1/auth/refresh)
+    Client->>AuthAPI: Send old refresh token
+    AuthAPI->>RefreshSvc: refresh(old_refresh_token)
+    RefreshSvc->>DB: Query stored token by token string
+    alt Token Reused (revoked_at is not None)
+        RefreshSvc->>DB: Revoke entire session (reason: TOKEN_REUSE_DETECTED)
+        RefreshSvc-->>AuthAPI: Raise 401 Unauthorized (Session Revoked)
+        AuthAPI-->>Client: 401 Unauthorized (Session Expired)
+    else Token Active & Valid
+        RefreshSvc->>DB: Revoke old token (reason: ROTATED)
+        RefreshSvc->>RefreshSvc: Generate new JWT access & refresh tokens
+        RefreshSvc->>DB: Create new RefreshToken record
+        RefreshSvc-->>AuthAPI: Return new Access & Refresh tokens
+        AuthAPI-->>Client: 200 Return tokens & set cookies
+    end
+
+    Note over Client, DB: Single Device Logout (POST /api/v1/auth/logout)
+    Client->>AuthAPI: Send refresh token
+    AuthAPI->>RefreshSvc: logout(refresh_token)
+    RefreshSvc->>DB: Revoke token record (reason: LOGOUT)
+    RefreshSvc-->>AuthAPI: Logout success
+    AuthAPI-->>Client: 200 Logout Confirmed
+
+    Note over Client, DB: Multi-Device Logout (POST /api/v1/auth/logout-all)
+    Client->>AuthAPI: Send access token in header
+    AuthAPI->>RefreshSvc: logout_all(user_id)
+    RefreshSvc->>DB: Revoke all refresh tokens for user (reason: LOGOUT_ALL)
+    RefreshSvc-->>AuthAPI: Logout all success
+    AuthAPI-->>Client: 200 All Devices Logged Out
 ```

@@ -5,8 +5,12 @@
 | Endpoint | Method | Source File | Allowed Roles | Service Invoked | Request Body / Params | Response Schema | Description |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | `/api/v1/auth/register` | POST | `api/auth.py` | Public | `AuthService.register` | `UserCreate` | `MessageResponse` | Register a new Citizen account and dispatch an email OTP code. |
-| `/api/v1/auth/login` | POST | `api/auth.py` | Public | `AuthService.login` | `OAuth2PasswordRequestForm` | `Token` | Authenticate user credentials and issue a JWT bearer token. |
+| `/api/v1/auth/login` | POST | `api/auth.py` | Public | `AuthService.login` | `OAuth2PasswordRequestForm` | `TokenResponse` | Authenticate user credentials and issue access & refresh tokens. |
 | `/api/v1/auth/me` | GET | `api/auth.py` | Authenticated | Direct ORM | Header: Bearer Token | `UserResponse` | Fetch authenticated user profile details. |
+| `/api/v1/auth/refresh` | POST | `api/auth.py` | Public | `RefreshTokenService.refresh` | `RefreshTokenRequest` | `TokenResponse` | Rotate the refresh token to issue a new access/refresh token pair. |
+| `/api/v1/auth/logout` | POST | `api/auth.py` | Public | `RefreshTokenService.logout` | `RefreshTokenRequest` | Generic Dict | Revoke the active refresh token session. |
+| `/api/v1/auth/logout-all` | POST | `api/auth.py` | Authenticated | `RefreshTokenService.logout_all` | None | Generic Dict | Revoke all active refresh token sessions for the logged-in user. |
+| `/api/v1/auth/sessions` | GET | `api/auth.py` | Authenticated | `RefreshTokenService.get_active_sessions` | None | `list[SessionResponse]` | Fetch metadata of all active refresh token sessions for the user. |
 | `/api/v1/auth/verify-email` | POST | `api/auth.py` | Public | `AuthService.verify_email` | `VerifyEmailRequest` | `MessageResponse` | Validate 6-digit OTP to activate citizen account. |
 | `/api/v1/auth/resend-otp` | POST | `api/auth.py` | Public | `AuthService.resend_otp` | `ResendOTPRequest` | `MessageResponse` | Resend email verification OTP code. |
 | `/api/v1/auth/forgot-password` | POST | `api/auth.py` | Public | `AuthService.forgot_password` | `ForgotPasswordRequest` | `MessageResponse` | Initiate password recovery and dispatch reset OTP. |
@@ -101,6 +105,8 @@
 - `PATCH /city-admins/citizens/{id}/unblock`: Unblock Citizen account (`CITY_ADMIN`).
 - `PATCH /city-admins/department-admins/{id}/block`: Block Department Admin (`CITY_ADMIN`).
 - `PATCH /city-admins/department-admins/{id}/unblock`: Unblock Department Admin (`CITY_ADMIN`).
+- `PATCH /city-admins/admins/{id}/block`: Block City Admin account (`SUPER_ADMIN`).
+- `PATCH /city-admins/admins/{id}/unblock`: Unblock City Admin account (`SUPER_ADMIN`).
 
 ### Worker Management (`/workers`)
 - `POST /workers`: Onboard new field worker (`DEPARTMENT_ADMIN`, `SUPER_ADMIN`).
@@ -131,3 +137,13 @@
 - `POST /api/v1/feedback`: Submit application feedback (`CITIZEN`).
 - `GET /api/v1/feedback/export`: Export feedback data (`CITY_ADMIN`).
 - `GET /api/v1/ai-dataset/export`: Export verified detections dataset (`SUPER_ADMIN`).
+
+---
+
+## 9. Health & Diagnostics Endpoints
+
+The API exposes root-level health checking endpoints (without the `/api/v1` prefix) for deployment liveness and readiness monitoring:
+
+- `GET /health`: Fetch API status, version, and timestamp.
+- `GET /liveness`: Check if the service container is alive.
+- `GET /readiness`: Check if the service and database are ready to process traffic. Returns a `503 Service Unavailable` if database is disconnected.
