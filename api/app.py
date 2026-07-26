@@ -11,7 +11,7 @@ from utils.logger import get_logger
 from api.routes import router
 from contextlib import asynccontextmanager
 from pathlib import Path
-from configs.config import FRONTEND_BASE_URL
+from configs.config import FRONTEND_BASE_URL,ENABLE_API_DOCS
 
 logger = get_logger("cscrs")
 
@@ -46,6 +46,9 @@ app = FastAPI(
     title="CSCRS API",
     version="1.0.0",
     lifespan=lifespan,
+    docs_url="/docs" if ENABLE_API_DOCS else None,
+    redoc_url="/redoc" if ENABLE_API_DOCS else None,
+    openapi_url="/openapi.json" if ENABLE_API_DOCS else None,
 )
 
 app.state.limiter = limiter
