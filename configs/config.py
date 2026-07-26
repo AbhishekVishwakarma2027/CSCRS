@@ -172,8 +172,6 @@ DEFAULT_MANUAL_REVIEW = 0
 
 MAX_PAGE_SIZE_LIMIT=100
 
-ENABLE_API_DOCS: bool = True
-
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
 
 LOG_MAX_SIZE_MB = int(
@@ -189,3 +187,8 @@ LOG_BACKUP_COUNT = int(
         5,
     )
 )
+
+ENABLE_API_DOCS = os.getenv(
+    "ENABLE_API_DOCS",
+    "True",
+).lower() == "true"
