@@ -3,16 +3,36 @@ from math import atan2, cos, radians, sin, sqrt
 
 def _parse_fraction(value):
 
+    if value is None:
+        return None
+
     if isinstance(value, (int, float)):
         return float(value)
 
-    if "/" in value:
-        numerator, denominator = value.split("/")
+    value = str(value).strip()
 
-        if denominator == "0":
+    if "/" in value:
+
+        try:
+
+            numerator, denominator = value.split("/")
+
+            numerator = float(numerator)
+            denominator = float(denominator)
+
+            if denominator == 0:
+                return None
+
+            return numerator / denominator
+
+        except (ValueError, ZeroDivisionError):
             return None
 
-    return float(value)
+    try:
+        return float(value)
+
+    except ValueError:
+        return None
 
 
 def exif_to_decimal(gps_string):
@@ -30,6 +50,12 @@ def exif_to_decimal(gps_string):
     degrees = _parse_fraction(values[0])
     minutes = _parse_fraction(values[1])
     seconds = _parse_fraction(values[2])
+    if (
+        degrees is None
+        or minutes is None
+        or seconds is None
+    ):
+        return None
 
     decimal = (
         degrees
