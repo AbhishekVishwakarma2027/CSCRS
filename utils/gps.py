@@ -7,7 +7,10 @@ def _parse_fraction(value):
         return float(value)
 
     if "/" in value:
-        return float(Fraction(value))
+        numerator, denominator = value.split("/")
+
+        if denominator == "0":
+            return None
 
     return float(value)
 
