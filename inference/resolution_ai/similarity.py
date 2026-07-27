@@ -21,11 +21,19 @@ class SceneSimilarityEngine:
 
         device = "cuda" if torch.cuda.is_available() else "cpu"
 
+        OPENCLIP_MODEL = Path(
+            "/app/models/huggingface/hub/"
+            "models--laion--CLIP-ViT-B-32-laion2B-s34B-b79K/"
+            "snapshots/"
+            "1a25a446712ba5ee05982a381eed697ef9b435cf/"
+            "open_clip_model.safetensors"
+        )
+
         if SceneSimilarityEngine._model is None:
 
             model, _, preprocess = open_clip.create_model_and_transforms(
                 model_name=model_name,
-                pretrained=pretrained,
+                pretrained=str(OPENCLIP_MODEL),
             )
 
             model = model.to(device)
