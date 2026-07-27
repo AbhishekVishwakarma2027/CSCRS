@@ -3,7 +3,7 @@ from pathlib import Path
 import torch
 import torch.nn.functional as F
 from PIL import Image
-
+from inference.config import MODEL_DIR
 import open_clip
 
 
@@ -21,12 +21,14 @@ class SceneSimilarityEngine:
 
         device = "cuda" if torch.cuda.is_available() else "cpu"
 
-        OPENCLIP_MODEL = Path(
-            "/app/models/huggingface/hub/"
-            "models--laion--CLIP-ViT-B-32-laion2B-s34B-b79K/"
-            "snapshots/"
-            "1a25a446712ba5ee05982a381eed697ef9b435cf/"
-            "open_clip_model.safetensors"
+        OPENCLIP_MODEL = (
+            MODEL_DIR
+            / "huggingface"
+            / "hub"
+            / "models--laion--CLIP-ViT-B-32-laion2B-s34B-b79K"
+            / "snapshots"
+            / "1a25a446712ba5ee05982a381eed697ef9b435cf"
+            / "open_clip_model.safetensors"
         )
 
         if SceneSimilarityEngine._model is None:

@@ -3,6 +3,8 @@ import torch
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
+MODEL_DIR = Path("/app/models")
+
 MODEL_PATH = PROJECT_ROOT / "models" / "best_cscrs_seg_v1.pt"
 
 MODEL_VERSION = "best_cscrs_seg_v1"
