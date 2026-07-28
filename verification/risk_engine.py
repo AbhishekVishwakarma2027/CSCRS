@@ -2,9 +2,8 @@ class RiskEngine:
 
     # Detector Weights
     WEIGHTS = {
-        "exif": 0.60,
-        "quality": 0.20,
-        "ai_generated": 0.15,
+        "exif": 0.70,
+        "quality": 0.25,
         "duplicate": 0.05
     }
 

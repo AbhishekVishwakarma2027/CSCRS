@@ -213,15 +213,6 @@ CSCRS/
 ├── templates/                        # Email Templates
 │   ├── __init__.py
 │   └── email_templates.py            # HTML/Text email template renderer
-├── third_party/                      # Third-party integrated repositories
-│   └── UniversalFakeDetect/          # Synthetic image generator detector repository
-│       ├── dataset_paths.py
-│       ├── train.py
-│       ├── validate.py
-│       ├── data/
-│       ├── models/
-│       ├── networks/
-│       └── options/
 ├── train/                            # YOLO Fine-Tuning & Training Scripts
 │   ├── __init__.py
 │   ├── resume_training.py            # Resume YOLO training script
@@ -242,14 +233,6 @@ CSCRS/
     ├── base_detector.py              # Base interface for verification detectors
     ├── risk_engine.py                # Weighted risk score & decision engine
     ├── verifier.py                   # Aggregated VerificationEngine orchestrator
-    ├── ai_generated/                 # Synthetic image detection module (Requires third_party)
-    │   ├── __init__.py
-    │   ├── config.py                 # AI detector configuration & weights path
-    │   ├── detector.py               # AIGeneratedDetector model runner
-    │   ├── infer.py                  # Standalone inference helper
-    │   └── model_loader.py           # Weights loader (Imports from third_party)
-    ├── duplicate/                    # Duplicate verification subpackage placeholder
-    │   └── __init__.py
     ├── exif/                         # EXIF metadata verification module
     │   ├── __init__.py
     │   ├── detector.py               # EXIFDetector risk evaluation
@@ -492,34 +475,6 @@ Total Python Files in Repository: **220 Files** (including 2 Alembic migration s
 192. `scripts/bootstrap_super_admin.py`
 193. `scripts/seed_departments.py`
 194. `scripts/sk.py`
-
-### Third-Party Integrated Modules (`third_party/`) - 26 Files
-195. `third_party/UniversalFakeDetect/dataset_paths.py`
-196. `third_party/UniversalFakeDetect/train.py`
-197. `third_party/UniversalFakeDetect/validate.py`
-198. `third_party/UniversalFakeDetect/data/__init__.py`
-199. `third_party/UniversalFakeDetect/data/datasets.py`
-200. `third_party/UniversalFakeDetect/models/__init__.py`
-201. `third_party/UniversalFakeDetect/models/clip/__init__.py`
-202. `third_party/UniversalFakeDetect/models/clip/clip.py`
-203. `third_party/UniversalFakeDetect/models/clip/model.py`
-204. `third_party/UniversalFakeDetect/models/clip/simple_tokenizer.py`
-205. `third_party/UniversalFakeDetect/models/clip_models.py`
-206. `third_party/UniversalFakeDetect/models/imagenet_models.py`
-207. `third_party/UniversalFakeDetect/models/resnet.py`
-208. `third_party/UniversalFakeDetect/models/vgg.py`
-209. `third_party/UniversalFakeDetect/models/vision_transformer.py`
-210. `third_party/UniversalFakeDetect/models/vision_transformer_misc.py`
-211. `third_party/UniversalFakeDetect/models/vision_transformer_utils.py`
-212. `third_party/UniversalFakeDetect/networks/__init__.py`
-213. `third_party/UniversalFakeDetect/networks/base_model.py`
-214. `third_party/UniversalFakeDetect/networks/lpf.py`
-215. `third_party/UniversalFakeDetect/networks/resnet_lpf.py`
-216. `third_party/UniversalFakeDetect/networks/trainer.py`
-217. `third_party/UniversalFakeDetect/options/__init__.py`
-218. `third_party/UniversalFakeDetect/options/base_options.py`
-219. `third_party/UniversalFakeDetect/options/test_options.py`
-220. `third_party/UniversalFakeDetect/options/train_options.py`
 
 ---
 
