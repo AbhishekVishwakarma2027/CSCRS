@@ -31,7 +31,7 @@ from services.forward_request_service import (
 
 
 router = APIRouter(
-    prefix="/api/v1/forward-requests",
+    prefix="/forward-requests",
     tags=["Forward Requests"],
 )
 

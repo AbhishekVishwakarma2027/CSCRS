@@ -34,10 +34,9 @@ from services.profile_service import (
 
 
 router = APIRouter(
-    prefix="/api/v1/profile",
+    prefix="/profile",
     tags=["Profile"],
 )
-
 
 @router.get(
     "/me",
