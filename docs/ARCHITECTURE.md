@@ -258,7 +258,7 @@ flowchart TD
     UpdateReportStatus --> AuditLog[Log Action AUTO_ASSIGNED]
     AuditLog --> NotifyWorker[Create InAppNotification for Worker]
     NotifyWorker --> WorkerArrives([Worker Arrives at Site])
-    WorkerArrives --> StartWorkRequest[Worker POST /api/v1/assignments/{id}/start-work]
+    WorkerArrives --> StartWorkRequest[Worker POST /api/v1/assignments/{assignment_id}/start]
     StartWorkRequest --> CalcDist[Calculate Distance from Report GPS via Haversine]
     CalcDist --> CheckRadius{Distance <= 30m?}
     CheckRadius -- No --> RejectStart[Raise 403 Distance Exceeded]
@@ -285,7 +285,7 @@ sequenceDiagram
     AssignSvc->>Audit: log("AUTO_ASSIGNED")
     AssignSvc->>Notif: create_notification("New Assignment")
 
-    Worker->>AssignAPI: POST /api/v1/assignments/{id}/start-work (lat, lon)
+    Worker->>AssignAPI: POST /api/v1/assignments/{assignment_id}/start (lat, lon)
     AssignAPI->>AssignSvc: start_work(assignment_id, worker_id, lat, lon)
     AssignSvc->>AssignSvc: calculate_distance(worker_gps, report_gps)
     alt Distance > 30 meters
@@ -351,7 +351,7 @@ sequenceDiagram
     else Decision == REVIEW
         ResSvc->>DB: Save Resolution (manual_review=True)
         ResAPI-->>Worker: 200 Pending Manual Review
-        Admin->>ResAPI: POST /api/v1/resolutions/{id}/approve-manual-review
+        Admin->>ResAPI: POST /api/v1/resolutions/manual-review/{report_id}/approve
         ResAPI->>ResSvc: approve_manual_review(report_id)
         ResSvc->>DB: Update Report Status RESOLVED
         ResSvc->>Notif: Send Resolution Completed Email
@@ -388,23 +388,23 @@ sequenceDiagram
     participant AssignSvc as Assignment Service
     participant DB as Database
 
-    Worker->>FwdAPI: POST /api/v1/forward-requests (reason)
+    Worker->>FwdAPI: POST /api/v1/forward-requests/{report_id} (reason)
     FwdAPI->>FwdSvc: create_request(report_id, worker, request)
     FwdSvc->>DB: Create DepartmentForwardRequest (Status: PENDING)
     
-    SourceAdmin->>FwdAPI: POST /api/v1/forward-requests/{id}/approve
+    SourceAdmin->>FwdAPI: POST /api/v1/forward-requests/{request_id}/approve
     FwdAPI->>FwdSvc: approve_request(request_id, destination_dept_id)
     FwdSvc->>DB: Update Status (WAITING_DESTINATION)
 
     alt Destination Admin Accepts
-        DestAdmin->>FwdAPI: POST /api/v1/forward-requests/{id}/accept
+        DestAdmin->>FwdAPI: POST /api/v1/forward-requests/{request_id}/accept
         FwdAPI->>FwdSvc: accept_request(request_id)
         FwdSvc->>DB: Update Report Department ID
         FwdSvc->>AssignSvc: assign_worker(new_department_id)
         AssignSvc->>DB: Create New Assignment for Destination Worker
         FwdAPI-->>DestAdmin: 200 Forward Accepted & Reassigned
     else Destination Admin Declines
-        DestAdmin->>FwdAPI: POST /api/v1/forward-requests/{id}/decline
+        DestAdmin->>FwdAPI: POST /api/v1/forward-requests/{request_id}/decline
         FwdAPI->>FwdSvc: decline_request(request_id, reason)
         FwdSvc->>DB: Revert Assignment to Original Source Worker
         FwdAPI-->>DestAdmin: 200 Forward Declined & Returned

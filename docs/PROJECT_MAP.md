@@ -485,7 +485,7 @@ Total Python Files in Repository: **220 Files** (including 2 Alembic migration s
 - `api/routes.py`: Aggregates all 17 sub-routers into a master router.
 - `api/auth.py`: Registration, login token issuance, email OTP verification, password reset, and profile inspection endpoints.
 - `api/report.py`: Issue report submission, duplicate handling, citizen/department report listing, pagination, and cancellation/reopening.
-- `api/assignment.py`: Worker assignment queries and work initiation (`/start-work`) endpoint.
+- `api/assignment.py`: Worker assignment queries and work initiation (`/start`) endpoint.
 - `api/resolution.py`: Worker resolution proof upload, manual review approval, and rejection.
 - `api/forward_request.py`: Inter-department report forwarding creation, approval, acceptance, and declination.
 - `api/admin.py`: Department Admin invitation and account activation.

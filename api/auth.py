@@ -275,6 +275,7 @@ def reset_password(
         }
     },
 )
+@limiter.limit("2 per 15 minutes")
 def change_password(
     request: ChangePasswordRequest,
     current_user: User = Depends(

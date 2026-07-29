@@ -149,16 +149,6 @@ class DepartmentDashboardResponse(BaseModel):
 
     automation_rate: float
 
-
-class TopWorkerItem(BaseModel):
-
-    worker_id: int
-
-    worker_name: str
-
-    completed_reports: int
-
-    in_progress_reports: int
 class TopWorkerItem(BaseModel):
 
     worker_id: int

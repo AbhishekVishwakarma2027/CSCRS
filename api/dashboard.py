@@ -53,7 +53,7 @@ def dashboard_summary(
     if current_user.role not in allowed_roles:
         raise HTTPException(
             status_code=403,
-            detail="You are not authorized to export feedback.",
+            detail="You are not authorized to access the dashboard summary.",
         )
     service = AnalyticsService(db)
 
