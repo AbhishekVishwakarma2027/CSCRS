@@ -75,12 +75,12 @@ class DepartmentForwardRequest(Base):
     )
 
     reviewed_at = Column(
-        DateTime,
+        DateTime(timezone=True),
         nullable=True,
     )
 
     created_at = Column(
-        DateTime,
+        DateTime(timezone=True),
         server_default=func.now(),
         nullable=False,
     )
