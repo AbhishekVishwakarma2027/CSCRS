@@ -95,6 +95,10 @@ Production_Test/
 *.engine
 *.tflite
 
+# AI Models
+models/
+*.safetensors
+
 # Training Dataset
 Dataset/
 datasets/
@@ -128,3 +132,25 @@ Thumbs.db
 # Python Cache
 .mypy_cache/
 .ruff_cache/
+
+# ─── Frontend (CSCRS Admin Portal) ───────────────────────────────────────────
+frontend/node_modules/
+frontend/dist/
+frontend/.eslintcache
+
+# =========================
+# Frontend (React/Vite)
+# =========================
+frontend/.env.local
+frontend/.env.development
+frontend/.env.production
+frontend/.env.*.local
+!frontend/.env.example
+
+frontend/.vercel/
+frontend/.vite/
+frontend/coverage/
+frontend/*.tsbuildinfo
+frontend/frontend_tree.txt
+frontend/src/src_tree.txt
+frontend/frontend_tree.txt

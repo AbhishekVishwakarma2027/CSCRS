@@ -1,5 +1,3 @@
---extra-index-url https://download.pytorch.org/whl/cu121
-
 # FastAPI & ASGI Web Server
 fastapi==0.138.2
 uvicorn==0.49.0
@@ -33,8 +31,8 @@ reportlab==5.0.0
 redis[hiredis]==6.4.0
 
 # Image Processing, Machine Learning, & AI Verification
-torch==2.5.1+cu121
-torchvision==0.20.1+cu121
+torch==2.5.1
+torchvision==0.20.1
 ultralytics==8.4.41
 open-clip-torch==3.3.0
 exifread==3.5.1
