@@ -75,10 +75,10 @@ export function SummaryCards() {
         <div className="flex items-center space-x-3 text-red-800">
           <AlertCircle className="text-red-650 h-5 w-5 shrink-0" />
           <div>
-            <h4 className="text-[10px] font-black tracking-widest text-neutral-400 uppercase">
+            <h4 className="text-[13px] font-black tracking-wide text-neutral-400 uppercase">
               Service Synchronizer
             </h4>
-            <p className="mt-1 text-xs font-black text-red-700">
+            <p className="mt-1 text-[13px] font-black text-red-700">
               Failed to retrieve operational stats
             </p>
           </div>
@@ -139,7 +139,7 @@ export function SummaryCards() {
             className="group flex h-[135px] flex-col justify-between border border-neutral-200 bg-white p-4 shadow-xs transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md dark:border-neutral-800 dark:bg-[#1C1C1E]"
           >
             <div className="flex items-start justify-between">
-              <span className="text-neutral-450 mt-0.5 text-[10px] leading-none font-black tracking-widest uppercase dark:text-neutral-500">
+              <span className="text-neutral-450 mt-0.5 text-[13px] leading-none font-black tracking-wide uppercase dark:text-neutral-500">
                 {card.title}
               </span>
               <div className="-mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-neutral-50 transition-colors select-none group-hover:bg-[#0A3C7D]/5 dark:bg-neutral-800/40 dark:group-hover:bg-[#0A3C7D]/10">
@@ -151,10 +151,10 @@ export function SummaryCards() {
                 {card.value}
               </h3>
               <div className="mt-1 flex items-center justify-between gap-2">
-                <p className="dark:text-neutral-450 text-[11px] leading-none font-bold text-neutral-500">
+                <p className="dark:text-neutral-450 text-[13px] leading-none font-bold text-neutral-500">
                   {card.desc}
                 </p>
-                <span className="text-[9px] leading-none font-semibold text-neutral-400 select-none">
+                <span className="text-[12px] leading-none font-semibold text-neutral-400 select-none">
                   {lastUpdatedText}
                 </span>
               </div>
@@ -212,7 +212,7 @@ export function SummaryCards() {
             className="group flex h-[135px] flex-col justify-between border border-neutral-200 bg-white p-4 shadow-xs transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md dark:border-neutral-800 dark:bg-[#1C1C1E]"
           >
             <div className="flex items-start justify-between">
-              <span className="text-neutral-450 mt-0.5 text-[10px] leading-none font-black tracking-widest uppercase dark:text-neutral-500">
+              <span className="text-neutral-450 mt-0.5 text-[13px] leading-none font-black tracking-wide uppercase dark:text-neutral-500">
                 {card.title}
               </span>
               <div className="-mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-neutral-50 transition-colors select-none group-hover:bg-[#0A3C7D]/5 dark:bg-neutral-800/40 dark:group-hover:bg-[#0A3C7D]/10">
@@ -224,10 +224,10 @@ export function SummaryCards() {
                 {card.value}
               </h3>
               <div className="mt-1 flex items-center justify-between gap-2">
-                <p className="dark:text-neutral-450 text-[11px] leading-none font-bold text-neutral-500">
+                <p className="dark:text-neutral-450 text-[13px] leading-none font-bold text-neutral-500">
                   {card.desc}
                 </p>
-                <span className="text-[9px] leading-none font-semibold text-neutral-400 select-none">
+                <span className="text-[12px] leading-none font-semibold text-neutral-400 select-none">
                   {lastUpdatedText}
                 </span>
               </div>
@@ -241,7 +241,7 @@ export function SummaryCards() {
   // 5. Empty State fallback (identical height)
   return (
     <Card className="flex h-[135px] items-center justify-center border border-neutral-200 bg-white p-6 shadow-xs dark:border-neutral-800 dark:bg-[#1C1C1E]">
-      <span className="text-xs font-bold text-neutral-500">No summary data available.</span>
+      <span className="text-[13px] font-bold text-neutral-500">No summary data available.</span>
     </Card>
   )
 }

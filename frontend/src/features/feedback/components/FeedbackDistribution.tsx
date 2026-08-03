@@ -50,10 +50,10 @@ export function FeedbackDistribution({ data }: FeedbackDistributionProps) {
           <>
             <div className="dark:text-neutral-150 font-mono text-[40px] leading-none font-black tracking-tight text-neutral-800">
               {average_rating.toFixed(1)}{' '}
-              <span className="text-neutral-450 text-xs font-bold">/ 5</span>
+              <span className="text-neutral-450 text-[13px] font-bold">/ 5</span>
             </div>
             {renderStarDisplay(Math.round(average_rating))}
-            <span className="text-neutral-450 mt-1 block text-[11px] font-bold dark:text-neutral-500">
+            <span className="text-neutral-450 mt-1 block text-[13px] font-bold dark:text-neutral-500">
               Based on {total_feedback} {total_feedback === 1 ? 'review' : 'reviews'}
             </span>
           </>
@@ -71,7 +71,7 @@ export function FeedbackDistribution({ data }: FeedbackDistributionProps) {
       </div>
 
       {/* 2. Rating Breakdown Bars / Zero-Feedback Illustration Block */}
-      <div className="dark:text-neutral-350 col-span-1 flex flex-col justify-center space-y-3.5 text-xs font-bold text-neutral-700 md:col-span-2">
+      <div className="dark:text-neutral-350 col-span-1 flex flex-col justify-center space-y-3.5 text-[13px] font-bold text-neutral-700 md:col-span-2">
         {!hasFeedback ? (
           <div className="flex flex-col items-center justify-center space-y-3.5 p-3 text-center">
             <div className="flex size-14 shrink-0 items-center justify-center rounded-full border border-dashed border-neutral-300 text-neutral-400 dark:border-neutral-800 dark:text-neutral-500">
@@ -81,7 +81,7 @@ export function FeedbackDistribution({ data }: FeedbackDistributionProps) {
               <h4 className="dark:text-neutral-250 text-[26px] leading-none font-bold tracking-widest text-neutral-800 uppercase">
                 No Feedback Yet
               </h4>
-              <p className="text-sm leading-relaxed font-semibold text-neutral-500 dark:text-neutral-400">
+              <p className="text-[13px] leading-relaxed font-semibold text-neutral-500 dark:text-neutral-400">
                 No citizen feedback has been submitted yet.
               </p>
               <p className="dark:text-neutral-550 text-[15px] leading-relaxed font-medium text-neutral-400">

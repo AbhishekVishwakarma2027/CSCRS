@@ -107,7 +107,7 @@ export function TableFilterHeader({
             placeholder="Search reports... (⌘K)"
             value={searchValue}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="h-8.5 w-full rounded-lg border border-neutral-200 bg-neutral-50/50 pl-9 text-xs font-bold transition-colors outline-none focus:border-[#0A3C7D] dark:border-neutral-800 dark:bg-[#1C1C1E] dark:focus:border-blue-500"
+            className="h-8.5 w-full rounded-lg border border-neutral-200 bg-neutral-50/50 pl-9 text-[13px] font-bold transition-colors outline-none focus:border-[#0A3C7D] dark:border-neutral-800 dark:bg-[#1C1C1E] dark:focus:border-blue-500"
           />
         </div>
 
@@ -117,7 +117,7 @@ export function TableFilterHeader({
           <select
             value={statusValue}
             onChange={(e) => onStatusChange(e.target.value)}
-            className="h-8.5 cursor-pointer rounded-lg border border-neutral-200 bg-white px-2.5 text-xs font-bold text-neutral-700 transition-colors outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-neutral-800 dark:bg-[#1C1C1E] dark:text-neutral-300"
+            className="h-8.5 cursor-pointer rounded-lg border border-neutral-200 bg-white px-2.5 text-[13px] font-bold text-neutral-700 transition-colors outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-neutral-800 dark:bg-[#1C1C1E] dark:text-neutral-300"
             aria-label="Filter by Report Status"
           >
             <option value="">All Statuses</option>
@@ -132,7 +132,7 @@ export function TableFilterHeader({
           <select
             value={priorityValue}
             onChange={(e) => onPriorityChange(e.target.value)}
-            className="h-8.5 cursor-pointer rounded-lg border border-neutral-200 bg-white px-2.5 text-xs font-bold text-neutral-700 transition-colors outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-neutral-800 dark:bg-[#1C1C1E] dark:text-neutral-300"
+            className="h-8.5 cursor-pointer rounded-lg border border-neutral-200 bg-white px-2.5 text-[13px] font-bold text-neutral-700 transition-colors outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-neutral-800 dark:bg-[#1C1C1E] dark:text-neutral-300"
             aria-label="Filter by Priority"
           >
             <option value="">All Priorities</option>
@@ -147,7 +147,7 @@ export function TableFilterHeader({
           <select
             value={categoryValue}
             onChange={(e) => onCategoryChange(e.target.value)}
-            className="h-8.5 cursor-pointer rounded-lg border border-neutral-200 bg-white px-2.5 text-xs font-bold text-neutral-700 transition-colors outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-neutral-800 dark:bg-[#1C1C1E] dark:text-neutral-300"
+            className="h-8.5 cursor-pointer rounded-lg border border-neutral-200 bg-white px-2.5 text-[13px] font-bold text-neutral-700 transition-colors outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-neutral-800 dark:bg-[#1C1C1E] dark:text-neutral-300"
             aria-label="Filter by Category"
           >
             <option value="">All Categories</option>
@@ -169,7 +169,7 @@ export function TableFilterHeader({
             variant="ghost"
             size="xs"
             onClick={() => onDensityChange('comfortable')}
-            className={`h-7.5 cursor-pointer rounded-md px-2 text-[10px] font-black tracking-wider uppercase transition-colors ${
+            className={`h-7.5 cursor-pointer rounded-md px-2 text-[11px] font-black tracking-wider uppercase transition-colors ${
               density === 'comfortable'
                 ? 'bg-white text-[#0A3C7D] shadow-xs dark:bg-neutral-800 dark:text-blue-400'
                 : 'text-neutral-450 hover:text-neutral-700 dark:text-neutral-400'
@@ -182,7 +182,7 @@ export function TableFilterHeader({
             variant="ghost"
             size="xs"
             onClick={() => onDensityChange('compact')}
-            className={`h-7.5 cursor-pointer rounded-md px-2 text-[10px] font-black tracking-wider uppercase transition-colors ${
+            className={`h-7.5 cursor-pointer rounded-md px-2 text-[11px] font-black tracking-wider uppercase transition-colors ${
               density === 'compact'
                 ? 'bg-white text-[#0A3C7D] shadow-xs dark:bg-neutral-800 dark:text-blue-400'
                 : 'text-neutral-450 hover:text-neutral-700 dark:text-neutral-400'
@@ -209,14 +209,14 @@ export function TableFilterHeader({
 
           {isColMenuOpen && (
             <div className="animate-in fade-in slide-in-from-top-1 absolute right-0 z-40 mt-1.5 w-44 rounded-xl border border-neutral-200 bg-white p-2.5 shadow-lg duration-150 dark:border-neutral-800 dark:bg-[#1C1C1E]">
-              <span className="text-neutral-450 dark:border-neutral-850 block border-b border-neutral-100 pb-2 text-[9px] font-black tracking-wider uppercase select-none dark:text-neutral-400">
+              <span className="text-neutral-450 dark:border-neutral-850 block border-b border-neutral-100 pb-2 text-[11px] font-black tracking-wider uppercase select-none dark:text-neutral-400">
                 Visible Columns
               </span>
               <div className="mt-2 max-h-48 space-y-1.5 overflow-y-auto">
                 {allColumns.map((col) => (
                   <label
                     key={col.id}
-                    className="dark:hover:bg-neutral-850 flex cursor-pointer items-center gap-2 rounded-md px-1.5 py-1 text-xs font-bold text-neutral-700 select-none hover:bg-neutral-50 dark:text-neutral-300"
+                    className="dark:hover:bg-neutral-850 flex cursor-pointer items-center gap-2 rounded-md px-1.5 py-1 text-[13px] font-bold text-neutral-700 select-none hover:bg-neutral-50 dark:text-neutral-300"
                   >
                     <input
                       type="checkbox"

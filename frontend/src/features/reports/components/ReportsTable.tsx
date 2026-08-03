@@ -248,7 +248,7 @@ export function ReportsTable({
               <>
                 <div className="fixed inset-0 z-30" onClick={() => setActiveActionRow(null)} />
                 <div className="animate-in fade-in slide-in-from-top-1 absolute right-0 z-40 mt-1 w-44 rounded-xl border border-neutral-200 bg-white p-1.5 shadow-lg duration-150 dark:border-neutral-800 dark:bg-[#1C1C1E]">
-                  <span className="dark:text-neutral-550 dark:border-neutral-850 block border-b border-neutral-100 px-2 py-1 pb-1 text-left text-[8px] font-black tracking-wider text-neutral-400 uppercase select-none">
+                  <span className="dark:text-neutral-550 dark:border-neutral-850 block border-b border-neutral-100 px-2 py-1 pb-1 text-left text-[11px] font-black tracking-wider text-neutral-400 uppercase select-none">
                     Operations
                   </span>
                   <div className="mt-1 space-y-0.5">
@@ -393,10 +393,10 @@ export function ReportsTable({
     return (
       <div className="flex min-h-[300px] flex-col items-center justify-center gap-3 rounded-xl border border-neutral-200 bg-white p-8 text-center shadow-sm dark:border-neutral-800 dark:bg-[#1C1C1E]">
         <AlertCircle className="h-7 w-7 shrink-0 text-rose-500" />
-        <h4 className="dark:text-neutral-250 text-sm font-bold text-neutral-800">
+        <h4 className="dark:text-neutral-250 text-[13px] font-bold text-neutral-800">
           Failed to load reports ledger
         </h4>
-        <p className="text-neutral-450 max-w-sm text-xs leading-relaxed font-medium dark:text-neutral-500">
+        <p className="text-neutral-450 max-w-sm text-[13px] leading-relaxed font-medium dark:text-neutral-500">
           The server returned an error: {error.message || 'Unknown network error'}. Please verify
           connection and retry.
         </p>
@@ -418,10 +418,10 @@ export function ReportsTable({
         <div className="dark:bg-neutral-850 flex h-12 w-12 items-center justify-center rounded-full bg-neutral-50 text-neutral-400 dark:text-neutral-500">
           <FileText className="h-6 w-6" />
         </div>
-        <h4 className="text-xs font-black tracking-widest text-neutral-600 uppercase dark:text-neutral-400">
+        <h4 className="text-[13px] font-black tracking-widest text-neutral-600 uppercase dark:text-neutral-400">
           No active reports
         </h4>
-        <p className="text-neutral-450 max-w-[280px] text-xs leading-relaxed font-semibold dark:text-neutral-500">
+        <p className="text-neutral-450 max-w-[280px] text-[13px] leading-relaxed font-semibold dark:text-neutral-500">
           There are no reports recorded matching your select filter criteria in the ledger.
         </p>
       </div>
@@ -451,7 +451,7 @@ export function ReportsTable({
             {table.getHeaderGroups().map((headerGroup) => (
               <tr
                 key={headerGroup.id}
-                className="dark:border-neutral-850 text-neutral-450 border-b border-neutral-100 bg-neutral-50/30 text-[10px] font-black tracking-wider uppercase select-none dark:bg-[#1E1E20] dark:text-neutral-400"
+                className="dark:border-neutral-850 text-neutral-450 border-b border-neutral-100 bg-neutral-50/30 text-[13px] font-black tracking-wider uppercase select-none dark:bg-[#1E1E20] dark:text-neutral-400"
               >
                 {headerGroup.headers.map((header) => {
                   const isSortable = header.column.getCanSort()
@@ -477,7 +477,7 @@ export function ReportsTable({
               </tr>
             ))}
           </thead>
-          <tbody className="dark:divide-neutral-850 dark:text-neutral-350 divide-y divide-neutral-100 text-xs font-bold text-neutral-700">
+          <tbody className="dark:divide-neutral-850 dark:text-neutral-350 divide-y divide-neutral-100 text-[13px] font-bold text-neutral-700">
             {table.getRowModel().rows.map((row) => (
               <tr
                 key={row.id}
@@ -557,7 +557,7 @@ export function ReportsTable({
                         onClick={() => setActiveActionRow(null)}
                       />
                       <div className="animate-in fade-in slide-in-from-top-1 absolute right-0 z-40 mt-1 w-40 rounded-xl border border-neutral-200 bg-white p-1.5 shadow-lg duration-150 dark:border-neutral-800 dark:bg-[#1C1C1E]">
-                        <span className="dark:text-neutral-550 dark:border-neutral-850 block border-b border-neutral-100 px-2 py-1 pb-1 text-left text-[8px] font-black tracking-wider text-neutral-400 uppercase select-none">
+                        <span className="dark:text-neutral-550 dark:border-neutral-850 block border-b border-neutral-100 px-2 py-1 pb-1 text-left text-[11px] font-black tracking-wider text-neutral-400 uppercase select-none">
                           Operations
                         </span>
                         <div className="mt-1 space-y-0.5">
@@ -632,7 +632,7 @@ export function ReportsTable({
               {/* Card Meta Content Grid */}
               <div className="grid grid-cols-2 gap-y-2.5 text-xs">
                 <div>
-                  <span className="text-neutral-450 block text-[10px] font-black uppercase dark:text-neutral-500">
+                  <span className="text-neutral-450 block text-[13px] font-black uppercase dark:text-neutral-500">
                     Category
                   </span>
                   <span className="dark:text-neutral-250 font-semibold text-neutral-800 capitalize">
@@ -641,7 +641,7 @@ export function ReportsTable({
                 </div>
                 {!isDeptAdmin && (
                   <div>
-                    <span className="text-neutral-450 block text-[10px] font-black uppercase dark:text-neutral-500">
+                    <span className="text-neutral-450 block text-[13px] font-black uppercase dark:text-neutral-500">
                       Department
                     </span>
                     <span

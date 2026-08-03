@@ -61,7 +61,7 @@ export function HighPriorityQueue() {
     return (
       <Card className="flex h-[330px] flex-col items-center justify-center gap-2 border border-neutral-200 bg-white p-6 text-center shadow-sm dark:border-neutral-800 dark:bg-[#1C1C1E]">
         <AlertCircle className="h-6 w-6 shrink-0 text-rose-500" />
-        <h4 className="dark:text-neutral-350 text-xs font-bold text-neutral-700">
+        <h4 className="dark:text-neutral-350 text-[13px] font-bold text-neutral-700">
           Failed to load critical queue
         </h4>
         <button
@@ -81,14 +81,14 @@ export function HighPriorityQueue() {
         <div className="shadow-xxs mb-3.5 flex h-12 w-12 items-center justify-center rounded-full border border-emerald-100 bg-emerald-50 text-emerald-600 dark:border-emerald-900/30 dark:bg-emerald-950/20 dark:text-emerald-400">
           <ShieldCheck className="h-6 w-6 animate-pulse" />
         </div>
-        <h4 className="text-xs leading-none font-black tracking-widest text-neutral-700 uppercase dark:text-neutral-300">
+        <h4 className="text-[13px] leading-none font-black tracking-widest text-neutral-700 uppercase dark:text-neutral-300">
           Queue Is Clear
         </h4>
-        <p className="text-neutral-450 dark:text-neutral-450 mt-2.5 max-w-[200px] text-[11px] leading-normal font-bold">
+        <p className="text-neutral-450 dark:text-neutral-450 mt-2.5 max-w-[200px] text-[13px] leading-normal font-bold">
           No unresolved critical or high priority incidents pending immediate manual verification.
         </p>
         {lastUpdatedText && (
-          <span className="mt-4 text-[9px] font-semibold text-neutral-400 dark:text-neutral-500">
+          <span className="mt-4 text-[13px] font-semibold text-neutral-400 dark:text-neutral-500">
             {lastUpdatedText}
           </span>
         )}
@@ -105,12 +105,12 @@ export function HighPriorityQueue() {
     >
       {/* Header */}
       <div className="flex shrink-0 items-center justify-between border-b border-neutral-100 pb-2 select-none dark:border-neutral-800">
-        <h4 className="flex items-center gap-2 text-[10px] font-black tracking-widest text-neutral-500 uppercase dark:text-neutral-400">
+        <h4 className="flex items-center gap-2 text-[18px] font-black tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
           <span className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-[#DC2626]" />
           Critical Queue
         </h4>
         {lastUpdatedText && (
-          <span className="text-neutral-450 text-[9px] font-semibold dark:text-neutral-500">
+          <span className="text-neutral-450 text-[13px] font-semibold dark:text-neutral-500">
             {lastUpdatedText}
           </span>
         )}
@@ -130,19 +130,19 @@ export function HighPriorityQueue() {
                 <span className="block text-xs font-black text-[#0A3C7D] dark:text-blue-400">
                   {report.report_number}
                 </span>
-                <span className="text-neutral-450 py-0.2 dark:border-neutral-750 shrink-0 rounded border border-neutral-200 bg-neutral-100 px-1.5 text-[9px] font-black uppercase dark:bg-neutral-800 dark:text-neutral-400">
+                <span className="text-neutral-450 py-0.2 dark:border-neutral-750 shrink-0 rounded border border-neutral-200 bg-neutral-100 px-1.5 text-[11px] font-black uppercase dark:bg-neutral-800 dark:text-neutral-400">
                   {report.issue_type?.toLowerCase()}
                 </span>
               </div>
 
-              <div className="text-neutral-450 flex flex-wrap items-center gap-x-2 text-[10px] font-bold dark:text-neutral-500">
+              <div className="text-neutral-450 flex flex-wrap items-center gap-x-2 text-[13px] font-bold dark:text-neutral-500">
                 <span>{report.department_name}</span>
                 <span>•</span>
                 <span>{formatRelativeTime(report.created_at)}</span>
               </div>
 
               {/* Assigned Worker */}
-              <div className="flex items-center space-x-1.5 pt-0.5 text-[10px] font-semibold text-neutral-500 dark:text-neutral-400">
+              <div className="flex items-center space-x-1.5 pt-0.5 text-[13px] font-semibold text-neutral-500 dark:text-neutral-400">
                 <User className="h-3.5 w-3.5 shrink-0 text-neutral-400" />
                 <span className="truncate">
                   {report.assigned_worker
@@ -154,7 +154,7 @@ export function HighPriorityQueue() {
 
             {/* Risk Score */}
             <div className="shrink-0 text-right">
-              <span className="inline-flex items-center rounded border border-[#DC2626]/20 bg-[#DC2626]/10 px-2 py-1 text-[10px] font-black tracking-wider text-[#DC2626] uppercase dark:border-red-900/30 dark:bg-red-950/20 dark:text-red-400">
+              <span className="inline-flex items-center rounded border border-[#DC2626]/20 bg-[#DC2626]/10 px-2 py-1 text-[11px] font-black tracking-wider text-[#DC2626] uppercase dark:border-red-900/30 dark:bg-red-950/20 dark:text-red-400">
                 Risk: {report.risk_score ? report.risk_score.toFixed(1) : 'N/A'}
               </span>
             </div>

@@ -84,12 +84,12 @@ export function ConfirmationDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby="confirm-dialog-title"
-        className="dark:text-neutral-350 w-full max-w-sm space-y-4 rounded-2xl border border-neutral-200 bg-white p-5 text-xs font-bold text-neutral-700 shadow-2xl dark:border-neutral-800 dark:bg-[#1C1C1E]"
+        className="dark:text-neutral-350 w-full max-w-sm space-y-4 rounded-2xl border border-neutral-200 bg-white p-5 text-[13px] font-bold text-neutral-700 shadow-2xl dark:border-neutral-800 dark:bg-[#1C1C1E]"
       >
         <div className="dark:border-neutral-850 flex items-center justify-between border-b border-neutral-100 pb-2">
           <h3
             id="confirm-dialog-title"
-            className={`flex items-center gap-1.5 text-sm font-black tracking-wider uppercase ${
+            className={`flex items-center gap-1.5 text-xl font-black tracking-wider uppercase ${
               isDanger ? 'text-rose-600' : 'text-emerald-600'
             }`}
           >

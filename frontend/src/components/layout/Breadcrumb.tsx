@@ -18,7 +18,7 @@ export function Breadcrumb() {
 
   return (
     <nav
-      className="flex items-center space-x-1.5 text-xs font-semibold text-neutral-500"
+      className="flex items-center space-x-1.5 text-[13px] font-semibold text-neutral-500"
       aria-label="Breadcrumb"
     >
       {/* Home Crumb */}

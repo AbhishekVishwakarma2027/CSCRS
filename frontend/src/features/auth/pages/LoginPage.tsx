@@ -187,7 +187,7 @@ export default function LoginPage() {
                     <span>Verifying Session...</span>
                   </>
                 ) : (
-                  <span>Secure Sign In</span>
+                  <span>Login</span>
                 )}
               </Button>
             </form>

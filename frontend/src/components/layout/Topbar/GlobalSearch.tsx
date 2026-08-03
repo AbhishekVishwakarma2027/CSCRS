@@ -24,10 +24,10 @@ export function GlobalSearch() {
         type="text"
         disabled
         placeholder="Search reports, workers or departments... (⌘K)"
-        className="border-neutral-250 w-full cursor-not-allowed rounded-lg border bg-neutral-50/50 py-1.5 pr-12 pl-9 text-sm text-neutral-400 placeholder-neutral-400 focus:outline-none dark:border-neutral-800 dark:bg-neutral-800/20"
+        className="border-neutral-250 w-full cursor-not-allowed rounded-lg border bg-neutral-50/50 py-1.5 pr-12 pl-9 text-[13px] text-neutral-400 placeholder-neutral-400 focus:outline-none dark:border-neutral-800 dark:bg-neutral-800/20"
       />
       <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-        <kbd className="text-neutral-450 border-neutral-250 hidden items-center gap-0.5 rounded border bg-neutral-100 px-1.5 py-0.5 text-[10px] font-black select-none sm:inline-flex dark:border-neutral-700 dark:bg-neutral-800">
+        <kbd className="text-neutral-450 border-neutral-250 hidden items-center gap-0.5 rounded border bg-neutral-100 px-1.5 py-0.5 text-[11px] font-black select-none sm:inline-flex dark:border-neutral-700 dark:bg-neutral-800">
           ⌘K
         </kbd>
       </div>

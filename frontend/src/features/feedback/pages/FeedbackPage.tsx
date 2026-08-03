@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 import { useFeedbackSummaryQuery } from '../hooks/use-feedback'
 import { feedbackService } from '../services/feedback.service'
 import { FeedbackDistribution } from '../components/FeedbackDistribution'
@@ -72,17 +73,14 @@ export default function FeedbackPage() {
   return (
     <div className="space-y-6 pb-10 text-left select-none">
       {/* 1. Header Banner */}
-      <div className="dark:border-neutral-850 flex items-center justify-between border-b border-neutral-100 pb-4">
-        <div>
-          <h2 className="dark:text-blue-450 flex items-center gap-2 text-[24px] font-bold tracking-wide text-[#0A3C7D] uppercase">
-            <MessageSquare className="h-8 w-8" />
-            Citizen Feedback Registry
-          </h2>
-          <p className="dark:text-neutral-455 mt-1.5 text-[13px] leading-relaxed font-semibold text-neutral-500 sm:text-[18px]">
-            Overview aggregate ratings statistics, download detailed comments log, and audit service
-            metrics.
-          </p>
-        </div>
+      <div className="flex shrink-0 flex-col gap-1.5 pb-4 select-none">
+        <h1 className="text-2xl font-black tracking-tight text-neutral-800 dark:text-white">
+          Citizen Feedback Registry
+        </h1>
+        <p className="text-[13px] leading-relaxed font-semibold text-neutral-500 dark:text-neutral-400">
+          Overview aggregate ratings statistics, download detailed comments log, and audit service
+          metrics.
+        </p>
       </div>
 
       {/* 2. Loading / Connection Error States */}
@@ -101,74 +99,86 @@ export default function FeedbackPage() {
       ) : error ? (
         <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-red-200/60 bg-red-50/20 p-8 text-center dark:border-red-900/40 dark:bg-red-950/5">
           <AlertCircle className="text-red-550 h-8 w-8 shrink-0" />
-          <h4 className="text-red-750 text-xs font-black tracking-wider uppercase sm:text-sm dark:text-red-400">
+          <h4 className="text-red-750 text-[13px] font-black tracking-wider uppercase dark:text-red-400">
             Connection Error
           </h4>
-          <p className="max-w-md text-xs leading-relaxed font-semibold text-red-600/80 dark:text-red-400/80">
+          <p className="max-w-md text-[13px] leading-relaxed font-semibold text-red-600/80 dark:text-red-400/80">
             {error.message ||
               'FastAPI dashboard summary query failed. Try refreshing or logging in again.'}
           </p>
-          <Button type="button" onClick={() => refetch()} className="h-8.5 text-xs">
+          <Button type="button" onClick={() => refetch()} className="h-8.5 text-[13px]">
             Retry Connection
           </Button>
         </div>
       ) : (
         <>
-          {/* 3. Taller, Centered KPI Summary Cards (2 columns on tablet, 3 columns on desktop, 1 column on mobile) */}
+          {/* 3. Taller, Centered KPI Summary Cards */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
             {/* Card 1: Total Feedback */}
-            <div className="border-neutral-250/60 flex h-24 items-center gap-4.5 rounded-xl border bg-white px-5 py-6 shadow-xs transition-all duration-200 hover:shadow-sm dark:border-neutral-800 dark:bg-[#1C1C1E]">
-              <div className="shrink-0 rounded-xl bg-blue-50/60 p-3 text-[#0A3C7D] dark:bg-blue-950/20 dark:text-blue-400">
-                <MessageSquare className="h-5 w-5" />
-              </div>
-              <div className="flex-1 space-y-1 text-left font-bold">
-                <span className="block text-[13px] leading-none font-semibold tracking-wider text-neutral-600 uppercase sm:text-[16px] dark:text-neutral-400">
+            <Card className="group flex h-[135px] flex-col justify-between border border-neutral-200 bg-white p-4 shadow-xs transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md dark:border-neutral-800 dark:bg-[#1C1C1E]">
+              <div className="flex items-start justify-between">
+                <span className="text-neutral-450 mt-0.5 text-[13px] leading-none font-black tracking-wide uppercase dark:text-neutral-500">
                   Total Feedbacks
                 </span>
-                <div className="my-1 block font-mono text-[34px] leading-none font-black tracking-tight text-neutral-800 sm:text-[36px] dark:text-neutral-200">
-                  {summary?.total_feedback ?? 0}
+                <div className="-mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-neutral-50 transition-colors select-none group-hover:bg-[#0A3C7D]/5 dark:bg-neutral-800/40 dark:group-hover:bg-[#0A3C7D]/10">
+                  <MessageSquare className="h-4.5 w-4.5 text-[#0A3C7D]" />
                 </div>
-                <span className="dark:text-neutral-550 block text-[12px] leading-none font-medium text-neutral-400">
-                  Real-time query sync
-                </span>
               </div>
-            </div>
+              <div className="space-y-1">
+                <h3 className="text-3xl leading-none font-black tracking-tight text-neutral-800 transition-colors md:text-4xl dark:text-white">
+                  {summary?.total_feedback ?? 0}
+                </h3>
+                <div className="mt-1 flex items-center justify-between gap-2">
+                  <p className="dark:text-neutral-450 text-[13px] leading-none font-bold text-neutral-500">
+                    Real-time query sync
+                  </p>
+                </div>
+              </div>
+            </Card>
 
             {/* Card 2: Average Rating */}
-            <div className="border-neutral-250/60 flex h-24 items-center gap-4.5 rounded-xl border bg-white px-5 py-6 shadow-xs transition-all duration-200 hover:shadow-sm dark:border-neutral-800 dark:bg-[#1C1C1E]">
-              <div className="shrink-0 rounded-xl bg-amber-50/60 p-3 text-amber-500 dark:bg-amber-950/20 dark:text-amber-400">
-                <Star className="h-5 w-5 fill-amber-500" />
-              </div>
-              <div className="flex-1 space-y-1 text-left font-bold">
-                <span className="block text-[13px] leading-none font-semibold tracking-wider text-neutral-600 uppercase sm:text-[16px] dark:text-neutral-400">
+            <Card className="group flex h-[135px] flex-col justify-between border border-neutral-200 bg-white p-4 shadow-xs transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md dark:border-neutral-800 dark:bg-[#1C1C1E]">
+              <div className="flex items-start justify-between">
+                <span className="text-neutral-450 mt-0.5 text-[13px] leading-none font-black tracking-wide uppercase dark:text-neutral-500">
                   Average Score
                 </span>
-                <div className="my-1 block font-mono text-[34px] leading-none font-black tracking-tight text-neutral-800 sm:text-[36px] dark:text-neutral-200">
-                  {hasFeedback ? `${summary?.average_rating.toFixed(2)}` : '0.00'}
+                <div className="-mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-neutral-50 transition-colors select-none group-hover:bg-[#0A3C7D]/5 dark:bg-neutral-800/40 dark:group-hover:bg-[#0A3C7D]/10">
+                  <Star className="h-4.5 w-4.5 text-amber-500" />
                 </div>
-                <span className="dark:text-neutral-550 block text-[12px] leading-none font-medium text-neutral-400">
-                  Aggregate score
-                </span>
               </div>
-            </div>
+              <div className="space-y-1">
+                <h3 className="text-3xl leading-none font-black tracking-tight text-neutral-800 transition-colors md:text-4xl dark:text-white">
+                  {hasFeedback ? `${summary?.average_rating.toFixed(2)}` : '0.00'}
+                </h3>
+                <div className="mt-1 flex items-center justify-between gap-2">
+                  <p className="dark:text-neutral-450 text-[13px] leading-none font-bold text-neutral-500">
+                    Aggregate score
+                  </p>
+                </div>
+              </div>
+            </Card>
 
-            {/* Card 3: Satisfaction Rate (with N/A check) */}
-            <div className="border-neutral-250/60 col-span-1 flex h-24 items-center gap-4.5 rounded-xl border bg-white px-5 py-6 shadow-xs transition-all duration-200 hover:shadow-sm sm:col-span-2 md:col-span-1 dark:border-neutral-800 dark:bg-[#1C1C1E]">
-              <div className="dark:text-emerald-455 shrink-0 rounded-xl bg-emerald-50/60 p-3 text-emerald-600 dark:bg-emerald-950/20">
-                <TrendingUp className="h-5 w-5" />
-              </div>
-              <div className="flex-1 space-y-1 text-left font-bold">
-                <span className="block text-[13px] leading-none font-semibold tracking-wider text-neutral-600 uppercase sm:text-[16px] dark:text-neutral-400">
+            {/* Card 3: Satisfaction Rate */}
+            <Card className="group flex h-[135px] flex-col justify-between border border-neutral-200 bg-white p-4 shadow-xs transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md sm:col-span-2 md:col-span-1 dark:border-neutral-800 dark:bg-[#1C1C1E]">
+              <div className="flex items-start justify-between">
+                <span className="text-neutral-450 mt-0.5 text-[13px] leading-none font-black tracking-wide uppercase dark:text-neutral-500">
                   User Satisfaction Rate
                 </span>
-                <div className="my-1 block font-mono text-[34px] leading-none font-black tracking-tight text-neutral-800 sm:text-[36px] dark:text-neutral-200">
-                  {satisfactionRate}
+                <div className="-mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-neutral-50 transition-colors select-none group-hover:bg-[#0A3C7D]/5 dark:bg-neutral-800/40 dark:group-hover:bg-[#0A3C7D]/10">
+                  <TrendingUp className="h-4.5 w-4.5 text-[#22C55E]" />
                 </div>
-                <span className="dark:text-neutral-550 block text-[12px] leading-none font-medium text-neutral-400">
-                  {hasFeedback ? '4 & 5 Star ratings ratio' : 'No feedback available'}
-                </span>
               </div>
-            </div>
+              <div className="space-y-1">
+                <h3 className="text-3xl leading-none font-black tracking-tight text-neutral-800 transition-colors md:text-4xl dark:text-white">
+                  {satisfactionRate}
+                </h3>
+                <div className="mt-1 flex items-center justify-between gap-2">
+                  <p className="dark:text-neutral-450 text-[13px] leading-none font-bold text-neutral-500">
+                    {hasFeedback ? '4 & 5 Star ratings ratio' : 'No feedback available'}
+                  </p>
+                </div>
+              </div>
+            </Card>
           </div>
 
           {/* 4. Telemetry Distribution Block */}
@@ -195,7 +205,7 @@ export default function FeedbackPage() {
                 onClick={() => handleExport('csv')}
                 aria-label="Export feedback as CSV"
                 aria-busy={exportStatus === 'loading' && exportFormat === 'csv'}
-                className="dark:text-neutral-350 flex h-10 w-full cursor-pointer items-center justify-center gap-1.5 px-4 text-xs font-black tracking-wider text-neutral-700 uppercase focus-visible:ring-2 sm:w-auto dark:border-neutral-800"
+                className="dark:text-neutral-350 flex h-10 w-full cursor-pointer items-center justify-center gap-1.5 px-4 text-[13px] font-black tracking-wider text-neutral-700 uppercase focus-visible:ring-2 sm:w-auto dark:border-neutral-800"
               >
                 {exportStatus === 'loading' && exportFormat === 'csv' ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -211,7 +221,7 @@ export default function FeedbackPage() {
                 onClick={() => handleExport('xlsx')}
                 aria-label="Export feedback as Excel"
                 aria-busy={exportStatus === 'loading' && exportFormat === 'xlsx'}
-                className="flex h-10 w-full cursor-pointer items-center justify-center gap-1.5 bg-[#0A3C7D] px-4 text-xs font-black tracking-wider text-white uppercase hover:bg-[#0A3C7D]/95 focus-visible:ring-2 sm:w-auto"
+                className="flex h-10 w-full cursor-pointer items-center justify-center gap-1.5 bg-[#0A3C7D] px-4 text-[13px] font-black tracking-wider text-white uppercase hover:bg-[#0A3C7D]/95 focus-visible:ring-2 sm:w-auto"
               >
                 {exportStatus === 'loading' && exportFormat === 'xlsx' ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -223,7 +233,7 @@ export default function FeedbackPage() {
             </div>
 
             {/* Formats indicators */}
-            <div className="dark:text-neutral-450 text-xs font-bold tracking-wider text-neutral-500 uppercase">
+            <div className="dark:text-neutral-450 text-[13px] font-bold tracking-wider text-neutral-500 uppercase">
               Supported formats:{' '}
               <span className="dark:text-neutral-350 font-extrabold text-neutral-700">• CSV</span>{' '}
               <span className="dark:text-neutral-350 font-extrabold text-neutral-700">• XLSX</span>
@@ -231,13 +241,13 @@ export default function FeedbackPage() {
 
             {/* Status alerts */}
             {exportStatus === 'loading' && (
-              <span className="block animate-pulse text-[9px] font-extrabold tracking-wider text-blue-500 uppercase">
+              <span className="block animate-pulse text-[13px] font-extrabold tracking-wider text-blue-500 uppercase">
                 Compiling database table rows...
               </span>
             )}
 
             {exportStatus === 'success' && (
-              <span className="block flex items-center justify-center gap-1 text-[9px] font-extrabold tracking-wider text-emerald-600 uppercase dark:text-emerald-500">
+              <span className="block flex items-center justify-center gap-1 text-[13px] font-extrabold tracking-wider text-emerald-600 uppercase dark:text-emerald-500">
                 <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
                 Download initialized!
               </span>
@@ -246,7 +256,7 @@ export default function FeedbackPage() {
             {exportStatus === 'error' && (
               <div className="mx-auto flex max-w-sm items-start justify-center gap-1 text-rose-600">
                 <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-rose-500" />
-                <span className="text-left text-[9px] leading-relaxed font-extrabold tracking-wider uppercase">
+                <span className="text-left text-[13px] leading-relaxed font-extrabold tracking-wider uppercase">
                   {exportErrorMessage}
                 </span>
               </div>

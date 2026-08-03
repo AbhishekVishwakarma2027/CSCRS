@@ -99,7 +99,7 @@ export function Sidebar({
     if (hasChildren && visibleChildren.length === 0) return null
 
     // Polished enterprise border highlight and smooth hover states
-    const baseItemClasses = `flex items-center justify-between text-xs font-bold transition-all duration-200 ease-in-out cursor-pointer select-none ${
+    const baseItemClasses = `flex items-center justify-between text-[13px] font-bold transition-all duration-200 ease-in-out cursor-pointer select-none ${
       isActive
         ? 'bg-[#0A3C7D]/10 text-[#0A3C7D] border-l-3 border-[#0A3C7D] pl-2 rounded-l-none rounded-r-lg dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-500'
         : 'text-neutral-500 hover:bg-neutral-50 hover:text-neutral-900 rounded-lg dark:text-neutral-400 dark:hover:bg-neutral-800/50 dark:hover:text-white'
@@ -170,7 +170,7 @@ export function Sidebar({
               <span className="text-sm leading-none font-black tracking-tight text-neutral-800 transition-colors group-hover:text-[#0A3C7D] dark:text-white">
                 CSCRS Portal
               </span>
-              <span className="mt-1 text-[9px] leading-none font-bold tracking-widest text-neutral-400 uppercase">
+              <span className="mt-1 text-[11px] leading-none font-bold tracking-widest text-neutral-400 uppercase">
                 Civic Governance
               </span>
             </div>
@@ -184,7 +184,7 @@ export function Sidebar({
           <div key={group.id} className="mt-5 space-y-1.5 first:mt-0">
             {/* Optional Group Title Headers */}
             {group.title && (!isCollapsed || isMobileOpen) && (
-              <span className="mb-1.5 block px-3 text-[9px] font-black tracking-[0.15em] text-neutral-400 uppercase select-none dark:text-neutral-500">
+              <span className="mb-1.5 block px-3 text-[11px] font-black tracking-[0.15em] text-neutral-400 uppercase select-none dark:text-neutral-500">
                 {group.title}
               </span>
             )}
@@ -197,7 +197,7 @@ export function Sidebar({
       <div className="hidden border-t border-neutral-100 p-3 lg:block dark:border-neutral-800">
         <button
           onClick={onToggleCollapse}
-          className="flex w-full items-center space-x-2.5 rounded-lg px-3 py-2.5 text-xs text-neutral-500 transition-colors hover:bg-neutral-50 hover:text-neutral-900 focus:outline-none dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-white"
+          className="flex w-full items-center space-x-2.5 rounded-lg px-3 py-2.5 text-[13px] text-neutral-500 transition-colors hover:bg-neutral-50 hover:text-neutral-900 focus:outline-none dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-white"
         >
           {isCollapsed ? (
             <>

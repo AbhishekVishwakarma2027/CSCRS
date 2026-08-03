@@ -104,7 +104,7 @@ export function OperationalInsights() {
     return (
       <Card className="flex h-[330px] flex-col items-center justify-center gap-2 border border-neutral-200 bg-white p-6 text-center shadow-sm dark:border-neutral-800 dark:bg-[#1C1C1E]">
         <AlertCircle className="h-6 w-6 shrink-0 text-rose-500" />
-        <h4 className="dark:text-neutral-350 text-xs font-bold text-neutral-700">
+        <h4 className="dark:text-neutral-350 text-[13px] font-bold text-neutral-700">
           Failed to load platform insights
         </h4>
         <button
@@ -124,10 +124,10 @@ export function OperationalInsights() {
         <div className="text-neutral-450 border-neutral-150 mb-3 flex h-12 w-12 items-center justify-center rounded-full border bg-neutral-50 dark:bg-neutral-800">
           <Lightbulb className="h-6 w-6" />
         </div>
-        <h4 className="dark:text-neutral-450 text-xs leading-none font-black tracking-widest text-neutral-600 uppercase">
+        <h4 className="dark:text-neutral-450 text-[13px] leading-none font-black tracking-widest text-neutral-600 uppercase">
           No Anomalies Detected
         </h4>
-        <p className="dark:text-neutral-550 mt-2 max-w-[200px] text-[11px] leading-normal font-bold text-neutral-400">
+        <p className="dark:text-neutral-550 mt-2 max-w-[200px] text-[13px] leading-normal font-bold text-neutral-400">
           System telemetry registers normal operations. No warning anomalies logged.
         </p>
       </Card>
@@ -143,7 +143,7 @@ export function OperationalInsights() {
     >
       {/* Header */}
       <div className="flex shrink-0 items-center justify-between border-b border-neutral-100 pb-2 select-none dark:border-neutral-800">
-        <h4 className="flex items-center gap-2 text-[10px] font-black tracking-widest text-neutral-500 uppercase dark:text-neutral-400">
+        <h4 className="flex items-center gap-2 text-[18px] font-black tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
           <Lightbulb className="h-4 w-4 text-[#0A3C7D]" />
           Operational Anomalies & Insights
         </h4>
@@ -162,16 +162,16 @@ export function OperationalInsights() {
 
             <div className="min-w-0 flex-grow space-y-1">
               <div className="flex items-center justify-between gap-2">
-                <h5 className="text-xs leading-tight font-black text-neutral-800 dark:text-neutral-200">
+                <h5 className="text-[13px] leading-tight font-black text-neutral-800 dark:text-neutral-200">
                   {insight.title}
                 </h5>
                 <span
-                  className={`py-0.2 shrink-0 rounded border px-1.5 text-[8px] font-black tracking-wider uppercase select-none ${insight.settings.tagClass}`}
+                  className={`py-0.2 shrink-0 rounded border px-1.5 text-[10px] font-black tracking-wider uppercase select-none ${insight.settings.tagClass}`}
                 >
                   {insight.settings.tagText}
                 </span>
               </div>
-              <p className="text-[11px] leading-relaxed font-semibold break-words whitespace-normal text-neutral-500 dark:text-neutral-400">
+              <p className="text-[13px] leading-relaxed font-semibold break-words whitespace-normal text-neutral-500 dark:text-neutral-400">
                 {insight.message}
               </p>
             </div>

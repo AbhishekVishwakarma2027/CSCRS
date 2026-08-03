@@ -63,11 +63,11 @@ export function NotificationBell({
         <div className="border-neutral-250 absolute right-0 z-50 mt-2 w-80 origin-top-right transform overflow-hidden rounded-xl border bg-white shadow-xl transition-all dark:border-neutral-800 dark:bg-[#1C1C1E]">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-neutral-100 bg-neutral-50/50 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-900/30">
-            <span className="text-xs font-black tracking-wider text-neutral-500 uppercase">
+            <span className="text-[13px] font-black tracking-wider text-neutral-500 uppercase">
               Alerts & Notifications
             </span>
             {unreadCount > 0 && (
-              <span className="rounded-full bg-[#0D9488]/10 px-1.5 py-0.5 text-[10px] font-black text-[#0D9488]">
+              <span className="rounded-full bg-[#0D9488]/10 px-1.5 py-0.5 text-[11px] font-black text-[#0D9488]">
                 {unreadCount} new
               </span>
             )}
@@ -78,22 +78,22 @@ export function NotificationBell({
             {isLoading ? (
               <div className="flex flex-col items-center justify-center gap-2 p-8 text-center text-neutral-400">
                 <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#0A3C7D] border-t-transparent" />
-                <span className="text-[11px] font-bold">Synchronizing feeds...</span>
+                <span className="text-[13px] font-bold">Synchronizing feeds...</span>
               </div>
             ) : error ? (
               <div className="flex flex-col items-center justify-center gap-2 p-6 text-center text-rose-500">
-                <span className="text-xs font-bold">Failed to load notifications</span>
-                <span className="text-neutral-450 text-[10px]">{error}</span>
+                <span className="text-[13px] font-bold">Failed to load notifications</span>
+                <span className="text-neutral-450 text-[11px]">{error}</span>
               </div>
             ) : notifications.length === 0 ? (
               <div className="flex flex-col items-center justify-center gap-2 p-8 text-center">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-50 text-neutral-400 dark:bg-neutral-800/40">
                   <Bell className="h-5 w-5" />
                 </div>
-                <h4 className="text-xs font-bold text-neutral-700 dark:text-neutral-300">
+                <h4 className="text-[13px] font-bold text-neutral-700 dark:text-neutral-300">
                   All caught up
                 </h4>
-                <p className="text-neutral-450 max-w-[200px] text-[11px] leading-relaxed">
+                <p className="text-neutral-450 max-w-[200px] text-[13px] leading-relaxed">
                   No active operational alerts dispatched to your profile.
                 </p>
               </div>
@@ -120,13 +120,13 @@ export function NotificationBell({
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <h5 className="text-xs leading-tight font-bold text-neutral-800 dark:text-neutral-200">
+                      <h5 className="text-[13px] leading-tight font-bold text-neutral-800 dark:text-neutral-200">
                         {n.title}
                       </h5>
-                      <p className="mt-1 text-[11px] leading-normal text-neutral-500 dark:text-neutral-400">
+                      <p className="mt-1 text-[13px] leading-normal text-neutral-500 dark:text-neutral-400">
                         {n.message}
                       </p>
-                      <span className="mt-1.5 block text-[10px] font-semibold text-neutral-400">
+                      <span className="mt-1.5 block text-[11px] font-semibold text-neutral-400">
                         {n.createdAt}
                       </span>
                     </div>
@@ -144,7 +144,7 @@ export function NotificationBell({
                   onMarkAllRead?.()
                   setIsOpen(false)
                 }}
-                className="inline-flex cursor-pointer items-center gap-1 text-xs font-bold text-[#0A3C7D] hover:text-[#0A3C7D]/85 dark:text-blue-400"
+                className="inline-flex cursor-pointer items-center gap-1 text-[13px] font-bold text-[#0A3C7D] hover:text-[#0A3C7D]/85 dark:text-blue-400"
               >
                 <Check className="h-3.5 w-3.5" />
                 Mark all as read

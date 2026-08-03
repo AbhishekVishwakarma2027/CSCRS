@@ -63,7 +63,7 @@ export function RecentReportsTable() {
     return (
       <Card className="flex min-h-[340px] flex-col items-center justify-center gap-2 border border-neutral-200 bg-white p-6 text-center shadow-sm dark:border-neutral-800 dark:bg-[#1C1C1E]">
         <AlertCircle className="h-6 w-6 shrink-0 text-rose-500" />
-        <h4 className="dark:text-neutral-350 text-xs font-bold text-neutral-700">
+        <h4 className="dark:text-neutral-350 text-[13px] font-bold text-neutral-700">
           Failed to load recent reports
         </h4>
         <button
@@ -83,10 +83,10 @@ export function RecentReportsTable() {
         <div className="text-neutral-455 dark:bg-neutral-850 flex h-10 w-10 items-center justify-center rounded-full bg-neutral-50">
           <FileText className="h-5 w-5" />
         </div>
-        <h4 className="dark:text-neutral-450 text-xs font-black tracking-widest text-neutral-600 uppercase">
+        <h4 className="dark:text-neutral-450 text-[13px] font-black tracking-widest text-neutral-600 uppercase">
           No reports resolved
         </h4>
-        <p className="text-neutral-450 dark:text-neutral-550 max-w-[220px] text-[11px] leading-relaxed font-semibold">
+        <p className="text-neutral-450 dark:text-neutral-550 max-w-[220px] text-[13px] leading-relaxed font-semibold">
           There are currently no active civic reports in the database ledger.
         </p>
       </Card>
@@ -112,7 +112,7 @@ export function RecentReportsTable() {
     >
       {/* Header */}
       <div className="flex shrink-0 items-center justify-between border-b border-neutral-100 pb-2 dark:border-neutral-800">
-        <h4 className="flex items-center gap-2 text-[10px] font-black tracking-widest text-neutral-500 uppercase select-none dark:text-neutral-400">
+        <h4 className="flex items-center gap-2 text-[18px] font-black tracking-wider text-neutral-500 uppercase select-none dark:text-neutral-400">
           <FileText className="h-4 w-4 text-[#0A3C7D]" />
           Recent Civic Reports
         </h4>
@@ -122,7 +122,7 @@ export function RecentReportsTable() {
       <div className="max-h-[265px] w-full scrollbar-thin overflow-x-auto overflow-y-auto focus:outline-none">
         <table className="w-full min-w-[500px] border-collapse text-left">
           <thead>
-            <tr className="text-neutral-450 dark:border-neutral-850 border-b border-neutral-100 text-[10px] font-black uppercase select-none dark:text-neutral-400">
+            <tr className="text-neutral-450 dark:border-neutral-850 border-b border-neutral-100 text-[13px] font-black uppercase select-none dark:text-neutral-400">
               <th className="sticky top-0 z-10 bg-white px-3 py-2 dark:bg-[#1C1C1E]">Reference</th>
               <th className="sticky top-0 z-10 bg-white px-3 py-2 dark:bg-[#1C1C1E]">
                 Issue Category
@@ -137,7 +137,7 @@ export function RecentReportsTable() {
               </th>
             </tr>
           </thead>
-          <tbody className="dark:divide-neutral-850 dark:text-neutral-350 divide-y divide-neutral-100 text-xs font-bold text-neutral-700">
+          <tbody className="dark:divide-neutral-850 dark:text-neutral-350 divide-y divide-neutral-100 text-[13px] font-bold text-neutral-700">
             {reports.map((report) => (
               <tr
                 key={report.report_number}

@@ -107,7 +107,7 @@ function ChartActionMenu({ onRefresh }: { onRefresh: () => void }) {
                 toast.success('Telemetry refetched successfully')
               })
             }
-            className="text-neutral-750 hover:bg-neutral-55 focus:bg-neutral-55 flex w-full cursor-pointer items-center space-x-2 px-3 py-1.5 text-[11px] font-bold transition-colors outline-none dark:text-neutral-300 dark:hover:bg-neutral-800"
+            className="text-neutral-750 hover:bg-neutral-55 focus:bg-neutral-55 flex w-full cursor-pointer items-center space-x-2 px-3 py-1.5 text-[13px] font-bold transition-colors outline-none dark:text-neutral-300 dark:hover:bg-neutral-800"
           >
             <RefreshCw className="text-neutral-450 h-3.5 w-3.5 shrink-0" />
             <span>Refresh</span>
@@ -185,7 +185,7 @@ function ChartStateWrapper({
     >
       {/* Header */}
       <div className="mb-3 flex shrink-0 items-center justify-between border-b border-neutral-100 pb-2 select-none dark:border-neutral-800">
-        <h4 className="flex items-center gap-2 text-[10px] font-black tracking-widest text-neutral-500 uppercase dark:text-neutral-400">
+        <h4 className="flex items-center gap-2 text-[18px] font-black tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
           {icon}
           {title}
         </h4>
@@ -202,7 +202,7 @@ function ChartStateWrapper({
         {isLoading && (
           <div className="absolute inset-0 z-10 flex animate-pulse flex-col items-center justify-center gap-2 bg-white/60 select-none dark:bg-[#1C1C1E]/60">
             <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#0A3C7D] border-t-transparent" />
-            <span className="text-neutral-450 dark:text-neutral-450 text-[10px] font-black tracking-wider uppercase">
+            <span className="text-neutral-450 dark:text-neutral-450 text-[13px] font-black tracking-wider uppercase">
               Syncing Data...
             </span>
           </div>
@@ -211,12 +211,12 @@ function ChartStateWrapper({
         {!!error && (
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 p-6 text-center select-none">
             <AlertCircle className="h-6 w-6 shrink-0 text-rose-500" />
-            <h5 className="text-neutral-750 dark:text-neutral-350 text-xs font-bold">
+            <h5 className="text-neutral-750 dark:text-neutral-350 text-[13px] font-bold">
               Failed to render telemetry
             </h5>
             <button
               onClick={refetch}
-              className="mt-1 cursor-pointer rounded px-1 text-[11px] font-black text-[#0A3C7D] outline-none hover:underline focus:ring-2 focus:ring-blue-500 dark:text-blue-400"
+              className="mt-1 cursor-pointer rounded px-1 text-[13px] font-black text-[#0A3C7D] outline-none hover:underline focus:ring-2 focus:ring-blue-500 dark:text-blue-400"
             >
               Retry Sync
             </button>
@@ -226,10 +226,10 @@ function ChartStateWrapper({
         {!isLoading && !error && isEmpty && (
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 p-6 text-center select-none">
             <Activity className="h-5 w-5 shrink-0 animate-pulse text-neutral-400" />
-            <h5 className="dark:text-neutral-450 text-xs font-black tracking-widest text-neutral-500 uppercase">
+            <h5 className="dark:text-neutral-450 text-[13px] font-black tracking-widest text-neutral-500 uppercase">
               No Records Found
             </h5>
-            <p className="dark:text-neutral-550 max-w-[200px] text-[10px] leading-relaxed font-semibold text-neutral-400">
+            <p className="dark:text-neutral-550 max-w-[200px] text-[13px] leading-relaxed font-semibold text-neutral-400">
               There is currently no reported operational data for this widget.
             </p>
           </div>
@@ -386,7 +386,7 @@ export function StatusChart() {
             height={36}
             iconSize={8}
             iconType="circle"
-            wrapperStyle={{ fontSize: '9px', fontWeight: 'bold', paddingTop: '8px' }}
+            wrapperStyle={{ fontSize: '10px', fontWeight: 'bold', paddingTop: '8px' }}
           />
         </PieChart>
       </ResponsiveContainer>

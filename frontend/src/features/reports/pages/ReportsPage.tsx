@@ -282,11 +282,11 @@ export default function ReportsPage() {
       {/* 1. Header Widget */}
       <div className="flex items-center justify-between select-none">
         <div>
-          <h2 className="dark:text-blue-450 flex items-center gap-2 text-xl font-extrabold tracking-tight text-[#0A3C7D]">
+          <h2 className="dark:text-blue-450 flex items-center gap-2 text-2xl font-black tracking-tight text-[#0A3C7D]">
             <FileText className="h-5 w-5 text-[#0A3C7D] dark:text-blue-400" />
             {isCityAdmin ? 'Citywide Civic Records' : 'Department Queue'}
           </h2>
-          <p className="text-neutral-450 mt-1 text-xs font-semibold dark:text-neutral-500">
+          <p className="text-neutral-450 mt-1 text-[13px] font-semibold dark:text-neutral-500">
             Manage, verify, audit, and track operational civic reports across municipal sectors.
           </p>
         </div>
@@ -330,7 +330,7 @@ export default function ReportsPage() {
       {/* 4. Pagination Controls Footer - Always rendered when loaded successfully */}
       {!isLoading && !error && (
         <div className="flex items-center justify-between rounded-xl border border-neutral-200 bg-white p-3 shadow-xs select-none dark:border-neutral-800 dark:bg-[#1C1C1E]">
-          <span className="text-neutral-455 dark:text-neutral-505 text-[11px] font-bold">
+          <span className="text-neutral-455 dark:text-neutral-505 text-[13px] font-bold">
             Showing {totalItems > 0 ? (pageParam - 1) * 10 + 1 : 0}–
             {Math.min(pageParam * 10, totalItems)} of {totalItems} items
           </span>
@@ -401,12 +401,12 @@ export default function ReportsPage() {
 
             <form
               onSubmit={handleCancelFormSubmit}
-              className="dark:text-neutral-350 space-y-4 text-xs font-bold text-neutral-700"
+              className="dark:text-neutral-350 space-y-4 text-[13px] font-bold text-neutral-700"
             >
               <div className="space-y-1.5">
                 <label
                   htmlFor="cancel-reason-select"
-                  className="text-neutral-450 text-[11px] font-black uppercase dark:text-neutral-500"
+                  className="text-neutral-450 text-[13px] font-black uppercase dark:text-neutral-500"
                 >
                   Select Reason Type
                 </label>
@@ -427,7 +427,7 @@ export default function ReportsPage() {
               <div className="space-y-1.5">
                 <label
                   htmlFor="cancel-remarks-textarea"
-                  className="text-neutral-450 text-[11px] font-black uppercase dark:text-neutral-500"
+                  className="text-neutral-450 text-[13px] font-black uppercase dark:text-neutral-500"
                 >
                   Remarks / Cancellation Details (Min 5 chars)
                 </label>
@@ -438,7 +438,7 @@ export default function ReportsPage() {
                   placeholder="Enter specific administrative reasons for cancelling this report..."
                   required
                   rows={4}
-                  className="w-full rounded-lg border border-neutral-200 bg-neutral-50 p-2.5 font-sans text-xs font-bold outline-none focus:ring-1 focus:ring-rose-500 dark:border-neutral-800 dark:bg-[#1C1C1E]"
+                  className="w-full rounded-lg border border-neutral-200 bg-neutral-50 p-2.5 font-sans text-[13px] font-bold outline-none focus:ring-1 focus:ring-rose-500 dark:border-neutral-800 dark:bg-[#1C1C1E]"
                 />
               </div>
 
@@ -484,12 +484,12 @@ export default function ReportsPage() {
 
             <form
               onSubmit={handleReopenFormSubmit}
-              className="dark:text-neutral-350 space-y-4 text-xs font-bold text-neutral-700"
+              className="dark:text-neutral-350 space-y-4 text-[13px] font-bold text-neutral-700"
             >
               <div className="space-y-1.5">
                 <label
                   htmlFor="reopen-remarks-textarea"
-                  className="text-neutral-450 text-[11px] font-black uppercase dark:text-neutral-500"
+                  className="text-neutral-450 text-[13px] font-black uppercase dark:text-neutral-500"
                 >
                   Remarks / Reason to Reopen (Optional)
                 </label>
@@ -499,7 +499,7 @@ export default function ReportsPage() {
                   onChange={(e) => setReopenReason(e.target.value)}
                   placeholder="Enter remarks explaining why this report is being reopened for verification..."
                   rows={4}
-                  className="w-full rounded-lg border border-neutral-200 bg-neutral-50 p-2.5 font-sans text-xs font-bold outline-none focus:ring-1 focus:ring-emerald-500 dark:border-neutral-800 dark:bg-[#1C1C1E]"
+                  className="w-full rounded-lg border border-neutral-200 bg-neutral-50 p-2.5 font-sans text-[13px] font-bold outline-none focus:ring-1 focus:ring-emerald-500 dark:border-neutral-800 dark:bg-[#1C1C1E]"
                 />
               </div>
 

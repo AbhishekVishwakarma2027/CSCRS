@@ -217,11 +217,11 @@ export function ReportDetailsDrawer({
           <div>
             <h2
               id="drawer-title"
-              className="dark:text-blue-450 text-sm font-black tracking-widest text-[#0A3C7D] uppercase"
+              className="dark:text-blue-450 text-xl font-black tracking-widest text-[#0A3C7D] uppercase"
             >
               Audit File details
             </h2>
-            <span className="text-neutral-450 mt-0.5 block text-[10px] font-semibold dark:text-neutral-500">
+            <span className="text-neutral-450 mt-0.5 block text-[13px] font-semibold dark:text-neutral-500">
               Reference: {report.report_number}
             </span>
           </div>
@@ -235,17 +235,17 @@ export function ReportDetailsDrawer({
         </div>
 
         {/* Content Viewport scrollable */}
-        <div className="dark:text-neutral-350 flex-1 scrollbar-thin space-y-6 overflow-y-auto p-5 text-xs font-bold text-neutral-700">
+        <div className="dark:text-neutral-350 flex-1 scrollbar-thin space-y-6 overflow-y-auto p-5 text-[13px] font-bold text-neutral-700">
           {/* SECTION A: REPORT SUMMARY (Standard properties from listing row) */}
           <div className="dark:border-neutral-850 space-y-4 rounded-xl border border-neutral-200/60 bg-neutral-50/50 p-4 dark:bg-[#1E1E20]">
-            <h3 className="dark:border-neutral-850 flex items-center gap-1.5 border-b border-neutral-200/40 pb-2 text-[10px] font-black tracking-wider text-neutral-400 uppercase dark:text-neutral-500">
+            <h3 className="dark:border-neutral-850 flex items-center gap-1.5 border-b border-neutral-200/40 pb-2 text-[18px] font-black tracking-wider text-neutral-400 uppercase dark:text-neutral-500">
               <AlertCircle className="h-4 w-4 shrink-0 text-blue-500" />
               Overview Summary
             </h3>
 
             <div className="grid grid-cols-2 gap-x-4 gap-y-3.5">
               <div>
-                <span className="text-neutral-450 block text-[9px] font-black tracking-wider uppercase dark:text-neutral-500">
+                <span className="text-neutral-450 block text-[13px] font-black tracking-wider uppercase dark:text-neutral-500">
                   Status
                 </span>
                 <span
@@ -258,7 +258,7 @@ export function ReportDetailsDrawer({
               </div>
 
               <div>
-                <span className="text-neutral-450 block text-[9px] font-black tracking-wider uppercase dark:text-neutral-500">
+                <span className="text-neutral-450 block text-[13px] font-black tracking-wider uppercase dark:text-neutral-500">
                   Priority
                 </span>
                 <span
@@ -271,7 +271,7 @@ export function ReportDetailsDrawer({
               </div>
 
               <div>
-                <span className="text-neutral-450 block text-[9px] font-black tracking-wider uppercase dark:text-neutral-500">
+                <span className="text-neutral-450 block text-[13px] font-black tracking-wider uppercase dark:text-neutral-500">
                   Category
                 </span>
                 <span className="text-neutral-850 mt-1 block font-bold capitalize dark:text-neutral-200">
@@ -280,7 +280,7 @@ export function ReportDetailsDrawer({
               </div>
 
               <div>
-                <span className="text-neutral-450 block text-[9px] font-black tracking-wider uppercase dark:text-neutral-500">
+                <span className="text-neutral-450 block text-[13px] font-black tracking-wider uppercase dark:text-neutral-500">
                   Department
                 </span>
                 <span className="mt-1 block font-bold text-neutral-800 dark:text-neutral-300">
@@ -289,7 +289,7 @@ export function ReportDetailsDrawer({
               </div>
 
               <div>
-                <span className="text-neutral-450 block text-[9px] font-black tracking-wider uppercase dark:text-neutral-500">
+                <span className="text-neutral-450 block text-[13px] font-black tracking-wider uppercase dark:text-neutral-500">
                   Created Date
                 </span>
                 <span className="mt-1 block font-semibold text-neutral-500 dark:text-neutral-400">
@@ -298,7 +298,7 @@ export function ReportDetailsDrawer({
               </div>
 
               <div>
-                <span className="text-neutral-450 block text-[9px] font-black tracking-wider uppercase dark:text-neutral-500">
+                <span className="text-neutral-450 block text-[13px] font-black tracking-wider uppercase dark:text-neutral-500">
                   Source
                 </span>
                 <span className="mt-1 block font-semibold text-neutral-500 dark:text-neutral-400">
@@ -310,7 +310,7 @@ export function ReportDetailsDrawer({
 
           {/* SECTION B: CITIZEN INFORMATION */}
           <div className="dark:border-neutral-850 space-y-3 rounded-xl border border-neutral-200/60 bg-neutral-50/50 p-4 dark:bg-[#1E1E20]">
-            <h3 className="dark:border-neutral-850 flex items-center gap-1.5 border-b border-neutral-200/40 pb-2 text-[10px] font-black tracking-wider text-neutral-400 uppercase dark:text-neutral-500">
+            <h3 className="dark:border-neutral-850 flex items-center gap-1.5 border-b border-neutral-200/40 pb-2 text-[18px] font-black tracking-wider text-neutral-400 uppercase dark:text-neutral-500">
               <User className="h-4 w-4 shrink-0 text-blue-500" />
               Citizen Submitter Information
             </h3>
@@ -336,7 +336,7 @@ export function ReportDetailsDrawer({
 
           {/* SECTION C: DESCRIPTION */}
           <div className="dark:border-neutral-850 space-y-3 rounded-xl border border-neutral-200/60 bg-neutral-50/50 p-4 dark:bg-[#1E1E20]">
-            <h3 className="dark:border-neutral-850 flex items-center gap-1.5 border-b border-neutral-200/40 pb-2 text-[10px] font-black tracking-wider text-neutral-400 uppercase dark:text-neutral-500">
+            <h3 className="dark:border-neutral-850 flex items-center gap-1.5 border-b border-neutral-200/40 pb-2 text-[18px] font-black tracking-wider text-neutral-400 uppercase dark:text-neutral-500">
               <ImageIcon className="h-4 w-4 shrink-0 text-blue-500" />
               Report Description
             </h3>
@@ -359,7 +359,7 @@ export function ReportDetailsDrawer({
 
           {/* SECTION D: LOCATION */}
           <div className="dark:border-neutral-850 space-y-4.5 rounded-xl border border-neutral-200/60 bg-neutral-50/50 p-4 dark:bg-[#1E1E20]">
-            <h3 className="dark:border-neutral-850 flex items-center gap-1.5 border-b border-neutral-200/40 pb-2 text-[10px] font-black tracking-wider text-neutral-400 uppercase dark:text-neutral-500">
+            <h3 className="dark:border-neutral-850 flex items-center gap-1.5 border-b border-neutral-200/40 pb-2 text-[18px] font-black tracking-wider text-neutral-400 uppercase dark:text-neutral-500">
               <MapPin className="h-4 w-4 shrink-0 text-blue-500" />
               Coordinates & Mapping details
             </h3>
@@ -376,7 +376,7 @@ export function ReportDetailsDrawer({
                 </p>
                 <div className="dark:bg-neutral-850 flex items-start gap-2 rounded-lg border border-neutral-200/40 bg-neutral-100 p-3 dark:border-neutral-800">
                   <Info className="mt-0.5 h-4 w-4 shrink-0 text-[#0A3C7D] dark:text-blue-400" />
-                  <p className="text-[10px] leading-relaxed font-semibold text-neutral-500 dark:text-neutral-400">
+                  <p className="text-[13px] leading-relaxed font-semibold text-neutral-500 dark:text-neutral-400">
                     FastAPI enforces strict user checks. Coordinates can be verified if the report
                     enters Manual Review validation.
                   </p>
@@ -386,7 +386,7 @@ export function ReportDetailsDrawer({
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-3 text-xs font-bold text-neutral-600 dark:text-neutral-400">
                   <div>
-                    <span className="text-neutral-450 block text-[9px] font-black tracking-wider uppercase">
+                    <span className="text-neutral-450 block text-[13px] font-black tracking-wider uppercase">
                       Latitude
                     </span>
                     <span className="mt-0.5 block font-mono text-neutral-800 dark:text-neutral-200">
@@ -394,7 +394,7 @@ export function ReportDetailsDrawer({
                     </span>
                   </div>
                   <div>
-                    <span className="text-neutral-450 block text-[9px] font-black tracking-wider uppercase">
+                    <span className="text-neutral-450 block text-[13px] font-black tracking-wider uppercase">
                       Longitude
                     </span>
                     <span className="mt-0.5 block font-mono text-neutral-800 dark:text-neutral-200">
@@ -423,7 +423,7 @@ export function ReportDetailsDrawer({
 
           {/* SECTION E: IMAGES WITH ZOOM & PAN */}
           <div className="dark:border-neutral-850 space-y-4 rounded-xl border border-neutral-200/60 bg-neutral-50/50 p-4 dark:bg-[#1E1E20]">
-            <h3 className="dark:border-neutral-850 flex items-center gap-1.5 border-b border-neutral-200/40 pb-2 text-[10px] font-black tracking-wider text-neutral-400 uppercase dark:text-neutral-500">
+            <h3 className="dark:border-neutral-850 flex items-center gap-1.5 border-b border-neutral-200/40 pb-2 text-[18px] font-black tracking-wider text-neutral-400 uppercase dark:text-neutral-500">
               <ImageIcon className="h-4 w-4 shrink-0 text-blue-500" />
               Attached Proof Image
             </h3>
@@ -436,7 +436,7 @@ export function ReportDetailsDrawer({
                 <h5 className="text-[11px] font-bold text-neutral-600 dark:text-neutral-400">
                   Image Authorization Restricted
                 </h5>
-                <p className="text-neutral-450 max-w-xs text-[9px] leading-relaxed font-semibold dark:text-neutral-500">
+                <p className="text-neutral-450 max-w-xs text-[11px] leading-relaxed font-semibold dark:text-neutral-500">
                   Image files are citizen-restricted for this report. Image access is granted only
                   during operational workflow manual review states.
                 </p>
@@ -564,7 +564,7 @@ export function ReportDetailsDrawer({
                     <button
                       type="button"
                       onClick={handleResetImage}
-                      className="cursor-pointer rounded border border-neutral-800 px-1.5 py-0.5 text-[9px] font-black transition-colors hover:bg-neutral-800"
+                      className="cursor-pointer rounded border border-neutral-800 px-1.5 py-0.5 text-[11px] font-black transition-colors hover:bg-neutral-800"
                     >
                       RESET
                     </button>
@@ -593,7 +593,7 @@ export function ReportDetailsDrawer({
 
           {/* SECTION F: AI VERIFICATION */}
           <div className="dark:border-neutral-850 space-y-3 rounded-xl border border-neutral-200/60 bg-neutral-50/50 p-4 dark:bg-[#1E1E20]">
-            <h3 className="dark:border-neutral-850 flex items-center gap-1.5 border-b border-neutral-200/40 pb-2 text-[10px] font-black tracking-wider text-neutral-400 uppercase dark:text-neutral-500">
+            <h3 className="dark:border-neutral-850 flex items-center gap-1.5 border-b border-neutral-200/40 pb-2 text-[18px] font-black tracking-wider text-neutral-400 uppercase dark:text-neutral-500">
               <Cpu className="h-4 w-4 shrink-0 text-blue-500" />
               Automated AI Telemetry
             </h3>
@@ -607,7 +607,7 @@ export function ReportDetailsDrawer({
             ) : details ? (
               <div className="grid grid-cols-2 gap-x-4 gap-y-3.5">
                 <div>
-                  <span className="text-neutral-450 Block text-[9px] font-black tracking-wider uppercase">
+                  <span className="text-neutral-450 block text-[13px] font-black tracking-wider uppercase">
                     YOLO Detection Category
                   </span>
                   <span className="mt-1 block font-bold text-neutral-800 capitalize dark:text-neutral-200">
@@ -615,7 +615,7 @@ export function ReportDetailsDrawer({
                   </span>
                 </div>
                 <div>
-                  <span className="text-neutral-450 Block text-[9px] font-black tracking-wider uppercase">
+                  <span className="text-neutral-450 block text-[13px] font-black tracking-wider uppercase">
                     AI Confidence Score
                   </span>
                   <span className="mt-1 block font-mono font-bold text-neutral-800 dark:text-neutral-200">
@@ -623,7 +623,7 @@ export function ReportDetailsDrawer({
                   </span>
                 </div>
                 <div>
-                  <span className="text-neutral-450 Block text-[9px] font-black tracking-wider uppercase">
+                  <span className="text-neutral-450 block text-[13px] font-black tracking-wider uppercase">
                     Calculated Risk Score
                   </span>
                   <span className="mt-1 block font-mono font-bold text-neutral-800 dark:text-neutral-200">
@@ -631,7 +631,7 @@ export function ReportDetailsDrawer({
                   </span>
                 </div>
                 <div>
-                  <span className="text-neutral-450 Block text-[9px] font-black tracking-wider uppercase">
+                  <span className="text-neutral-450 block text-[13px] font-black tracking-wider uppercase">
                     Verification Verdict
                   </span>
                   <span
@@ -654,14 +654,14 @@ export function ReportDetailsDrawer({
 
           {/* SECTION G: ASSIGNMENT INFORMATION */}
           <div className="dark:border-neutral-850 space-y-3 rounded-xl border border-neutral-200/60 bg-neutral-50/50 p-4 dark:bg-[#1E1E20]">
-            <h3 className="dark:border-neutral-850 flex items-center gap-1.5 border-b border-neutral-200/40 pb-2 text-[10px] font-black tracking-wider text-neutral-400 uppercase dark:text-neutral-500">
+            <h3 className="dark:border-neutral-850 flex items-center gap-1.5 border-b border-neutral-200/40 pb-2 text-[18px] font-black tracking-wider text-neutral-400 uppercase dark:text-neutral-500">
               <UserCheck className="h-4 w-4 shrink-0 text-blue-500" />
               Operational Assignment Log
             </h3>
 
             <div className="grid grid-cols-2 gap-y-3">
               <div>
-                <span className="text-neutral-450 block text-[9px] font-black tracking-wider uppercase">
+                <span className="text-neutral-450 block text-[13px] font-black tracking-wider uppercase">
                   Assigned Worker
                 </span>
                 <span className="mt-1 block font-semibold text-neutral-500 dark:text-neutral-400">
@@ -669,7 +669,7 @@ export function ReportDetailsDrawer({
                 </span>
               </div>
               <div>
-                <span className="text-neutral-450 block text-[9px] font-black tracking-wider uppercase">
+                <span className="text-neutral-450 block text-[13px] font-black tracking-wider uppercase">
                   Operation Status
                 </span>
                 <span className="mt-1 block font-mono font-semibold text-neutral-500 uppercase dark:text-neutral-400">
@@ -681,7 +681,7 @@ export function ReportDetailsDrawer({
 
           {/* SECTION H: CHRONOLOGICAL TIMELINE */}
           <div className="dark:border-neutral-850 space-y-4 rounded-xl border border-neutral-200/60 bg-neutral-50/50 p-4 dark:bg-[#1E1E20]">
-            <h3 className="dark:border-neutral-850 flex items-center gap-1.5 border-b border-neutral-200/40 pb-2 text-[10px] font-black tracking-wider text-neutral-400 uppercase dark:text-neutral-500">
+            <h3 className="dark:border-neutral-850 flex items-center gap-1.5 border-b border-neutral-200/40 pb-2 text-[18px] font-black tracking-wider text-neutral-400 uppercase dark:text-neutral-500">
               <History className="h-4 w-4 shrink-0 text-blue-500" />
               Chronological Audit Trail
             </h3>
@@ -699,7 +699,7 @@ export function ReportDetailsDrawer({
             ) : isTimelineRestricted ? (
               <div className="dark:bg-neutral-850 flex items-start gap-2.5 rounded-lg border border-neutral-200/40 bg-neutral-100 p-3 dark:border-neutral-800">
                 <Info className="mt-0.5 h-4.5 w-4.5 shrink-0 text-[#0A3C7D] dark:text-blue-400" />
-                <p className="text-[10px] leading-relaxed font-semibold text-neutral-500 dark:text-neutral-400">
+                <p className="text-[13px] leading-relaxed font-semibold text-neutral-500 dark:text-neutral-400">
                   Timeline logs are restricted for administrative role tokens. Access is
                   citizen-only via ownership token validation.
                 </p>
@@ -711,13 +711,13 @@ export function ReportDetailsDrawer({
                     {/* Bullet Indicator */}
                     <div className="absolute top-1 -left-[23px] h-2.5 w-2.5 rounded-full border border-white bg-[#0A3C7D] transition-transform group-hover:scale-125 dark:border-[#1E1E20] dark:bg-blue-600" />
 
-                    <h4 className="text-xs font-extrabold text-neutral-800 dark:text-neutral-200">
+                    <h4 className="text-[13px] font-extrabold text-neutral-800 dark:text-neutral-200">
                       {event.title}
                     </h4>
-                    <p className="mt-0.5 text-[10px] leading-relaxed font-semibold text-neutral-500 dark:text-neutral-400">
+                    <p className="mt-0.5 text-[13px] leading-relaxed font-semibold text-neutral-500 dark:text-neutral-400">
                       {event.description}
                     </p>
-                    <span className="dark:text-neutral-550 mt-1.5 block flex items-center gap-1 font-mono text-[9px] font-black tracking-wider text-neutral-400 uppercase">
+                    <span className="dark:text-neutral-550 mt-1.5 block flex items-center gap-1 font-mono text-[11px] font-black tracking-wider text-neutral-400 uppercase">
                       <Calendar className="h-3 w-3" />
                       {formatDate(event.created_at)}
                     </span>

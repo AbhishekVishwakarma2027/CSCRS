@@ -62,7 +62,7 @@ export function DepartmentsTable({
           <div className="flex items-center gap-3">
             {/* Deterministic initials avatar */}
             <div
-              className={`flex size-8 shrink-0 items-center justify-center rounded-lg text-[10px] font-black shadow-sm select-none ${row.original.colorClass}`}
+              className={`flex size-8 shrink-0 items-center justify-center rounded-lg text-[11px] font-black shadow-sm select-none ${row.original.colorClass}`}
             >
               {row.original.initials}
             </div>
@@ -74,7 +74,7 @@ export function DepartmentsTable({
                 {row.original.name}
               </span>
               {row.original.description && (
-                <span className="text-neutral-450 mt-0.5 line-clamp-1 max-w-[240px] text-[12px] font-medium dark:text-neutral-500">
+                <span className="text-neutral-450 mt-0.5 line-clamp-1 max-w-[240px] text-[13px] font-medium dark:text-neutral-500">
                   {row.original.description}
                 </span>
               )}
@@ -145,7 +145,7 @@ export function DepartmentsTable({
                 <>
                   <div className="fixed inset-0 z-30" onClick={() => setActiveActionRow(null)} />
                   <div className="animate-in fade-in slide-in-from-top-1 absolute right-0 z-40 mt-1 w-44 rounded-xl border border-neutral-200 bg-white p-1.5 shadow-lg duration-150 dark:border-neutral-800 dark:bg-[#1C1C1E]">
-                    <span className="dark:text-neutral-550 dark:border-neutral-850 block border-b border-neutral-100 px-2 py-1 pb-1 text-left text-[8px] font-black tracking-wider text-neutral-400 uppercase select-none">
+                    <span className="dark:text-neutral-550 dark:border-neutral-850 block border-b border-neutral-100 px-2 py-1 pb-1 text-left text-[11px] font-black tracking-wider text-neutral-400 uppercase select-none">
                       Operations
                     </span>
                     <div className="mt-1 space-y-0.5">
@@ -220,7 +220,7 @@ export function DepartmentsTable({
       <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-xs dark:border-neutral-800 dark:bg-[#1C1C1E]">
         <div className="overflow-x-auto select-none">
           <table className="w-full text-xs font-bold">
-            <thead className="dark:bg-neutral-850/50 dark:border-neutral-850 text-neutral-450 border-b border-neutral-100 bg-neutral-50 text-left text-[9.5px] tracking-wider uppercase dark:text-neutral-500">
+            <thead className="dark:bg-neutral-850/50 dark:border-neutral-850 text-neutral-450 border-b border-neutral-100 bg-neutral-50 text-left text-[13px] tracking-wider uppercase dark:text-neutral-500">
               <tr>
                 {columns.map((c, idx) => (
                   <th key={idx} className="p-3.5">
@@ -260,10 +260,10 @@ export function DepartmentsTable({
     return (
       <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-red-200/60 bg-red-50/20 p-8 text-center select-none dark:border-red-900/40 dark:bg-red-950/5">
         <ShieldAlert className="text-red-550 h-8 w-8 shrink-0" />
-        <h4 className="text-red-750 text-sm font-black tracking-wider uppercase dark:text-red-400">
+        <h4 className="text-red-750 text-[13px] font-black tracking-wider uppercase dark:text-red-400">
           Registry Connection Failure
         </h4>
-        <p className="max-w-md text-xs leading-relaxed font-semibold text-red-600/80 dark:text-red-400/80">
+        <p className="max-w-md text-[13px] leading-relaxed font-semibold text-red-600/80 dark:text-red-400/80">
           {error.message ||
             'FastAPI rejected department fetch query token. Ensure active administrative credentials.'}
         </p>
@@ -275,10 +275,10 @@ export function DepartmentsTable({
     return (
       <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-neutral-300 bg-neutral-50/30 p-10 text-center select-none dark:border-neutral-800 dark:bg-neutral-900/10">
         <Building2 className="h-9 w-9 text-neutral-400 dark:text-neutral-500" />
-        <h4 className="text-neutral-650 dark:text-neutral-450 text-xs font-black tracking-widest uppercase">
+        <h4 className="text-neutral-650 dark:text-neutral-450 text-[13px] font-black tracking-widest uppercase">
           No Departments Found
         </h4>
-        <p className="text-neutral-450 dark:text-neutral-550 max-w-xs text-[11px] leading-relaxed font-semibold">
+        <p className="text-neutral-450 dark:text-neutral-550 max-w-xs text-[13px] leading-relaxed font-semibold">
           No registered municipal departments fit the active criteria filters.
         </p>
       </div>
@@ -291,7 +291,7 @@ export function DepartmentsTable({
       <div className="hidden overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-xs md:block dark:border-neutral-800 dark:bg-[#1C1C1E]">
         <div className="scrollbar-thin overflow-x-auto">
           <table className="w-full text-xs font-bold">
-            <thead className="dark:bg-neutral-850/50 dark:border-neutral-850 text-neutral-450 border-b border-neutral-100 bg-neutral-50 text-left text-[9px] tracking-wider uppercase select-none dark:text-neutral-500">
+            <thead className="dark:bg-neutral-850/50 dark:border-neutral-850 text-neutral-450 border-b border-neutral-100 bg-neutral-50 text-left text-[13px] tracking-wider uppercase select-none dark:text-neutral-500">
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
@@ -346,7 +346,7 @@ export function DepartmentsTable({
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div
-                    className={`flex size-8 items-center justify-center rounded-lg text-[10px] font-black select-none ${dept.colorClass}`}
+                    className={`flex size-8 items-center justify-center rounded-lg text-[11px] font-black select-none ${dept.colorClass}`}
                   >
                     {dept.initials}
                   </div>
@@ -379,7 +379,7 @@ export function DepartmentsTable({
                         onClick={() => setActiveActionRow(null)}
                       />
                       <div className="animate-in fade-in slide-in-from-top-1 absolute right-0 z-40 mt-1 w-40 rounded-xl border border-neutral-200 bg-white p-1.5 shadow-lg duration-150 dark:border-neutral-800 dark:bg-[#1C1C1E]">
-                        <span className="text-neutral-450 dark:border-neutral-850 block border-b border-neutral-100 px-2 py-1 pb-1 text-left text-[8px] font-black tracking-wider uppercase select-none">
+                        <span className="text-neutral-450 dark:border-neutral-850 block border-b border-neutral-100 px-2 py-1 pb-1 text-left text-[11px] font-black tracking-wider uppercase select-none">
                           Operations
                         </span>
                         <div className="mt-1 space-y-0.5">
@@ -428,18 +428,18 @@ export function DepartmentsTable({
               </div>
 
               {dept.description && (
-                <p className="text-left text-[11px] leading-relaxed font-medium text-neutral-500 dark:text-neutral-400">
+                <p className="text-left text-[13px] leading-relaxed font-medium text-neutral-500 dark:text-neutral-400">
                   {dept.description}
                 </p>
               )}
 
-              <div className="dark:border-neutral-850 text-neutral-450 flex items-center justify-between border-t border-neutral-100 pt-2.5 text-[10px] font-bold dark:text-neutral-500">
+              <div className="dark:border-neutral-850 text-neutral-450 flex items-center justify-between border-t border-neutral-100 pt-2.5 text-[13px] font-bold dark:text-neutral-500">
                 <span className="flex items-center gap-1">
                   <Calendar className="h-3.5 w-3.5" />
                   {formatDate(dept.created_at)}
                 </span>
                 <span
-                  className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[8.5px] font-black tracking-wider uppercase ${
+                  className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-black tracking-wider uppercase ${
                     isActive
                       ? 'dark:text-emerald-450 border-emerald-200 bg-emerald-100/60 text-emerald-700 dark:border-emerald-900/30 dark:bg-emerald-950/20'
                       : 'border-neutral-200 bg-neutral-100 text-neutral-600 dark:border-neutral-700/40 dark:bg-neutral-800/40 dark:text-neutral-400'
@@ -469,7 +469,7 @@ function SortableHeader({ column, title }: SortableHeaderProps) {
     <button
       type="button"
       onClick={() => column.toggleSorting(isSorted === 'asc')}
-      className="dark:hover:text-neutral-350 flex cursor-pointer items-center gap-1 text-[9px] font-black tracking-widest uppercase outline-none hover:text-neutral-700"
+      className="dark:hover:text-neutral-350 flex cursor-pointer items-center gap-1 text-[13px] font-black tracking-widest uppercase outline-none hover:text-neutral-700"
     >
       {title}
       {isSorted === 'asc' ? (

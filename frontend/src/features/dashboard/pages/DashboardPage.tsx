@@ -51,7 +51,7 @@ export default function DashboardPage() {
         <h1 className="text-2xl font-black tracking-tight text-neutral-800 dark:text-white">
           {title}
         </h1>
-        <p className="text-sm leading-relaxed font-semibold text-neutral-500 dark:text-neutral-400">
+        <p className="text-[13px] leading-relaxed font-semibold text-neutral-500 dark:text-neutral-400">
           {subtitle}
         </p>
       </div>
@@ -114,13 +114,13 @@ export default function DashboardPage() {
               <h3 className="text-sm font-black text-neutral-800 dark:text-neutral-200">
                 Operational Dispatch Center
               </h3>
-              <p className="dark:text-neutral-450 text-xs leading-relaxed font-semibold text-neutral-500">
+              <p className="dark:text-neutral-450 text-[13px] leading-relaxed font-semibold text-neutral-500">
                 You are currently accessing the department dashboard. Detailed analytics charts,
                 monthly trends, and citywide reports tables are restricted to Citywide
                 Administration accounts.
               </p>
               <div className="flex flex-wrap gap-2 pt-2">
-                <span className="dark:border-neutral-750 flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-neutral-100 px-2.5 py-1 text-[10px] font-bold text-neutral-600 dark:bg-neutral-800/40 dark:text-neutral-400">
+                <span className="dark:border-neutral-750 flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-neutral-100 px-2.5 py-1 text-[11px] font-bold text-neutral-600 dark:bg-neutral-800/40 dark:text-neutral-400">
                   <ShieldCheck className="h-3.5 w-3.5 text-neutral-500" />
                   Department Guard Active
                 </span>

@@ -267,11 +267,11 @@ export default function DepartmentsPage() {
       {/* 1. Header Banner */}
       <div className="dark:border-neutral-850 flex flex-col gap-4 border-b border-neutral-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="dark:text-blue-450 flex items-center gap-1.5 text-sm font-black tracking-widest text-[#0A3C7D] uppercase">
+          <h2 className="dark:text-blue-450 flex items-center gap-1.5 text-2xl font-black tracking-widest text-[#0A3C7D] uppercase">
             <Building2 className="h-5 w-5" />
             Municipal Departments
           </h2>
-          <p className="text-neutral-450 mt-1 text-xs font-semibold dark:text-neutral-500">
+          <p className="text-neutral-450 mt-1 text-[13px] font-semibold dark:text-neutral-500">
             Configure system routing sectors, activate/deactivate departments, and overview metrics.
           </p>
         </div>
@@ -300,13 +300,13 @@ export default function DepartmentsPage() {
               value={searchInputValue}
               onChange={(e) => setSearchInputValue(e.target.value)}
               placeholder="Search departments... (Ctrl+K)"
-              className="h-8.5 w-full rounded-lg border border-neutral-200 bg-white pr-12 pl-3.5 text-xs font-bold outline-none focus:ring-1 focus:ring-[#0A3C7D] dark:border-neutral-800 dark:bg-[#1C1C1E]"
+              className="h-8.5 w-full rounded-lg border border-neutral-200 bg-white pr-12 pl-3.5 text-[13px] font-bold outline-none focus:ring-1 focus:ring-[#0A3C7D] dark:border-neutral-800 dark:bg-[#1C1C1E]"
             />
             {searchInputValue && (
               <button
                 type="button"
                 onClick={() => setSearchInputValue('')}
-                className="dark:hover:text-neutral-350 absolute top-1/2 right-2.5 -translate-y-1/2 cursor-pointer text-[10px] text-neutral-400 outline-none hover:text-neutral-600"
+                className="dark:hover:text-neutral-350 absolute top-1/2 right-2.5 -translate-y-1/2 cursor-pointer text-[13px] text-neutral-400 outline-none hover:text-neutral-600"
               >
                 Clear
               </button>
@@ -317,7 +317,7 @@ export default function DepartmentsPage() {
           <select
             value={statusParam}
             onChange={(e) => setFilterParam('status', e.target.value)}
-            className="h-8.5 cursor-pointer rounded-lg border border-neutral-200 bg-white px-2.5 text-xs font-bold outline-none focus:ring-1 focus:ring-[#0A3C7D] dark:border-neutral-800 dark:bg-[#1C1C1E]"
+            className="h-8.5 cursor-pointer rounded-lg border border-neutral-200 bg-white px-2.5 text-[13px] font-bold outline-none focus:ring-1 focus:ring-[#0A3C7D] dark:border-neutral-800 dark:bg-[#1C1C1E]"
           >
             {STATUS_OPTIONS.map((o) => (
               <option key={o.value} value={o.value}>
@@ -334,7 +334,7 @@ export default function DepartmentsPage() {
             <button
               type="button"
               onClick={() => setDensity('comfortable')}
-              className={`cursor-pointer rounded-md px-2 py-1 text-[10px] font-black uppercase transition-all outline-none ${
+              className={`cursor-pointer rounded-md px-2 py-1 text-[11px] font-black uppercase transition-all outline-none ${
                 density === 'comfortable'
                   ? 'bg-white text-neutral-800 shadow-xs dark:bg-[#1C1C1E] dark:text-neutral-200'
                   : 'text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300'
@@ -345,7 +345,7 @@ export default function DepartmentsPage() {
             <button
               type="button"
               onClick={() => setDensity('compact')}
-              className={`cursor-pointer rounded-md px-2 py-1 text-[10px] font-black uppercase transition-all outline-none ${
+              className={`cursor-pointer rounded-md px-2 py-1 text-[11px] font-black uppercase transition-all outline-none ${
                 density === 'compact'
                   ? 'bg-white text-neutral-800 shadow-xs dark:bg-[#1C1C1E] dark:text-neutral-200'
                   : 'text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300'
@@ -372,7 +372,7 @@ export default function DepartmentsPage() {
               <>
                 <div className="fixed inset-0 z-35" onClick={() => setIsColumnPickerOpen(false)} />
                 <div className="animate-in fade-in slide-in-from-top-1 absolute right-0 z-40 mt-1 w-44 space-y-1.5 rounded-xl border border-neutral-200 bg-white p-2.5 shadow-lg duration-150 dark:border-neutral-800 dark:bg-[#1C1C1E]">
-                  <span className="dark:text-neutral-550 dark:border-neutral-850 mb-1.5 block border-b border-neutral-100 pb-1.5 text-left text-[8px] font-black tracking-wider text-neutral-400 uppercase select-none">
+                  <span className="dark:text-neutral-550 dark:border-neutral-850 mb-1.5 block border-b border-neutral-100 pb-1.5 text-left text-[11px] font-black tracking-wider text-neutral-400 uppercase select-none">
                     Visible Columns
                   </span>
                   {ALL_COLUMNS.map((col) => {
@@ -382,7 +382,7 @@ export default function DepartmentsPage() {
                         key={col.id}
                         type="button"
                         onClick={() => handleToggleColumn(col.id)}
-                        className="dark:hover:bg-neutral-850 flex w-full cursor-pointer items-center justify-between rounded-md px-1.5 py-1 text-left text-xs font-bold text-neutral-700 hover:bg-neutral-50 dark:text-neutral-300"
+                        className="dark:hover:bg-neutral-850 flex w-full cursor-pointer items-center justify-between rounded-md px-1.5 py-1 text-left text-[13px] font-bold text-neutral-700 hover:bg-neutral-50 dark:text-neutral-300"
                       >
                         {col.label}
                         {isVisible && <Check className="h-3.5 w-3.5 text-emerald-600" />}
@@ -425,7 +425,7 @@ export default function DepartmentsPage() {
       {/* 4. Pagination Controls Footer (Consistent with Reports page footer) */}
       {!isLoading && !error && totalItems > 0 && (
         <div className="flex items-center justify-between rounded-xl border border-neutral-200 bg-white p-3 shadow-xs select-none dark:border-neutral-800 dark:bg-[#1C1C1E]">
-          <span className="text-neutral-455 dark:text-neutral-505 text-[11px] font-bold">
+          <span className="text-neutral-455 dark:text-neutral-505 text-[13px] font-bold">
             Showing {totalItems > 0 ? (pageParam - 1) * pageSize + 1 : 0}–
             {Math.min(pageParam * pageSize, totalItems)} of {totalItems} items
           </span>

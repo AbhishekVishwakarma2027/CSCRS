@@ -105,11 +105,11 @@ export function DepartmentDetailsDrawer({
             <div>
               <h2
                 id="dept-drawer-title"
-                className="dark:text-blue-450 text-sm font-black tracking-widest text-[#0A3C7D] uppercase"
+                className="dark:text-blue-450 text-xl font-black tracking-widest text-[#0A3C7D] uppercase"
               >
                 Department Overview
               </h2>
-              <span className="text-neutral-450 mt-0.5 block text-[10px] font-semibold dark:text-neutral-500">
+              <span className="text-neutral-450 mt-0.5 block text-[13px] font-semibold dark:text-neutral-500">
                 Register ID: #{department.id}
               </span>
             </div>
@@ -124,10 +124,10 @@ export function DepartmentDetailsDrawer({
         </div>
 
         {/* Scrollable Content Viewport */}
-        <div className="dark:text-neutral-355 flex-1 scrollbar-thin space-y-6 overflow-y-auto p-5 text-xs font-bold text-neutral-700">
+        <div className="dark:text-neutral-355 flex-1 scrollbar-thin space-y-6 overflow-y-auto p-5 text-[13px] font-bold text-neutral-700">
           {/* SECTION 1: GENERAL INFORMATION */}
           <div className="dark:border-neutral-850 space-y-4 rounded-xl border border-neutral-200/60 bg-neutral-50/50 p-4 dark:bg-[#1E1E20]">
-            <h3 className="dark:border-neutral-850 flex items-center gap-1.5 border-b border-neutral-200/40 pb-2 text-[10px] font-black tracking-wider text-neutral-400 uppercase dark:text-neutral-500">
+            <h3 className="dark:border-neutral-850 flex items-center gap-1.5 border-b border-neutral-200/40 pb-2 text-[18px] font-black tracking-wider text-neutral-400 uppercase dark:text-neutral-500">
               <Building2 className="h-4 w-4 shrink-0 text-blue-500" />
               General Information
             </h3>
@@ -142,7 +142,7 @@ export function DepartmentDetailsDrawer({
               <div className="space-y-3.5">
                 <div className="grid grid-cols-2 gap-x-4 gap-y-3.5">
                   <div>
-                    <span className="text-neutral-450 block text-[9px] font-black tracking-wider uppercase dark:text-neutral-500">
+                    <span className="text-neutral-450 block text-[13px] font-black tracking-wider uppercase dark:text-neutral-500">
                       Department Name
                     </span>
                     <span className="mt-1 block font-extrabold text-neutral-800 dark:text-neutral-200">
@@ -151,7 +151,7 @@ export function DepartmentDetailsDrawer({
                   </div>
 
                   <div>
-                    <span className="text-neutral-450 block text-[9px] font-black tracking-wider uppercase dark:text-neutral-500">
+                    <span className="text-neutral-450 block text-[13px] font-black tracking-wider uppercase dark:text-neutral-500">
                       Status
                     </span>
                     <span
@@ -166,7 +166,7 @@ export function DepartmentDetailsDrawer({
                   </div>
 
                   <div>
-                    <span className="text-neutral-450 block text-[9px] font-black tracking-wider uppercase dark:text-neutral-500">
+                    <span className="text-neutral-450 block text-[13px] font-black tracking-wider uppercase dark:text-neutral-500">
                       System Code
                     </span>
                     <span className="mt-1 block font-mono text-neutral-800 dark:text-neutral-200">
@@ -175,7 +175,7 @@ export function DepartmentDetailsDrawer({
                   </div>
 
                   <div>
-                    <span className="text-neutral-450 block text-[9px] font-black tracking-wider uppercase dark:text-neutral-500">
+                    <span className="text-neutral-450 block text-[13px] font-black tracking-wider uppercase dark:text-neutral-500">
                       Created Date
                     </span>
                     <span className="mt-1 block font-semibold text-neutral-500 dark:text-neutral-400">
@@ -198,7 +198,7 @@ export function DepartmentDetailsDrawer({
 
           {/* CONTACT INFO (PLACEHOLDERS) */}
           <div className="dark:border-neutral-850 space-y-3.5 rounded-xl border border-neutral-200/60 bg-neutral-50/50 p-4 dark:bg-[#1E1E20]">
-            <h3 className="dark:border-neutral-850 flex items-center gap-1.5 border-b border-neutral-200/40 pb-2 text-[10px] font-black tracking-wider text-neutral-400 uppercase dark:text-neutral-500">
+            <h3 className="dark:border-neutral-850 flex items-center gap-1.5 border-b border-neutral-200/40 pb-2 text-[18px] font-black tracking-wider text-neutral-400 uppercase dark:text-neutral-500">
               <User className="h-4 w-4 shrink-0 text-blue-500" />
               Administrative Contact Registry
             </h3>
@@ -238,7 +238,7 @@ export function DepartmentDetailsDrawer({
 
           {/* SECTION 2: OPERATIONAL STATISTICS (Renders required cards with placeholders) */}
           <div className="dark:border-neutral-850 space-y-4 rounded-xl border border-neutral-200/60 bg-neutral-50/50 p-4 dark:bg-[#1E1E20]">
-            <h3 className="dark:border-neutral-850 flex items-center gap-1.5 border-b border-neutral-200/40 pb-2 text-[10px] font-black tracking-wider text-neutral-400 uppercase dark:text-neutral-500">
+            <h3 className="dark:border-neutral-850 flex items-center gap-1.5 border-b border-neutral-200/40 pb-2 text-[18px] font-black tracking-wider text-neutral-400 uppercase dark:text-neutral-500">
               <Activity className="h-4 w-4 shrink-0 text-blue-500" />
               Operational Statistics
             </h3>
@@ -246,7 +246,7 @@ export function DepartmentDetailsDrawer({
             <div className="grid grid-cols-2 gap-2.5 md:grid-cols-3">
               {/* Card 1: Workers Count */}
               <div className="rounded-lg border border-neutral-200 bg-white p-2.5 dark:border-neutral-800 dark:bg-[#1A1A1C]">
-                <span className="text-neutral-450 block text-[8px] font-black uppercase dark:text-neutral-500">
+                <span className="text-neutral-450 block text-[11px] font-black uppercase dark:text-neutral-500">
                   Total Workers
                 </span>
                 <span className="dark:text-neutral-550 mt-1 block font-mono text-xs text-neutral-400 italic">
@@ -256,7 +256,7 @@ export function DepartmentDetailsDrawer({
 
               {/* Card 2: Active Workers */}
               <div className="rounded-lg border border-neutral-200 bg-white p-2.5 dark:border-neutral-800 dark:bg-[#1A1A1C]">
-                <span className="text-neutral-450 block text-[8px] font-black uppercase dark:text-neutral-500">
+                <span className="text-neutral-450 block text-[11px] font-black uppercase dark:text-neutral-500">
                   Active Workers
                 </span>
                 <span className="dark:text-neutral-555 mt-1 block font-mono text-xs text-neutral-400 italic">
@@ -266,7 +266,7 @@ export function DepartmentDetailsDrawer({
 
               {/* Card 3: Inactive Workers */}
               <div className="rounded-lg border border-neutral-200 bg-white p-2.5 dark:border-neutral-800 dark:bg-[#1A1A1C]">
-                <span className="text-neutral-450 block text-[8px] font-black uppercase dark:text-neutral-500">
+                <span className="text-neutral-450 block text-[11px] font-black uppercase dark:text-neutral-500">
                   Inactive Workers
                 </span>
                 <span className="dark:text-neutral-555 mt-1 block font-mono text-xs text-neutral-400 italic">
@@ -276,7 +276,7 @@ export function DepartmentDetailsDrawer({
 
               {/* Card 4: Average Resolution Time */}
               <div className="rounded-lg border border-neutral-200 bg-white p-2.5 dark:border-neutral-800 dark:bg-[#1A1A1C]">
-                <span className="text-neutral-450 block text-[8px] font-black uppercase dark:text-neutral-500">
+                <span className="text-neutral-450 block text-[11px] font-black uppercase dark:text-neutral-500">
                   Avg Resolution Time
                 </span>
                 <span className="dark:text-neutral-555 mt-1 block font-mono text-xs text-neutral-400 italic">
@@ -286,7 +286,7 @@ export function DepartmentDetailsDrawer({
 
               {/* Card 5: Pending Reports */}
               <div className="rounded-lg border border-neutral-200 bg-white p-2.5 dark:border-neutral-800 dark:bg-[#1A1A1C]">
-                <span className="text-neutral-450 block text-[8px] font-black uppercase dark:text-neutral-500">
+                <span className="text-neutral-450 block text-[11px] font-black uppercase dark:text-neutral-500">
                   Pending Reports
                 </span>
                 <span className="dark:text-neutral-555 mt-1 block font-mono text-xs text-neutral-400 italic">
@@ -296,7 +296,7 @@ export function DepartmentDetailsDrawer({
 
               {/* Card 6: Assigned Reports */}
               <div className="rounded-lg border border-neutral-200 bg-white p-2.5 dark:border-neutral-800 dark:bg-[#1A1A1C]">
-                <span className="text-neutral-450 block text-[8px] font-black uppercase dark:text-neutral-500">
+                <span className="text-neutral-450 block text-[11px] font-black uppercase dark:text-neutral-500">
                   Assigned Reports
                 </span>
                 <span className="dark:text-neutral-555 mt-1 block font-mono text-xs text-neutral-400 italic">
@@ -306,7 +306,7 @@ export function DepartmentDetailsDrawer({
 
               {/* Card 7: In Progress Reports */}
               <div className="rounded-lg border border-neutral-200 bg-white p-2.5 dark:border-neutral-800 dark:bg-[#1A1A1C]">
-                <span className="text-neutral-450 block text-[8px] font-black uppercase dark:text-neutral-500">
+                <span className="text-neutral-450 block text-[11px] font-black uppercase dark:text-neutral-500">
                   In Progress
                 </span>
                 <span className="dark:text-neutral-555 mt-1 block font-mono text-xs text-neutral-400 italic">
@@ -316,7 +316,7 @@ export function DepartmentDetailsDrawer({
 
               {/* Card 8: Resolved Reports */}
               <div className="rounded-lg border border-neutral-200 bg-white p-2.5 dark:border-neutral-800 dark:bg-[#1A1A1C]">
-                <span className="text-neutral-450 block text-[8px] font-black uppercase dark:text-neutral-500">
+                <span className="text-neutral-450 block text-[11px] font-black uppercase dark:text-neutral-500">
                   Resolved Reports
                 </span>
                 <span className="dark:text-neutral-555 mt-1 block font-mono text-xs text-neutral-400 italic">
@@ -327,7 +327,7 @@ export function DepartmentDetailsDrawer({
 
             <div className="dark:bg-neutral-850 mt-2 flex items-start gap-2.5 rounded-lg border border-neutral-200/40 bg-neutral-100 p-3 select-none dark:border-neutral-800">
               <AlertCircle className="mt-0.5 h-4.5 w-4.5 shrink-0 text-[#0A3C7D] dark:text-blue-400" />
-              <p className="text-[10px] leading-relaxed font-semibold text-neutral-500 dark:text-neutral-400">
+              <p className="text-[13px] leading-relaxed font-semibold text-neutral-500 dark:text-neutral-400">
                 Operational metrics are restricted under current administrative APIs. When backend
                 update hooks are released, these widgets will populate without requiring UI layout
                 refactoring.
@@ -337,7 +337,7 @@ export function DepartmentDetailsDrawer({
 
           {/* SECTION 3: RECENT ACTIVITY */}
           <div className="dark:border-neutral-850 space-y-4 rounded-xl border border-neutral-200/60 bg-neutral-50/50 p-4 dark:bg-[#1E1E20]">
-            <h3 className="dark:border-neutral-850 flex items-center gap-1.5 border-b border-neutral-200/40 pb-2 text-[10px] font-black tracking-wider text-neutral-400 uppercase dark:text-neutral-500">
+            <h3 className="dark:border-neutral-850 flex items-center gap-1.5 border-b border-neutral-200/40 pb-2 text-[18px] font-black tracking-wider text-neutral-400 uppercase dark:text-neutral-500">
               <Activity className="h-4 w-4 shrink-0 text-blue-500" />
               Recent Operational Events
             </h3>
@@ -348,7 +348,7 @@ export function DepartmentDetailsDrawer({
                   <Clock className="h-4 w-4 text-neutral-500" />
                   Average Operational Load Time
                 </h4>
-                <p className="text-neutral-450 dark:text-neutral-550 text-[9px] font-semibold italic">
+                <p className="text-neutral-450 dark:text-neutral-550 text-[13px] font-semibold italic">
                   Average system processing queues telemetry offline.
                 </p>
               </div>
