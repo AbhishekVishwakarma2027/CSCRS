@@ -16,6 +16,8 @@ export const PATHS = {
   REPORTS: '/reports',
   DEPARTMENTS: '/departments',
   FEEDBACK: '/feedback',
+  SYSTEM_ISSUES: '/system-issues',
+  PROFILE: '/profile',
 
   // Error states
   UNAUTHORIZED: '/unauthorized',

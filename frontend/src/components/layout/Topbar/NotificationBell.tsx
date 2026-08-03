@@ -1,35 +1,24 @@
 import { useState, useRef, useEffect } from 'react'
 import { Bell, Check, Info } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import {
+  useNotificationsQuery,
+  useMarkAllNotificationsReadMutation,
+  useMarkNotificationReadMutation,
+} from '@/features/notifications/hooks/use-notifications'
+import { formatDate } from '@/utils/format'
 
-// Structure prepared for backend synchronization in later phases
-export interface InAppNotification {
-  id: string
-  title: string
-  message: string
-  createdAt: string
-  read: boolean
-}
-
-interface NotificationBellProps {
-  notifications?: InAppNotification[]
-  onMarkAllRead?: () => void
-  onNotificationClick?: (notificationId: string) => void
-  isLoading?: boolean
-  error?: string | null
-}
-
-export function NotificationBell({
-  notifications = [],
-  onMarkAllRead,
-  onNotificationClick,
-  isLoading = false,
-  error = null,
-}: NotificationBellProps) {
+export function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const navigate = useNavigate()
+
+  const { data: notifications = [], isLoading, error } = useNotificationsQuery()
+  const markAllReadMutation = useMarkAllNotificationsReadMutation()
+  const markReadMutation = useMarkNotificationReadMutation()
 
   // Calculate unread count
-  const unreadCount = notifications.filter((n) => !n.read).length
+  const unreadCount = notifications.filter((n) => !n.is_read).length
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -83,7 +72,9 @@ export function NotificationBell({
             ) : error ? (
               <div className="flex flex-col items-center justify-center gap-2 p-6 text-center text-rose-500">
                 <span className="text-[13px] font-bold">Failed to load notifications</span>
-                <span className="text-neutral-450 text-[11px]">{error}</span>
+                <span className="text-neutral-450 text-[11px]">
+                  {error?.message || 'Unknown error'}
+                </span>
               </div>
             ) : notifications.length === 0 ? (
               <div className="flex flex-col items-center justify-center gap-2 p-8 text-center">
@@ -103,15 +94,21 @@ export function NotificationBell({
                   <button
                     key={n.id}
                     onClick={() => {
-                      onNotificationClick?.(n.id)
+                      if (!n.is_read) {
+                        markReadMutation.mutate(n.id)
+                      }
                       setIsOpen(false)
+                      // Optional: Navigate to report if related
+                      if (n.report_id) {
+                        navigate(`/reports?q=${n.report_id}`)
+                      }
                     }}
                     className={`flex w-full gap-3 p-4 text-left transition-colors hover:bg-neutral-50/50 focus:outline-none dark:hover:bg-neutral-800/30 ${
-                      !n.read ? 'bg-[#0D9488]/5 dark:bg-teal-950/10' : ''
+                      !n.is_read ? 'bg-[#0D9488]/5 dark:bg-teal-950/10' : ''
                     }`}
                   >
                     <div className="mt-1 shrink-0">
-                      {n.read ? (
+                      {n.is_read ? (
                         <Info className="h-3.5 w-3.5 text-neutral-400" />
                       ) : (
                         <span className="relative flex h-2 w-2">
@@ -127,7 +124,7 @@ export function NotificationBell({
                         {n.message}
                       </p>
                       <span className="mt-1.5 block text-[11px] font-semibold text-neutral-400">
-                        {n.createdAt}
+                        {formatDate(n.created_at)}
                       </span>
                     </div>
                   </button>
@@ -141,7 +138,7 @@ export function NotificationBell({
             <div className="border-t border-neutral-100 bg-neutral-50/30 px-4 py-2 text-center dark:border-neutral-800">
               <button
                 onClick={() => {
-                  onMarkAllRead?.()
+                  markAllReadMutation.mutate()
                   setIsOpen(false)
                 }}
                 className="inline-flex cursor-pointer items-center gap-1 text-[13px] font-bold text-[#0A3C7D] hover:text-[#0A3C7D]/85 dark:text-blue-400"

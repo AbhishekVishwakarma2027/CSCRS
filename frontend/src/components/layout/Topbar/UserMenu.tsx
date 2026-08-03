@@ -89,7 +89,7 @@ export function UserMenu() {
             <button
               onClick={() => {
                 setIsOpen(false)
-                toast.info('My Profile functionality will be integrated in a later phase.')
+                navigate(PATHS.PROFILE)
               }}
               className="dark:text-neutral-350 flex w-full cursor-pointer items-center space-x-2.5 px-4 py-2.5 text-[13px] font-bold text-neutral-700 transition-colors outline-none hover:bg-neutral-50 hover:text-[#0A3C7D] focus:bg-neutral-50 focus:text-[#0A3C7D] dark:hover:bg-neutral-800/45 dark:hover:text-blue-400 dark:focus:bg-neutral-800/45 dark:focus:text-blue-400"
             >
@@ -100,7 +100,7 @@ export function UserMenu() {
             <button
               onClick={() => {
                 setIsOpen(false)
-                toast.info('Settings panel will be integrated in a later phase.')
+                navigate(PATHS.PROFILE) // Same page handles settings for now
               }}
               className="dark:text-neutral-350 flex w-full cursor-pointer items-center space-x-2.5 px-4 py-2.5 text-[13px] font-bold text-neutral-700 transition-colors outline-none hover:bg-neutral-50 hover:text-[#0A3C7D] focus:bg-neutral-50 focus:text-[#0A3C7D] dark:hover:bg-neutral-800/45 dark:hover:text-blue-400 dark:focus:bg-neutral-800/45 dark:focus:text-blue-400"
             >

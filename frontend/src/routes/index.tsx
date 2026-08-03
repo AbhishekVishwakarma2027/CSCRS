@@ -16,6 +16,8 @@ const DashboardPage = lazy(() => import('@/features/dashboard/pages/DashboardPag
 const ReportsPage = lazy(() => import('@/features/reports/pages/ReportsPage'))
 const DepartmentsPage = lazy(() => import('@/features/departments/pages/DepartmentsPage'))
 const FeedbackPage = lazy(() => import('@/features/feedback/pages/FeedbackPage'))
+const SystemHealthPage = lazy(() => import('@/features/system-issues/pages/SystemHealthPage'))
+const ProfileSettingsPage = lazy(() => import('@/features/profile/pages/ProfileSettingsPage'))
 const UnauthorizedPage = lazy(() => import('@/features/auth/pages/UnauthorizedPage'))
 const NotFoundPage = lazy(() => import('@/features/auth/pages/NotFoundPage'))
 const LandingPage = lazy(() => import('@/pages/LandingPage'))
@@ -125,6 +127,24 @@ export const router = createBrowserRouter([
               <FeedbackPage />
             </Suspense>
           </ProtectedRoute>
+        ),
+      },
+      {
+        path: PATHS.SYSTEM_ISSUES,
+        element: (
+          <ProtectedRoute roles={[UserRole.SUPER_ADMIN, UserRole.CITY_ADMIN]}>
+            <Suspense fallback={<PageLoader />}>
+              <SystemHealthPage />
+            </Suspense>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: PATHS.PROFILE,
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <ProfileSettingsPage />
+          </Suspense>
         ),
       },
     ],
