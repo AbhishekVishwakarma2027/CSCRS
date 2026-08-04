@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { useUploadProfilePhotoMutation, useDeleteProfilePhotoMutation } from '../hooks/use-profile'
 import type { ProfileResponse } from '../types'
+import { getMediaUrl } from '@/utils/format'
 
 interface ProfilePhotoSectionProps {
   profile: ProfileResponse
@@ -61,7 +62,11 @@ export function ProfilePhotoSection({ profile }: ProfilePhotoSectionProps) {
       <div className="mt-5 flex flex-col items-center gap-4">
         <div className="flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-800">
           {profile.profile_image ? (
-            <img src={profile.profile_image} alt="Profile" className="h-full w-full object-cover" />
+            <img
+              src={getMediaUrl(profile.profile_image)}
+              alt="Profile"
+              className="h-full w-full object-cover"
+            />
           ) : (
             <span className="text-2xl font-black text-neutral-500 dark:text-neutral-400">
               {profile.name?.charAt(0).toUpperCase()}

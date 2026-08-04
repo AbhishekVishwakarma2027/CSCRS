@@ -23,3 +23,29 @@ export function formatDateTime(isoString: string): string {
 export function formatRelativeTime(isoString: string): string {
   return formatDistanceToNow(parseISO(isoString), { addSuffix: true })
 }
+
+/**
+ * Normalizes any absolute backend media/profile photo URL to handle host mismatches in dev/prod.
+ * Handles extracting relative /uploads paths and appending the active VITE_API_BASE_URL.
+ */
+export function getMediaUrl(url: string | null): string {
+  if (!url) return ''
+
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    if (url.includes('/uploads/')) {
+      const path = url.substring(url.indexOf('/uploads/'))
+      return import.meta.env.DEV
+        ? path
+        : `${(import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')}${path}`
+    }
+  }
+
+  if (url.includes('uploads/')) {
+    const path = '/' + url.substring(url.indexOf('uploads/'))
+    return import.meta.env.DEV
+      ? path
+      : `${(import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')}${path}`
+  }
+
+  return url
+}

@@ -79,7 +79,6 @@ async def custom_rate_limit_handler(
     )
 
 app.add_middleware(SlowAPIMiddleware)
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[

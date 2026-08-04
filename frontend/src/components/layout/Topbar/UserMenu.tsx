@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/use-auth'
 import { useMyProfileQuery } from '@/features/profile/hooks/use-profile'
 import { RoleBadge } from '../RoleBadge'
 import { PATHS } from '@/routes/paths'
+import { getMediaUrl } from '@/utils/format'
 
 export function UserMenu() {
   const { user, logout } = useAuth()
@@ -57,7 +58,11 @@ export function UserMenu() {
       >
         <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg bg-[#0A3C7D] text-xs font-black text-white shadow-sm select-none">
           {profile?.profile_image ? (
-            <img src={profile.profile_image} alt="Avatar" className="h-full w-full object-cover" />
+            <img
+              src={getMediaUrl(profile.profile_image)}
+              alt="Avatar"
+              className="h-full w-full object-cover"
+            />
           ) : (
             getInitials(user.name)
           )}
