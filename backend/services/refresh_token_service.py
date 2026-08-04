@@ -14,6 +14,7 @@ from authentication.security import (
     create_refresh_token,
     REFRESH_TOKEN_EXPIRE_DAYS,
 )
+from configs.config import ACCESS_TOKEN_EXPIRE_MINUTES
 from database.crud.user import UserCRUD
 from schemas.user import TokenResponse
 
@@ -169,7 +170,7 @@ class RefreshTokenService:
             access_token=access_data["access_token"],
             refresh_token=refresh_data["refresh_token"],
             token_type="bearer",
-            expires_in=1800,
+            expires_in=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         )
     
     def logout(

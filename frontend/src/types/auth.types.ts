@@ -41,3 +41,9 @@ export interface SessionResponse {
   last_used: string
   created_at: string
 }
+
+export interface ChangePasswordRequest {
+  old_password: string
+  new_password: string
+  confirm_password: string
+}

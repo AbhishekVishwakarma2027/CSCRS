@@ -1,13 +1,15 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { User, LogOut, Settings, Key, ChevronDown } from 'lucide-react'
+import { User, LogOut, Settings, ChevronDown } from 'lucide-react'
+import { toast } from 'sonner'
 import { useAuth } from '@/hooks/use-auth'
+import { useMyProfileQuery } from '@/features/profile/hooks/use-profile'
 import { RoleBadge } from '../RoleBadge'
 import { PATHS } from '@/routes/paths'
-import { toast } from 'sonner'
 
 export function UserMenu() {
   const { user, logout } = useAuth()
+  const { data: profile } = useMyProfileQuery()
   const navigate = useNavigate()
   const [isOpen, setIsOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -53,8 +55,12 @@ export function UserMenu() {
         aria-expanded={isOpen}
         aria-label="User Account Menu"
       >
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#0A3C7D] text-xs font-black text-white shadow-sm select-none">
-          {getInitials(user.name)}
+        <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg bg-[#0A3C7D] text-xs font-black text-white shadow-sm select-none">
+          {profile?.profile_image ? (
+            <img src={profile.profile_image} alt="Avatar" className="h-full w-full object-cover" />
+          ) : (
+            getInitials(user.name)
+          )}
         </div>
 
         <div className="hidden shrink-0 flex-col items-start text-left sm:flex">
@@ -100,23 +106,12 @@ export function UserMenu() {
             <button
               onClick={() => {
                 setIsOpen(false)
-                navigate(PATHS.PROFILE) // Same page handles settings for now
+                toast.info('Settings implementation planned for a later phase.')
               }}
               className="dark:text-neutral-350 flex w-full cursor-pointer items-center space-x-2.5 px-4 py-2.5 text-[13px] font-bold text-neutral-700 transition-colors outline-none hover:bg-neutral-50 hover:text-[#0A3C7D] focus:bg-neutral-50 focus:text-[#0A3C7D] dark:hover:bg-neutral-800/45 dark:hover:text-blue-400 dark:focus:bg-neutral-800/45 dark:focus:text-blue-400"
             >
               <Settings className="h-4 w-4 shrink-0 text-neutral-400" />
               <span>Settings</span>
-            </button>
-
-            <button
-              onClick={() => {
-                setIsOpen(false)
-                toast.info('Password changing will be integrated in a later phase.')
-              }}
-              className="dark:text-neutral-350 flex w-full cursor-pointer items-center space-x-2.5 px-4 py-2.5 text-[13px] font-bold text-neutral-700 transition-colors outline-none hover:bg-neutral-50 hover:text-[#0A3C7D] focus:bg-neutral-50 focus:text-[#0A3C7D] dark:hover:bg-neutral-800/45 dark:hover:text-blue-400 dark:focus:bg-neutral-800/45 dark:focus:text-blue-400"
-            >
-              <Key className="h-4 w-4 shrink-0 text-neutral-400" />
-              <span>Change Password</span>
             </button>
           </div>
 

@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { profileService } from '../services/profile.service'
+import { authService } from '@/features/auth/services/auth.service'
 import type { UpdateProfileRequest } from '../types'
+import type { ChangePasswordRequest } from '@/types/auth.types'
 
 export const PROFILE_QUERY_KEYS = {
   all: ['profile'] as const,
@@ -44,5 +46,11 @@ export function useDeleteProfilePhotoMutation() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: PROFILE_QUERY_KEYS.me() })
     },
+  })
+}
+
+export function useChangePasswordMutation() {
+  return useMutation({
+    mutationFn: (data: ChangePasswordRequest) => authService.changePassword(data),
   })
 }

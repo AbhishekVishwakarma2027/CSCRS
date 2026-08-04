@@ -1,5 +1,5 @@
 import { apiClient } from '@/services/api'
-import type { TokenResponse, UserProfile } from '@/types/auth.types'
+import type { TokenResponse, UserProfile, ChangePasswordRequest } from '@/types/auth.types'
 
 export interface MessageResponse {
   message: string
@@ -81,5 +81,13 @@ export const authService = {
       new_password: newPassword,
     })
     return data
+  },
+
+  /**
+   * Change user password when logged in.
+   */
+  async changePassword(data: ChangePasswordRequest): Promise<MessageResponse> {
+    const response = await apiClient.post<MessageResponse>('/api/v1/auth/change-password', data)
+    return response.data
   },
 }

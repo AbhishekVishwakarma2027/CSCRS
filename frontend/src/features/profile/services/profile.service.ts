@@ -14,11 +14,11 @@ export const profileService = {
     return data
   },
 
-  async uploadPhoto(file: File): Promise<{ message: string; url: string }> {
+  async uploadPhoto(file: File): Promise<{ message: string; profile_image: string }> {
     const formData = new FormData()
     formData.append('photo', file)
 
-    const { data } = await apiClient.post<{ message: string; url: string }>(
+    const { data } = await apiClient.post<{ message: string; profile_image: string }>(
       '/api/v1/profile/photo',
       formData,
       {

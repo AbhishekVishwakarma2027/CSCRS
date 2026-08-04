@@ -15,6 +15,7 @@ export const PATHS = {
   DASHBOARD: '/dashboard',
   REPORTS: '/reports',
   DEPARTMENTS: '/departments',
+  USERS: '/users',
   FEEDBACK: '/feedback',
   SYSTEM_ISSUES: '/system-issues',
   PROFILE: '/profile',

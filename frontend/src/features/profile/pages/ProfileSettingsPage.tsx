@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import { User, Mail, Phone, Shield, ShieldCheck, Briefcase } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { useMyProfileQuery, useUpdateProfileMutation } from '../hooks/use-profile'
+import { ProfilePhotoSection } from '../components/ProfilePhotoSection'
+import { ChangePasswordSection } from '../components/ChangePasswordSection'
 import { Button } from '@/components/ui/button'
 import { RoleBadge } from '@/components/layout/RoleBadge'
 import { formatDate } from '@/utils/format'
@@ -9,6 +12,7 @@ import { toast } from 'sonner'
 
 export default function ProfileSettingsPage() {
   useAuth()
+  const location = useLocation()
   const { data: profile, isLoading, error } = useMyProfileQuery()
   const updateProfileMutation = useUpdateProfileMutation()
 
@@ -27,6 +31,57 @@ export default function ProfileSettingsPage() {
       })
     }
   }, [profile])
+
+  // Handle hash navigation
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>
+
+    if (location.hash && profile && !isLoading) {
+      const id = location.hash.replace('#', '')
+
+      // Small timeout ensures the DOM is fully painted
+      timer = setTimeout(() => {
+        const element = document.getElementById(id)
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+
+          // Briefly highlight
+          element.classList.add(
+            'ring-2',
+            'ring-[#0A3C7D]/50',
+            'dark:ring-blue-500/50',
+            'ring-offset-2',
+            'dark:ring-offset-[#1C1C1E]',
+            'transition-all',
+            'duration-500'
+          )
+
+          setTimeout(() => {
+            element.classList.remove(
+              'ring-2',
+              'ring-[#0A3C7D]/50',
+              'dark:ring-blue-500/50',
+              'ring-offset-2',
+              'dark:ring-offset-[#1C1C1E]'
+            )
+          }, 1500)
+
+          // Focus current password if security section
+          if (id === 'security') {
+            const pwdInput = document.getElementById('current-password') as HTMLInputElement
+            if (pwdInput) {
+              // Wait slightly for scroll to finish before focusing
+              setTimeout(() => pwdInput.focus(), 500)
+            }
+          }
+        }
+      }, 100)
+    }
+
+    return () => {
+      if (timer) clearTimeout(timer)
+    }
+  }, [location.hash, profile, isLoading])
 
   const handleSave = async () => {
     try {
@@ -86,7 +141,10 @@ export default function ProfileSettingsPage() {
         {/* Left Column - Main Details */}
         <div className="space-y-6">
           {/* General Information Card */}
-          <div className="dark:border-neutral-850 rounded-xl border border-neutral-200/60 bg-neutral-50/50 p-6 dark:bg-[#1E1E20]">
+          <div
+            id="personal-information"
+            className="dark:border-neutral-850 rounded-xl border border-neutral-200/60 bg-neutral-50/50 p-6 dark:bg-[#1E1E20]"
+          >
             <div className="dark:border-neutral-850 flex items-center justify-between border-b border-neutral-200/40 pb-4">
               <h3 className="flex items-center gap-1.5 text-[18px] font-black tracking-wider text-neutral-400 uppercase dark:text-neutral-500">
                 <User className="h-4 w-4 shrink-0 text-[#0A3C7D] dark:text-blue-500" />
@@ -186,10 +244,18 @@ export default function ProfileSettingsPage() {
               </div>
             </div>
           </div>
+
+          <div id="security">
+            <ChangePasswordSection isEditing={isEditing} />
+          </div>
         </div>
 
         {/* Right Column - Status & Meta */}
         <div className="space-y-6">
+          <div id="profile-photo">
+            <ProfilePhotoSection profile={profile} />
+          </div>
+
           {/* Work Status Card */}
           <div className="dark:border-neutral-850 rounded-xl border border-neutral-200/60 bg-neutral-50/50 p-6 dark:bg-[#1E1E20]">
             <h3 className="dark:border-neutral-850 flex items-center gap-1.5 border-b border-neutral-200/40 pb-4 text-[18px] font-black tracking-wider text-neutral-400 uppercase dark:text-neutral-500">

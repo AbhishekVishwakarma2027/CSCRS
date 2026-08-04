@@ -31,7 +31,7 @@ from fastapi import Request
 from services.security_service import SecurityService
 from datetime import datetime, timezone,timedelta
 from database.crud.login_audit import LoginAuditCRUD
-from configs.config import REFRESH_TOKEN_EXPIRE_DAYS
+from configs.config import REFRESH_TOKEN_EXPIRE_DAYS, ACCESS_TOKEN_EXPIRE_MINUTES
 
 class AuthService:
 
@@ -337,7 +337,7 @@ class AuthService:
             access_token=token_data["access_token"],
             refresh_token=refresh_data["refresh_token"],
             token_type="bearer",
-            expires_in=1800,
+            expires_in=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         )
     
     def verify_email(

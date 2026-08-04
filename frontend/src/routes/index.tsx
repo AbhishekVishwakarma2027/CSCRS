@@ -16,6 +16,9 @@ const DashboardPage = lazy(() => import('@/features/dashboard/pages/DashboardPag
 const ReportsPage = lazy(() => import('@/features/reports/pages/ReportsPage'))
 const DepartmentsPage = lazy(() => import('@/features/departments/pages/DepartmentsPage'))
 const FeedbackPage = lazy(() => import('@/features/feedback/pages/FeedbackPage'))
+const UserDirectoriesPage = lazy(
+  () => import('@/features/user-directories/pages/UserDirectoriesPage')
+)
 const SystemHealthPage = lazy(() => import('@/features/system-issues/pages/SystemHealthPage'))
 const ProfileSettingsPage = lazy(() => import('@/features/profile/pages/ProfileSettingsPage'))
 const UnauthorizedPage = lazy(() => import('@/features/auth/pages/UnauthorizedPage'))
@@ -120,6 +123,18 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: PATHS.USERS,
+        element: (
+          <ProtectedRoute
+            roles={[UserRole.SUPER_ADMIN, UserRole.CITY_ADMIN, UserRole.DEPARTMENT_ADMIN]}
+          >
+            <Suspense fallback={<PageLoader />}>
+              <UserDirectoriesPage />
+            </Suspense>
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: PATHS.FEEDBACK,
         element: (
           <ProtectedRoute roles={[UserRole.SUPER_ADMIN, UserRole.CITY_ADMIN]}>
@@ -132,7 +147,7 @@ export const router = createBrowserRouter([
       {
         path: PATHS.SYSTEM_ISSUES,
         element: (
-          <ProtectedRoute roles={[UserRole.SUPER_ADMIN, UserRole.CITY_ADMIN]}>
+          <ProtectedRoute roles={[UserRole.SUPER_ADMIN]}>
             <Suspense fallback={<PageLoader />}>
               <SystemHealthPage />
             </Suspense>
