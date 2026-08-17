@@ -12,6 +12,7 @@ const LoginPage = lazy(() => import('@/features/auth/pages/LoginPage'))
 const ForgotPasswordPage = lazy(() => import('@/features/auth/pages/ForgotPasswordPage'))
 const VerifyResetOtpPage = lazy(() => import('@/features/auth/pages/VerifyResetOtpPage'))
 const ResetPasswordPage = lazy(() => import('@/features/auth/pages/ResetPasswordPage'))
+const ActivateAccountPage = lazy(() => import('@/features/auth/pages/ActivateAccountPage'))
 const DashboardPage = lazy(() => import('@/features/dashboard/pages/DashboardPage'))
 const ReportsPage = lazy(() => import('@/features/reports/pages/ReportsPage'))
 const DepartmentsPage = lazy(() => import('@/features/departments/pages/DepartmentsPage'))
@@ -21,6 +22,15 @@ const UserDirectoriesPage = lazy(
 )
 const SystemHealthPage = lazy(() => import('@/features/system-issues/pages/SystemHealthPage'))
 const ProfileSettingsPage = lazy(() => import('@/features/profile/pages/ProfileSettingsPage'))
+const SettingsPage = lazy(() => import('@/features/profile/pages/SettingsPage'))
+const ExportsPage = lazy(() => import('@/features/reports/pages/ExportsPage'))
+const SubmitIssuePage = lazy(() => import('@/features/system-issues/pages/SubmitIssuePage'))
+const WorkersPage = lazy(() => import('@/features/workers/pages/WorkersPage'))
+const ManualReviewPage = lazy(() => import('@/features/resolutions/pages/ManualReviewPage'))
+const ForwardRequestsPage = lazy(
+  () => import('@/features/forward-requests/pages/ForwardRequestsPage')
+)
+const NotificationsPage = lazy(() => import('@/features/notifications/pages/NotificationsPage'))
 const UnauthorizedPage = lazy(() => import('@/features/auth/pages/UnauthorizedPage'))
 const NotFoundPage = lazy(() => import('@/features/auth/pages/NotFoundPage'))
 const LandingPage = lazy(() => import('@/pages/LandingPage'))
@@ -73,6 +83,36 @@ export const router = createBrowserRouter([
       <PublicRoute>
         <Suspense fallback={<PageLoader />}>
           <ResetPasswordPage />
+        </Suspense>
+      </PublicRoute>
+    ),
+  },
+  {
+    path: PATHS.ACTIVATE_ADMIN,
+    element: (
+      <PublicRoute>
+        <Suspense fallback={<PageLoader />}>
+          <ActivateAccountPage />
+        </Suspense>
+      </PublicRoute>
+    ),
+  },
+  {
+    path: PATHS.ACTIVATE_CITY_ADMIN,
+    element: (
+      <PublicRoute>
+        <Suspense fallback={<PageLoader />}>
+          <ActivateAccountPage />
+        </Suspense>
+      </PublicRoute>
+    ),
+  },
+  {
+    path: PATHS.ACTIVATE_WORKER,
+    element: (
+      <PublicRoute>
+        <Suspense fallback={<PageLoader />}>
+          <ActivateAccountPage />
         </Suspense>
       </PublicRoute>
     ),
@@ -137,7 +177,9 @@ export const router = createBrowserRouter([
       {
         path: PATHS.FEEDBACK,
         element: (
-          <ProtectedRoute roles={[UserRole.SUPER_ADMIN, UserRole.CITY_ADMIN]}>
+          <ProtectedRoute
+            roles={[UserRole.SUPER_ADMIN, UserRole.CITY_ADMIN, UserRole.DEPARTMENT_ADMIN]}
+          >
             <Suspense fallback={<PageLoader />}>
               <FeedbackPage />
             </Suspense>
@@ -160,6 +202,76 @@ export const router = createBrowserRouter([
           <Suspense fallback={<PageLoader />}>
             <ProfileSettingsPage />
           </Suspense>
+        ),
+      },
+      {
+        path: PATHS.SETTINGS,
+        element: (
+          <Suspense fallback={<PageLoader />}>
+            <SettingsPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: PATHS.EXPORTS,
+        element: (
+          <ProtectedRoute roles={[UserRole.CITY_ADMIN, UserRole.DEPARTMENT_ADMIN]}>
+            <Suspense fallback={<PageLoader />}>
+              <ExportsPage />
+            </Suspense>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: PATHS.SUBMIT_ISSUE,
+        element: (
+          <ProtectedRoute roles={[UserRole.CITY_ADMIN, UserRole.DEPARTMENT_ADMIN]}>
+            <Suspense fallback={<PageLoader />}>
+              <SubmitIssuePage />
+            </Suspense>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: PATHS.WORKERS,
+        element: (
+          <ProtectedRoute roles={[UserRole.DEPARTMENT_ADMIN]}>
+            <Suspense fallback={<PageLoader />}>
+              <WorkersPage />
+            </Suspense>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: PATHS.MANUAL_REVIEW,
+        element: (
+          <ProtectedRoute roles={[UserRole.DEPARTMENT_ADMIN]}>
+            <Suspense fallback={<PageLoader />}>
+              <ManualReviewPage />
+            </Suspense>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: PATHS.FORWARD_REQUESTS,
+        element: (
+          <ProtectedRoute roles={[UserRole.DEPARTMENT_ADMIN]}>
+            <Suspense fallback={<PageLoader />}>
+              <ForwardRequestsPage />
+            </Suspense>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: PATHS.NOTIFICATIONS,
+        element: (
+          <ProtectedRoute
+            roles={[UserRole.SUPER_ADMIN, UserRole.CITY_ADMIN, UserRole.DEPARTMENT_ADMIN]}
+          >
+            <Suspense fallback={<PageLoader />}>
+              <NotificationsPage />
+            </Suspense>
+          </ProtectedRoute>
         ),
       },
     ],

@@ -1,5 +1,10 @@
 import { apiClient } from '@/services/api'
-import type { TokenResponse, UserProfile, ChangePasswordRequest } from '@/types/auth.types'
+import type {
+  TokenResponse,
+  UserProfile,
+  ChangePasswordRequest,
+  SessionResponse,
+} from '@/types/auth.types'
 
 export interface MessageResponse {
   message: string
@@ -88,6 +93,33 @@ export const authService = {
    */
   async changePassword(data: ChangePasswordRequest): Promise<MessageResponse> {
     const response = await apiClient.post<MessageResponse>('/api/v1/auth/change-password', data)
+    return response.data
+  },
+
+  /**
+   * Fetch all active sessions metadata.
+   */
+  async getSessions(): Promise<SessionResponse[]> {
+    const { data } = await apiClient.get<SessionResponse[]>('/api/v1/auth/sessions')
+    return data
+  },
+
+  /**
+   * Revoke all active sessions for the current user.
+   */
+  async logoutAll(): Promise<void> {
+    await apiClient.post('/api/v1/auth/logout-all')
+  },
+
+  /**
+   * Activate an invited account (Admin, City Admin, Worker).
+   * @param rolePath e.g. 'admins', 'city-admins', 'workers'
+   */
+  async activateAccount(
+    rolePath: string,
+    data: { token: string; password: string }
+  ): Promise<MessageResponse> {
+    const response = await apiClient.post<MessageResponse>(`/api/v1/${rolePath}/activate`, data)
     return response.data
   },
 }

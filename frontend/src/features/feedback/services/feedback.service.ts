@@ -23,4 +23,21 @@ export const feedbackService = {
     })
     return data
   },
+
+  /**
+   * Submit user feedback.
+   */
+  async submitFeedback(
+    payload: { rating: number; liked_text?: string; suggestion_text?: string },
+    signal?: AbortSignal
+  ): Promise<{ message: string; feedback_id: number }> {
+    const { data } = await apiClient.post<{ message: string; feedback_id: number }>(
+      '/api/v1/feedback',
+      payload,
+      {
+        signal,
+      }
+    )
+    return data
+  },
 }

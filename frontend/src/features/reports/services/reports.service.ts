@@ -183,4 +183,26 @@ export const reportsService = {
     })
     return data
   },
+
+  /**
+   * Download the City Performance Report (PDF).
+   */
+  async downloadCityReport(signal?: AbortSignal): Promise<Blob> {
+    const { data } = await apiClient.get<Blob>('/api/v1/reports/city/download', {
+      responseType: 'blob',
+      signal,
+    })
+    return data
+  },
+
+  /**
+   * Download the Department Performance Report (PDF).
+   */
+  async downloadDepartmentReport(signal?: AbortSignal): Promise<Blob> {
+    const { data } = await apiClient.get<Blob>('/api/v1/reports/department/download', {
+      responseType: 'blob',
+      signal,
+    })
+    return data
+  },
 }

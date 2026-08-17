@@ -98,9 +98,19 @@ export function NotificationBell() {
                         markReadMutation.mutate(n.id)
                       }
                       setIsOpen(false)
-                      // Optional: Navigate to report if related
+                      // Navigate to correct resource page if report_id present
                       if (n.report_id) {
-                        navigate(`/reports?q=${n.report_id}`)
+                        const typeLower = n.type.toLowerCase()
+                        if (typeLower.includes('forward')) {
+                          navigate('/forward-requests')
+                        } else if (
+                          typeLower.includes('manual') ||
+                          typeLower.includes('resolution')
+                        ) {
+                          navigate('/resolutions/manual-review')
+                        } else {
+                          navigate(`/reports?q=${n.report_id}`)
+                        }
                       }
                     }}
                     className={`flex w-full gap-3 p-4 text-left transition-colors hover:bg-neutral-50/50 focus:outline-none dark:hover:bg-neutral-800/30 ${

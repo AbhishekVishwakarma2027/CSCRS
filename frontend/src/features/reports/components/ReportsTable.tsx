@@ -269,13 +269,15 @@ export function ReportsTable({
                       <button
                         type="button"
                         onClick={() => {
-                          onAssign(report.id)
+                          toast.info(
+                            'Manual worker assignment is currently unavailable. The current system does not provide a worker-selection API for this action.'
+                          )
                           setActiveActionRow(null)
                         }}
                         className="dark:hover:bg-neutral-850 flex w-full cursor-pointer items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs font-bold text-neutral-700 hover:bg-neutral-50 dark:text-neutral-300"
                       >
                         <UserCheck className="text-blue-550 h-3.5 w-3.5" />
-                        Auto Assign
+                        Assign Worker
                       </button>
                     )}
                     {isCancellable && (
@@ -576,13 +578,15 @@ export function ReportsTable({
                             <button
                               type="button"
                               onClick={() => {
-                                onAssign(report.id)
+                                toast.info(
+                                  'Manual worker assignment is currently unavailable. The current system does not provide a worker-selection API for this action.'
+                                )
                                 setActiveActionRow(null)
                               }}
                               className="dark:hover:bg-neutral-850 flex w-full cursor-pointer items-center gap-2 rounded-lg px-2 py-1 text-left text-xs font-bold text-neutral-700 hover:bg-neutral-50 dark:text-neutral-300"
                             >
                               <UserCheck className="text-blue-550 h-3 w-3" />
-                              Auto Assign
+                              Assign Worker
                             </button>
                           )}
                           {isCancellable && (

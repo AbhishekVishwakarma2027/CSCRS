@@ -328,7 +328,7 @@ export default function ReportsPage() {
       />
 
       {/* 4. Pagination Controls Footer - Always rendered when loaded successfully */}
-      {!isLoading && !error && (
+      {!isLoading && !error && isCityAdmin && (
         <div className="flex items-center justify-between rounded-xl border border-neutral-200 bg-white p-3 shadow-xs select-none dark:border-neutral-800 dark:bg-[#1C1C1E]">
           <span className="text-neutral-455 dark:text-neutral-505 text-[13px] font-bold">
             Showing {totalItems > 0 ? (pageParam - 1) * 10 + 1 : 0}–

@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import * as Icons from 'lucide-react'
 import { ChevronRight, PanelLeftClose, PanelLeft } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
+import { UserRole } from '@/types/auth.types'
 import { SIDEBAR_MENU_GROUPS, type SidebarConfigItem } from './sidebar.config'
 
 // Helper component to render icons dynamically
@@ -140,11 +141,18 @@ export function Sidebar({
       )
     }
 
+    const displayTitle =
+      item.id === 'feedback' && user?.role === UserRole.DEPARTMENT_ADMIN
+        ? 'Give Feedback'
+        : item.title
+
     return (
       <Link key={item.id} to={item.path} className={baseItemClasses}>
         <div className="flex min-w-0 items-center space-x-2.5">
           <SidebarIcon name={item.icon} className="h-4 w-4 shrink-0" />
-          {(!isCollapsed || isMobileOpen) && <span className="flex-1 truncate">{item.title}</span>}
+          {(!isCollapsed || isMobileOpen) && (
+            <span className="flex-1 truncate">{displayTitle}</span>
+          )}
         </div>
 
         {item.badge && (!isCollapsed || isMobileOpen) && (

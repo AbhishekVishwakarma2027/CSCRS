@@ -34,12 +34,15 @@ export interface TokenResponse {
  * Active session metadata from GET /api/v1/auth/sessions
  */
 export interface SessionResponse {
+  id: number
   session_id: string
-  browser: string | null
-  os: string | null
   device_type: string | null
-  last_used: string
+  browser: string | null
+  operating_system: string | null
+  ip_address: string | null
   created_at: string
+  last_used_at: string | null
+  expires_at: string
 }
 
 export interface ChangePasswordRequest {

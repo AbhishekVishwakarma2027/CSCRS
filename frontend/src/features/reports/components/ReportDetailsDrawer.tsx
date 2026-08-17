@@ -25,6 +25,8 @@ import { formatDate } from '@/utils/format'
 import { APP_CONFIG } from '@/config/app.config'
 import type { ReportListItem } from '../types'
 import { useReportDetailsQuery, useReportTimelineQuery } from '../hooks/use-reports'
+import { useAuth } from '@/hooks/use-auth'
+import { UserRole } from '@/types/auth.types'
 
 // WCAG AA Compliant High Contrast Badges (aligned with dashboard palette)
 const PRIORITY_BADGES: Record<string, string> = {
@@ -136,7 +138,10 @@ export function ReportDetailsDrawer({
     setActiveImageTab('original')
   }, [report])
 
-  // Initialize TanStack Queries (only enabled when drawer is open)
+  const { user } = useAuth()
+  const isDeptAdmin = user?.role === UserRole.DEPARTMENT_ADMIN
+
+  // Initialize TanStack Queries (only enabled when drawer is open and not department admin)
   const reportNumber = report?.report_number || ''
   const reportId = report?.id || 0
 
@@ -144,13 +149,13 @@ export function ReportDetailsDrawer({
     data: details,
     isLoading: isDetailsLoading,
     error: detailsError,
-  } = useReportDetailsQuery(reportNumber, isOpen && !!reportNumber)
+  } = useReportDetailsQuery(reportNumber, isOpen && !!reportNumber && !isDeptAdmin)
 
   const {
     data: timelineData,
     isLoading: isTimelineLoading,
     error: timelineError,
-  } = useReportTimelineQuery(reportId, isOpen && !!reportId)
+  } = useReportTimelineQuery(reportId, isOpen && !!reportId && !isDeptAdmin)
 
   if (!isOpen || !report) return null
 
@@ -161,7 +166,11 @@ export function ReportDetailsDrawer({
 
   // Coordinates formatting
   const hasCoordinates =
-    (details && details.latitude !== undefined && details.longitude !== undefined) || false
+    (!isDeptAdmin &&
+      details &&
+      details.latitude !== undefined &&
+      details.longitude !== undefined) ||
+    false
   const latitude = details?.latitude || 0
   const longitude = details?.longitude || 0
   const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`
@@ -194,7 +203,9 @@ export function ReportDetailsDrawer({
 
   // Determine auth timeline restriction
   const isTimelineRestricted =
-    timelineError && (timelineError as { response?: { status?: number } }).response?.status === 403
+    isDeptAdmin ||
+    (timelineError &&
+      (timelineError as { response?: { status?: number } }).response?.status === 403)
 
   return (
     <>
@@ -342,7 +353,7 @@ export function ReportDetailsDrawer({
             </h3>
             {isDetailsLoading ? (
               <div className="dark:bg-neutral-850 h-6 w-full animate-pulse rounded bg-neutral-200" />
-            ) : detailsError ? (
+            ) : isDeptAdmin || detailsError ? (
               <p className="text-neutral-450 dark:text-neutral-550 font-semibold italic">
                 Description telemetry restricted under active admin credentials (403 Forbidden).
               </p>
@@ -369,7 +380,7 @@ export function ReportDetailsDrawer({
                 <div className="dark:bg-neutral-850 h-3 w-40 animate-pulse rounded bg-neutral-200" />
                 <div className="dark:bg-neutral-850 h-3 w-32 animate-pulse rounded bg-neutral-200" />
               </div>
-            ) : detailsError ? (
+            ) : isDeptAdmin || detailsError ? (
               <div className="space-y-3">
                 <p className="text-neutral-450 dark:text-neutral-555 leading-relaxed font-semibold italic">
                   Geolocations are restricted under admin credentials. No iframe maps embedded.
@@ -430,7 +441,7 @@ export function ReportDetailsDrawer({
 
             {isDetailsLoading ? (
               <div className="dark:bg-neutral-850 aspect-video animate-pulse rounded-lg bg-neutral-200" />
-            ) : detailsError ? (
+            ) : isDeptAdmin || detailsError ? (
               <div className="dark:bg-neutral-850/40 flex aspect-video flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-neutral-300 bg-neutral-100/50 p-4 text-center dark:border-neutral-800">
                 <AlertCircle className="h-6 w-6 text-neutral-400 dark:text-neutral-500" />
                 <h5 className="text-[11px] font-bold text-neutral-600 dark:text-neutral-400">
@@ -600,7 +611,7 @@ export function ReportDetailsDrawer({
 
             {isDetailsLoading ? (
               <div className="dark:bg-neutral-850 h-6 w-full animate-pulse rounded bg-neutral-200" />
-            ) : detailsError ? (
+            ) : isDeptAdmin || detailsError ? (
               <p className="text-neutral-450 dark:text-neutral-555 font-semibold italic">
                 AI detection confidence matrices restricted under admin credentials.
               </p>

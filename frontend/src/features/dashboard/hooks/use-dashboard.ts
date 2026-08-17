@@ -32,10 +32,11 @@ function useIsAdminAuthorized() {
  */
 export function useDashboardSummary() {
   const { user } = useAuth()
+  const isDeptAdmin = user?.role === UserRole.DEPARTMENT_ADMIN
 
   return useQuery({
     queryKey: DASHBOARD_QUERY_KEYS.summary(),
-    queryFn: ({ signal }) => dashboardService.getSummary(signal),
+    queryFn: ({ signal }) => dashboardService.getSummary(isDeptAdmin, signal),
     enabled: !!user,
     ...DEFAULT_QUERY_OPTIONS,
   })

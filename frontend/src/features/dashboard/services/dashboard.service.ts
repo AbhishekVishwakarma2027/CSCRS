@@ -17,11 +17,13 @@ export const dashboardService = {
    * Adaptive return type depending on authenticated user role.
    */
   async getSummary(
+    isDeptAdmin: boolean,
     signal?: AbortSignal
   ): Promise<CityDashboardSummaryResponse | DepartmentDashboardResponse> {
+    const url = isDeptAdmin ? '/api/v1/dashboard/department/dashboard' : '/api/v1/dashboard/summary'
     const { data } = await apiClient.get<
       CityDashboardSummaryResponse | DepartmentDashboardResponse
-    >('/api/v1/dashboard/summary', { signal })
+    >(url, { signal })
     return data
   },
 

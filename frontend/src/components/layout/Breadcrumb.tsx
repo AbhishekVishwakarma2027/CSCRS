@@ -1,6 +1,8 @@
 import { Link, useLocation } from 'react-router-dom'
 import { ChevronRight, Home } from 'lucide-react'
 import { PATHS } from '@/routes/paths'
+import { useAuth } from '@/hooks/use-auth'
+import { UserRole } from '@/types/auth.types'
 
 // Helper to format segments into displayable titles
 const formatCrumbLabel = (segment: string): string => {
@@ -15,6 +17,11 @@ const formatCrumbLabel = (segment: string): string => {
 export function Breadcrumb() {
   const location = useLocation()
   const pathnames = location.pathname.split('/').filter((x) => x)
+  const { user } = useAuth()
+  const homePath =
+    user?.role === UserRole.CITY_ADMIN || user?.role === UserRole.DEPARTMENT_ADMIN
+      ? PATHS.DASHBOARD
+      : PATHS.ROOT
 
   return (
     <nav
@@ -23,7 +30,7 @@ export function Breadcrumb() {
     >
       {/* Home Crumb */}
       <Link
-        to={PATHS.ROOT}
+        to={homePath}
         className="flex items-center gap-1 py-1 transition-colors duration-150 hover:text-[#0A3C7D]"
       >
         <Home className="h-3.5 w-3.5" />

@@ -39,4 +39,21 @@ export const systemIssuesService = {
     })
     return data
   },
+
+  /**
+   * Submit a new system issue with optional attachment.
+   */
+  async submitIssue(formData: FormData): Promise<SystemIssueResponse> {
+    const { data } = await apiClient.post<SystemIssueResponse>('/api/v1/issues', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+    return data
+  },
+}
+
+export interface SystemIssueResponse {
+  message: string
+  issue_number: string
 }

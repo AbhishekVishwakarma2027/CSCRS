@@ -2,16 +2,7 @@ import { useState, useEffect } from 'react'
 import { useDashboardSummary } from '../hooks/use-dashboard'
 import { useAuth } from '@/hooks/use-auth'
 import { Card } from '@/components/ui/card'
-import {
-  FileText,
-  Clock,
-  RefreshCw,
-  CheckCircle2,
-  Cpu,
-  Users,
-  Hourglass,
-  AlertCircle,
-} from 'lucide-react'
+import { FileText, Clock, RefreshCw, CheckCircle2, Cpu, Users, AlertCircle } from 'lucide-react'
 import type { CityDashboardSummaryResponse, DepartmentDashboardResponse } from '../types'
 
 // Type guards to check response shape safely
@@ -193,17 +184,10 @@ export function SummaryCards() {
         icon: <Users className="h-4.5 w-4.5 text-[#22C55E]" />, // Centralized green Resolved color
         ariaLabel: `Active Field Force is ${activeWorkers}`,
       },
-      {
-        title: 'Department Telemetry',
-        value: `${(data.automation_rate ?? 0).toFixed(1)}%`,
-        desc: `Avg response time: ${(data.average_resolution_time_hours ?? 0).toFixed(1)}h`,
-        icon: <Hourglass className="h-4.5 w-4.5 text-indigo-500" />,
-        ariaLabel: `Department Telemetry is ${(data.automation_rate ?? 0).toFixed(1)}%`,
-      },
     ]
 
     return (
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {cards.map((card, i) => (
           <Card
             key={i}
