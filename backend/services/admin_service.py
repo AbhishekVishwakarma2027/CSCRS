@@ -167,3 +167,19 @@ class AdminService:
         return {
             "message": "Department Admin account activated successfully."
         }
+    def get_workers(
+        self,
+        *,
+        current_user: User,
+    ):
+
+        if current_user.department_id is None:
+
+            raise ValueError(
+                "Department Admin is not assigned to a department."
+            )
+
+        return AdminCRUD.get_workers_by_department(
+            self.db,
+            current_user.department_id,
+        )

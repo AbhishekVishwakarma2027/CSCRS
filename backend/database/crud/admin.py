@@ -1,8 +1,9 @@
 from sqlalchemy.orm import Session
 
+from database.enums import UserRole
 from database.models.department import Department
 from database.models.user import User
-
+from database.models.worker_profile import WorkerProfile
 
 class AdminCRUD:
 
@@ -19,7 +20,27 @@ class AdminCRUD:
             )
             .first()
         )
+    @staticmethod
+    def get_workers_by_department(
+        db: Session,
+        department_id: int,
+    ) -> list[tuple[WorkerProfile, User]]:
 
+        return (
+            db.query(WorkerProfile, User)
+            .join(
+                User,
+                User.id == WorkerProfile.user_id,
+            )
+            .filter(
+                WorkerProfile.department_id == department_id,
+                User.role == UserRole.WORKER,
+            )
+            .order_by(
+                WorkerProfile.id.asc()
+            )
+            .all()
+        )
     @staticmethod
     def get_user_by_email(
         db: Session,

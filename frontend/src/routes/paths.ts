@@ -25,6 +25,7 @@ export const PATHS = {
   SETTINGS: '/settings',
   EXPORTS: '/exports',
   SUBMIT_ISSUE: '/submit-issue',
+  MY_ISSUES: '/my-issues',
   WORKERS: '/workers',
   MANUAL_REVIEW: '/resolutions/manual-review',
   FORWARD_REQUESTS: '/forward-requests',

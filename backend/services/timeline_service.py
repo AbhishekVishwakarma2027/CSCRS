@@ -1,4 +1,6 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
+from database.enums import UserRole
+from database.models.audit_log import AuditLog
 
 from database.crud.audit_log import AuditLogCRUD
 import database.crud.report as report_crud
@@ -161,3 +163,52 @@ class TimelineService:
             )
 
         return timeline
+
+    def get_admin_timeline(
+        self,
+        report_id: int,
+        admin_user,
+    ):
+        report = report_crud.get_report_by_id(self.db, report_id)
+
+        if report is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Report not found."
+            )
+
+        if admin_user.role == UserRole.DEPARTMENT_ADMIN:
+            if report.department_id != admin_user.department_id:
+                raise HTTPException(
+                    status_code=403,
+                    detail="Access denied."
+                )
+
+        logs = (
+            self.db.query(AuditLog)
+            .options(joinedload(AuditLog.user))
+            .filter(AuditLog.report_id == report_id)
+            .order_by(AuditLog.created_at.asc())
+            .all()
+        )
+
+        timeline = []
+        for log in logs:
+            actor_name = log.user.name if log.user else None
+            actor_role = log.user.role.value if log.user and log.user.role else None
+
+            timeline.append({
+                "id": log.id,
+                "user_id": log.user_id,
+                "actor_name": actor_name,
+                "actor_role": actor_role,
+                "action": log.action,
+                "details": log.details,
+                "created_at": log.created_at,
+            })
+
+        return {
+            "report_id": report.id,
+            "report_number": report.report_number,
+            "timeline": timeline,
+        }

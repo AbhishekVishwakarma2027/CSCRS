@@ -6,6 +6,8 @@ import type {
   PaginatedResponse,
   ReportResponseApi,
   TimelineResponse,
+  AdminReportDetailsResponseApi,
+  AdminTimelineResponse,
 } from '../types'
 import { UserRole } from '@/types/auth.types'
 
@@ -167,6 +169,32 @@ export function useReportTimelineQuery(reportId: number, enabled: boolean) {
   return useQuery<TimelineResponse, Error>({
     queryKey: REPORTS_QUERY_KEYS.timeline(reportId),
     queryFn: ({ signal }) => reportsService.getReportTimeline(reportId, signal),
+    enabled,
+    staleTime: 30 * 1000,
+    retry: 1,
+  })
+}
+
+/**
+ * Query to fetch the Admin version of report details.
+ */
+export function useAdminReportDetailsQuery(reportId: number, enabled: boolean) {
+  return useQuery<AdminReportDetailsResponseApi, Error>({
+    queryKey: [...REPORTS_QUERY_KEYS.details(), 'admin', reportId],
+    queryFn: ({ signal }) => reportsService.getAdminReportDetails(reportId, signal),
+    enabled,
+    staleTime: 30 * 1000,
+    retry: 1,
+  })
+}
+
+/**
+ * Query to fetch the Admin chronological timeline of a specific report.
+ */
+export function useAdminReportTimelineQuery(reportId: number, enabled: boolean) {
+  return useQuery<AdminTimelineResponse, Error>({
+    queryKey: [...REPORTS_QUERY_KEYS.timelines(), 'admin', reportId],
+    queryFn: ({ signal }) => reportsService.getAdminReportTimeline(reportId, signal),
     enabled,
     staleTime: 30 * 1000,
     retry: 1,

@@ -80,6 +80,35 @@ class SystemIssueAttachmentResponse(BaseModel):
     )
 
 
+class MySystemIssueItem(BaseModel):
+
+    issue_number: str
+
+    title: str
+
+    description: str
+
+    category: SystemIssueCategory
+
+    status: str
+
+    remarks: Optional[str] = None
+
+    related_report_number: Optional[str] = None
+
+    attachments: list[SystemIssueAttachmentResponse] = []
+
+    created_at: datetime
+
+    updated_at: datetime
+
+    closed_at: Optional[datetime] = None
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+
 class SystemIssueDetailResponse(BaseModel):
 
     issue_number: str
@@ -100,11 +129,15 @@ class SystemIssueDetailResponse(BaseModel):
 
     related_report_number: str | None
 
+    remarks: str | None = None
+
     attachments: list[SystemIssueAttachmentResponse]
 
     created_at: datetime
 
     updated_at: datetime
+
+    closed_at: datetime | None = None
 
     model_config = ConfigDict(
         from_attributes=True,

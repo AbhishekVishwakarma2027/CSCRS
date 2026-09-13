@@ -9,13 +9,14 @@ from fastapi import (
     HTTPException,
     UploadFile,
 )
-
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from authentication.dependencies import (
     require_citizen,
     require_department_admin,
-    require_city_admin
+    require_city_admin,
+    require_admin_reports,
 )
 
 from database.dependencies import get_db
@@ -37,6 +38,7 @@ from schemas.report import (
     ReportForwardRequest,
     ReportCancellationRequest,
     ReportReopenRequest,
+    AdminReportDetailsResponse,
 )
 from schemas.report import PaginatedCityReports
 from utils.file_utils import (
@@ -55,9 +57,7 @@ from configs.config import MAX_PAGE_SIZE_LIMIT,MAX_FILE_SIZE
 from fastapi import Request
 from utils.rate_limiter import limiter
 
-router = APIRouter(
-    tags=["Reports"]
-)
+router = APIRouter()
 
 engine = InferenceEngine()
 
@@ -70,6 +70,7 @@ UPLOAD_DIR.mkdir(exist_ok=True)
         "description": "Rate limit exceeded."
     }
 },
+             tags=["Reports"],
 )
 @limiter.limit("60 per hour")
 async def report_issue(
@@ -425,6 +426,7 @@ async def report_issue(
 @router.get(
     "/reports/my",
     response_model=list[CitizenReportListItem],
+    tags=["Reports"],
 )
 def get_my_reports(
     current_user: User = Depends(
@@ -442,6 +444,7 @@ def get_my_reports(
 @router.get(
     "/reports",
     response_model=PaginatedCityReports,
+    tags=["Reports"],
 )
 def get_all_reports(
     page: int = 1,
@@ -481,6 +484,7 @@ def get_all_reports(
 @router.get(
     "/reports/department",
     response_model=list[DepartmentReportListItem],
+    tags=["Reports"],
 )
 
 
@@ -506,6 +510,7 @@ def get_department_reports(
 @router.get(
     "/reports/my/search",
     response_model=list[CitizenReportListItem],
+    tags=["Reports"],
 )
 def search_my_reports(
     query: str,
@@ -525,6 +530,7 @@ def search_my_reports(
 @router.get(
     "/reports/search",
     response_model=list[CityReportListItem],
+    tags=["Reports"],
 )
 def search_reports(
     query: str,
@@ -543,6 +549,7 @@ def search_reports(
 @router.get(
     "/reports/department/search",
     response_model=list[DepartmentReportListItem],
+    tags=["Reports"],
 )
 def search_department_reports(
     query: str,
@@ -562,6 +569,7 @@ def search_department_reports(
 @router.get(
     "/reports/{report_number}",
     response_model=ReportResponse,
+    tags=["Reports"],
 )
 def get_my_report(
     report_number: str,
@@ -588,6 +596,7 @@ def get_my_report(
         )
 @router.post(
     "/reports/{report_id}/cancel",
+    tags=["Reports"],
 )
 def cancel_report(
     report_id: int,
@@ -607,6 +616,7 @@ def cancel_report(
     )
 @router.post(
     "/reports/{report_id}/reopen",
+    tags=["Reports"],
 )
 def reopen_report(
     report_id: int,
@@ -624,3 +634,30 @@ def reopen_report(
         department_admin=current_user,
         request=request,
     )
+
+@router.get(
+    "/reports/{report_id}/admin",
+    response_model=AdminReportDetailsResponse,
+    tags=["Admin Reports"],
+)
+def get_admin_report_details_api(
+    report_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin_reports()),
+):
+    report_service = ReportService(db)
+    return report_service.get_admin_report_details(report_id, current_user)
+
+@router.get(
+    "/reports/{report_id}/admin/image",
+    tags=["Admin Reports"],
+)
+def get_admin_report_image_api(
+    report_id: int,
+    type: str = "original",
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin_reports()),
+):
+    report_service = ReportService(db)
+    image = report_service.get_admin_secure_image(report_id, type, current_user)
+    return FileResponse(image.image_path)

@@ -24,7 +24,13 @@ import { Button } from '@/components/ui/button'
 import { formatDate } from '@/utils/format'
 import { APP_CONFIG } from '@/config/app.config'
 import type { ReportListItem } from '../types'
-import { useReportDetailsQuery, useReportTimelineQuery } from '../hooks/use-reports'
+import {
+  useReportDetailsQuery,
+  useReportTimelineQuery,
+  useAdminReportDetailsQuery,
+  useAdminReportTimelineQuery,
+} from '../hooks/use-reports'
+import { reportsService } from '../services/reports.service'
 import { useAuth } from '@/hooks/use-auth'
 import { UserRole } from '@/types/auth.types'
 
@@ -139,40 +145,110 @@ export function ReportDetailsDrawer({
   }, [report])
 
   const { user } = useAuth()
+  const isCityAdmin = user?.role === UserRole.CITY_ADMIN || user?.role === UserRole.SUPER_ADMIN
   const isDeptAdmin = user?.role === UserRole.DEPARTMENT_ADMIN
+  const isAdmin = isCityAdmin || isDeptAdmin
 
   // Initialize TanStack Queries (only enabled when drawer is open and not department admin)
   const reportNumber = report?.report_number || ''
   const reportId = report?.id || 0
 
   const {
-    data: details,
-    isLoading: isDetailsLoading,
-    error: detailsError,
-  } = useReportDetailsQuery(reportNumber, isOpen && !!reportNumber && !isDeptAdmin)
+    data: citizenDetails,
+    isLoading: isCitizenDetailsLoading,
+    error: citizenDetailsError,
+  } = useReportDetailsQuery(reportNumber, isOpen && !!reportNumber && !isAdmin)
 
   const {
-    data: timelineData,
-    isLoading: isTimelineLoading,
-    error: timelineError,
-  } = useReportTimelineQuery(reportId, isOpen && !!reportId && !isDeptAdmin)
+    data: citizenTimelineData,
+    isLoading: isCitizenTimelineLoading,
+    error: citizenTimelineError,
+  } = useReportTimelineQuery(reportId, isOpen && !!reportId && !isAdmin)
+
+  const {
+    data: adminDetails,
+    isLoading: isAdminDetailsLoading,
+    error: adminDetailsError,
+  } = useAdminReportDetailsQuery(reportId, isOpen && !!reportId && isAdmin)
+
+  const {
+    data: adminTimelineData,
+    isLoading: isAdminTimelineLoading,
+    error: adminTimelineError,
+  } = useAdminReportTimelineQuery(reportId, isOpen && !!reportId && isAdmin)
+
+  const isDetailsLoading = isAdmin ? isAdminDetailsLoading : isCitizenDetailsLoading
+  const detailsError = isAdmin ? adminDetailsError : citizenDetailsError
+  const isTimelineLoading = isAdmin ? isAdminTimelineLoading : isCitizenTimelineLoading
+  const timelineError = isAdmin ? adminTimelineError : citizenTimelineError
+  const details = isAdmin ? adminDetails : citizenDetails // For legacy ref if needed
+
+  const [adminImageUrl, setAdminImageUrl] = useState<string | null>(null)
+  const [isAdminImageLoading, setIsAdminImageLoading] = useState(false)
+  const [adminImageError, setAdminImageError] = useState(false)
+
+  useEffect(() => {
+    return () => {
+      if (adminImageUrl) URL.revokeObjectURL(adminImageUrl)
+    }
+  }, [adminImageUrl])
+
+  useEffect(() => {
+    if (!isOpen || !report || !isAdmin) return
+    let isMounted = true
+    const fetchAdminImage = async () => {
+      setIsAdminImageLoading(true)
+      setAdminImageError(false)
+      try {
+        const blob = await reportsService.getAdminReportImage(report.id, activeImageTab)
+        if (isMounted) {
+          const objectUrl = URL.createObjectURL(blob)
+          setAdminImageUrl((prev) => {
+            if (prev) URL.revokeObjectURL(prev)
+            return objectUrl
+          })
+        }
+      } catch (err) {
+        if (isMounted) {
+          const error = err as { response?: { status?: number } }
+          if (error?.response?.status === 404) {
+            setAdminImageUrl(null)
+          } else {
+            setAdminImageError(true)
+          }
+        }
+      } finally {
+        if (isMounted) setIsAdminImageLoading(false)
+      }
+    }
+    fetchAdminImage()
+    return () => {
+      isMounted = false
+    }
+  }, [isOpen, report, isAdmin, activeImageTab])
 
   if (!isOpen || !report) return null
 
   // Image helpers
-  const originalImageUrl = report.id
-    ? `${APP_CONFIG.apiBaseUrl}/api/v1/reports/${report.id}/image`
-    : undefined
+  const originalImageUrl = isAdmin
+    ? adminImageUrl
+    : report.id
+      ? `${APP_CONFIG.apiBaseUrl}/api/v1/reports/${report.id}/image`
+      : undefined
 
   // Coordinates formatting
+  const latitude = isAdmin ? adminDetails?.latitude || 0 : citizenDetails?.latitude || 0
+  const longitude = isAdmin ? adminDetails?.longitude || 0 : citizenDetails?.longitude || 0
   const hasCoordinates =
-    (!isDeptAdmin &&
-      details &&
-      details.latitude !== undefined &&
-      details.longitude !== undefined) ||
+    (isAdmin &&
+      adminDetails &&
+      adminDetails.latitude !== undefined &&
+      adminDetails.longitude !== undefined) ||
+    (!isAdmin &&
+      citizenDetails &&
+      citizenDetails.latitude !== undefined &&
+      citizenDetails.longitude !== undefined) ||
     false
-  const latitude = details?.latitude || 0
-  const longitude = details?.longitude || 0
   const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`
 
   // Zoom/Pan actions handlers
@@ -203,9 +279,9 @@ export function ReportDetailsDrawer({
 
   // Determine auth timeline restriction
   const isTimelineRestricted =
-    isDeptAdmin ||
-    (timelineError &&
-      (timelineError as { response?: { status?: number } }).response?.status === 403)
+    !isAdmin &&
+    timelineError &&
+    (timelineError as { response?: { status?: number } }).response?.status === 403
 
   return (
     <>
@@ -328,18 +404,22 @@ export function ReportDetailsDrawer({
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <span className="text-neutral-450 block text-[9px] font-black tracking-wider uppercase dark:text-neutral-500">
-                  Citizen Identifier
+                  {isAdmin ? 'Citizen Name' : 'Citizen Identifier'}
                 </span>
                 <span className="mt-1 block font-bold text-neutral-800 dark:text-neutral-300">
-                  #{report.citizen_id}
+                  {isAdmin && adminDetails?.citizen
+                    ? adminDetails.citizen.name
+                    : `#${report.citizen_id}`}
                 </span>
               </div>
               <div>
                 <span className="text-neutral-450 block text-[9px] font-black tracking-wider uppercase dark:text-neutral-500">
-                  Access Control Privacy
+                  {isAdmin ? 'Contact' : 'Access Control Privacy'}
                 </span>
                 <span className="mt-1 block font-medium text-neutral-500 dark:text-neutral-400">
-                  Fully Redacted (RBAC standard)
+                  {isAdmin
+                    ? adminDetails?.citizen?.email || 'N/A'
+                    : 'Fully Redacted (RBAC standard)'}
                 </span>
               </div>
             </div>
@@ -353,13 +433,13 @@ export function ReportDetailsDrawer({
             </h3>
             {isDetailsLoading ? (
               <div className="dark:bg-neutral-850 h-6 w-full animate-pulse rounded bg-neutral-200" />
-            ) : isDeptAdmin || detailsError ? (
+            ) : detailsError ? (
               <p className="text-neutral-450 dark:text-neutral-550 font-semibold italic">
                 Description telemetry restricted under active admin credentials (403 Forbidden).
               </p>
-            ) : details?.address ? (
+            ) : details?.description || details?.address ? (
               <p className="leading-relaxed font-bold text-neutral-800 dark:text-neutral-200">
-                {details.address}
+                {details.description || details.address}
               </p>
             ) : (
               <p className="text-neutral-450 font-medium italic dark:text-neutral-500">
@@ -380,7 +460,7 @@ export function ReportDetailsDrawer({
                 <div className="dark:bg-neutral-850 h-3 w-40 animate-pulse rounded bg-neutral-200" />
                 <div className="dark:bg-neutral-850 h-3 w-32 animate-pulse rounded bg-neutral-200" />
               </div>
-            ) : isDeptAdmin || detailsError ? (
+            ) : detailsError ? (
               <div className="space-y-3">
                 <p className="text-neutral-450 dark:text-neutral-555 leading-relaxed font-semibold italic">
                   Geolocations are restricted under admin credentials. No iframe maps embedded.
@@ -439,9 +519,11 @@ export function ReportDetailsDrawer({
               Attached Proof Image
             </h3>
 
-            {isDetailsLoading ? (
-              <div className="dark:bg-neutral-850 aspect-video animate-pulse rounded-lg bg-neutral-200" />
-            ) : isDeptAdmin || detailsError ? (
+            {isDetailsLoading || (isAdmin && isAdminImageLoading) ? (
+              <div className="dark:bg-neutral-850 flex aspect-video animate-pulse items-center justify-center rounded-lg bg-neutral-200 text-neutral-400">
+                Loading...
+              </div>
+            ) : (!isAdmin && detailsError) || (isAdmin && adminImageError) ? (
               <div className="dark:bg-neutral-850/40 flex aspect-video flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-neutral-300 bg-neutral-100/50 p-4 text-center dark:border-neutral-800">
                 <AlertCircle className="h-6 w-6 text-neutral-400 dark:text-neutral-500" />
                 <h5 className="text-[11px] font-bold text-neutral-600 dark:text-neutral-400">
@@ -611,7 +693,7 @@ export function ReportDetailsDrawer({
 
             {isDetailsLoading ? (
               <div className="dark:bg-neutral-850 h-6 w-full animate-pulse rounded bg-neutral-200" />
-            ) : isDeptAdmin || detailsError ? (
+            ) : detailsError ? (
               <p className="text-neutral-450 dark:text-neutral-555 font-semibold italic">
                 AI detection confidence matrices restricted under admin credentials.
               </p>
@@ -676,7 +758,14 @@ export function ReportDetailsDrawer({
                   Assigned Worker
                 </span>
                 <span className="mt-1 block font-semibold text-neutral-500 dark:text-neutral-400">
-                  {report.status === 'Pending' ? 'None (Unassigned)' : 'Auto-scheduled Worker'}
+                  {isAdmin &&
+                  adminDetails &&
+                  adminDetails.assignments &&
+                  adminDetails.assignments.length
+                    ? adminDetails.assignments[adminDetails.assignments.length - 1]?.worker?.name
+                    : report.status === 'Pending'
+                      ? 'None (Unassigned)'
+                      : 'Auto-scheduled Worker'}
                 </span>
               </div>
               <div>
@@ -715,25 +804,40 @@ export function ReportDetailsDrawer({
                   citizen-only via ownership token validation.
                 </p>
               </div>
-            ) : timelineData?.timeline && timelineData.timeline.length > 0 ? (
+            ) : (isAdmin && adminTimelineData?.timeline?.length) ||
+              (!isAdmin && citizenTimelineData?.timeline?.length) ? (
               <div className="relative space-y-5.5 border-l border-neutral-200 pl-4.5 select-none dark:border-neutral-800">
-                {timelineData.timeline.map((event, idx) => (
-                  <div key={idx} className="group relative text-left">
-                    {/* Bullet Indicator */}
-                    <div className="absolute top-1 -left-[23px] h-2.5 w-2.5 rounded-full border border-white bg-[#0A3C7D] transition-transform group-hover:scale-125 dark:border-[#1E1E20] dark:bg-blue-600" />
-
-                    <h4 className="text-[13px] font-extrabold text-neutral-800 dark:text-neutral-200">
-                      {event.title}
-                    </h4>
-                    <p className="mt-0.5 text-[13px] leading-relaxed font-semibold text-neutral-500 dark:text-neutral-400">
-                      {event.description}
-                    </p>
-                    <span className="dark:text-neutral-550 mt-1.5 block flex items-center gap-1 font-mono text-[11px] font-black tracking-wider text-neutral-400 uppercase">
-                      <Calendar className="h-3 w-3" />
-                      {formatDate(event.created_at)}
-                    </span>
-                  </div>
-                ))}
+                {(isAdmin ? adminTimelineData?.timeline : citizenTimelineData?.timeline)?.map(
+                  (
+                    event: {
+                      title?: string
+                      action?: string
+                      description?: string
+                      details?: string
+                    },
+                    idx: number
+                  ) => (
+                    <div key={idx} className="group relative text-left">
+                      <div className="absolute top-1 -left-[23px] h-2.5 w-2.5 rounded-full border border-white bg-[#0A3C7D] transition-transform group-hover:scale-125 dark:border-[#1E1E20] dark:bg-blue-600" />
+                      <h4 className="text-[13px] font-extrabold text-neutral-800 dark:text-neutral-200">
+                        {event.title || event.action}
+                      </h4>
+                      <p className="mt-0.5 text-[13px] leading-relaxed font-semibold text-neutral-500 dark:text-neutral-400">
+                        {event.description || event.details}
+                      </p>
+                      {isAdmin && event.actor_name && (
+                        <p className="mt-1 text-[11px] font-bold text-neutral-400 dark:text-neutral-500">
+                          Actor: {event.actor_name}{' '}
+                          {event.actor_role ? `(${event.actor_role})` : ''}
+                        </p>
+                      )}
+                      <span className="dark:text-neutral-550 mt-1.5 block flex items-center gap-1 font-mono text-[11px] font-black tracking-wider text-neutral-400 uppercase">
+                        <Calendar className="h-3 w-3" />
+                        {formatDate(event.created_at)}
+                      </span>
+                    </div>
+                  )
+                )}
               </div>
             ) : (
               <p className="text-neutral-450 font-semibold italic dark:text-neutral-500">

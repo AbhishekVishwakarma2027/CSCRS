@@ -9,13 +9,12 @@ from services.admin_service import AdminService
 from schemas.admin import (
     DepartmentAdminCreate,
     DepartmentAdminResponse,
-)
-from schemas.admin import (
     DepartmentAdminActivationRequest,
     DepartmentAdminActivationResponse,
+    DepartmentAdminWorkerResponse,
 )
 
-from authentication.dependencies import require_roles
+from authentication.dependencies import require_roles,require_department_admin
 from database.enums import UserRole
 
 
@@ -75,3 +74,45 @@ def activate_department_admin(
             status_code=400,
             detail=str(e),
         )
+
+@router.get(
+    "/workers",
+    response_model=list[DepartmentAdminWorkerResponse],
+    summary="List Department Workers",
+)
+def get_department_workers(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_department_admin()),
+):
+
+    service = AdminService(db)
+
+    workers = service.get_workers(
+        current_user=current_user,
+    )
+
+    return [
+        DepartmentAdminWorkerResponse(
+            id=worker.id,
+            user_id=user.id,
+
+            name=user.name,
+            email=user.email,
+            phone=user.phone,
+
+            department_id=worker.department_id,
+
+            employee_code=worker.employee_code,
+            designation=worker.designation,
+            phone_extension=worker.phone_extension,
+
+            is_available=worker.is_available,
+
+            is_active=user.is_active,
+            is_email_verified=user.is_email_verified,
+            is_blocked=user.is_blocked,
+
+            joined_at=worker.joined_at,
+        )
+        for worker, user in workers
+    ]

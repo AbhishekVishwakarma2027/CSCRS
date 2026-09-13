@@ -25,6 +25,7 @@ const ProfileSettingsPage = lazy(() => import('@/features/profile/pages/ProfileS
 const SettingsPage = lazy(() => import('@/features/profile/pages/SettingsPage'))
 const ExportsPage = lazy(() => import('@/features/reports/pages/ExportsPage'))
 const SubmitIssuePage = lazy(() => import('@/features/system-issues/pages/SubmitIssuePage'))
+const MyIssuesPage = lazy(() => import('@/features/system-issues/pages/MyIssuesPage'))
 const WorkersPage = lazy(() => import('@/features/workers/pages/WorkersPage'))
 const ManualReviewPage = lazy(() => import('@/features/resolutions/pages/ManualReviewPage'))
 const ForwardRequestsPage = lazy(
@@ -225,9 +226,23 @@ export const router = createBrowserRouter([
       {
         path: PATHS.SUBMIT_ISSUE,
         element: (
-          <ProtectedRoute roles={[UserRole.CITY_ADMIN, UserRole.DEPARTMENT_ADMIN]}>
+          <ProtectedRoute
+            roles={[UserRole.SUPER_ADMIN, UserRole.CITY_ADMIN, UserRole.DEPARTMENT_ADMIN]}
+          >
             <Suspense fallback={<PageLoader />}>
               <SubmitIssuePage />
+            </Suspense>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: PATHS.MY_ISSUES,
+        element: (
+          <ProtectedRoute
+            roles={[UserRole.SUPER_ADMIN, UserRole.CITY_ADMIN, UserRole.DEPARTMENT_ADMIN]}
+          >
+            <Suspense fallback={<PageLoader />}>
+              <MyIssuesPage />
             </Suspense>
           </ProtectedRoute>
         ),

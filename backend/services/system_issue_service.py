@@ -1,12 +1,13 @@
 from database.crud import report as report_crud
 from database.crud import SystemIssueCRUD
 
-from database.enums import SystemIssueStatus
+from database.enums import SystemIssueStatus, UserRole
 
 from schemas.system_issue import (
     SystemIssueCreate,
     SystemIssueResponse,
     SystemIssueListItem,
+    MySystemIssueItem,
     SystemIssueAttachmentResponse,
     SystemIssueDetailResponse,
     SystemIssueStatusUpdate,
@@ -189,10 +190,60 @@ class SystemIssueService:
             )
 
         return response
+
+    def get_my_issues(
+        self,
+        reporter_id: int,
+        status=None,
+        category=None,
+        search=None,
+    ) -> list[MySystemIssueItem]:
+        issues = SystemIssueCRUD.get_issues(
+            db=self.db,
+            reporter_id=reporter_id,
+            status=status,
+            category=category,
+            search=search,
+        )
+
+        response = []
+        for issue in issues:
+            attachments = [
+                SystemIssueAttachmentResponse(
+                    original_filename=att.original_filename,
+                    file_path=att.file_path,
+                    mime_type=att.mime_type,
+                    file_size=att.file_size,
+                )
+                for att in issue.attachments
+            ]
+
+            response.append(
+                MySystemIssueItem(
+                    issue_number=issue.issue_number,
+                    title=issue.title,
+                    description=issue.description,
+                    category=issue.category,
+                    status=issue.status.value,
+                    remarks=issue.remarks,
+                    related_report_number=(
+                        issue.related_report.report_number
+                        if issue.related_report
+                        else None
+                    ),
+                    attachments=attachments,
+                    created_at=issue.created_at,
+                    updated_at=issue.updated_at,
+                    closed_at=issue.closed_at,
+                )
+            )
+
+        return response
     
     def get_issue_detail(
         self,
         issue_number: str,
+        current_user=None,
     ):
 
         issue = SystemIssueCRUD.get_issue_by_number(
@@ -206,6 +257,20 @@ class SystemIssueService:
                 status_code=404,
                 detail="Issue not found.",
             )
+
+        if current_user:
+            allowed_roles = {
+                UserRole.SUPER_ADMIN,
+                UserRole.CITY_ADMIN,
+            }
+            if (
+                current_user.role not in allowed_roles
+                and issue.reporter_id != current_user.id
+            ):
+                raise HTTPException(
+                    status_code=403,
+                    detail="You are not authorized to view this issue.",
+                )
 
         attachments = []
 
@@ -237,11 +302,11 @@ class SystemIssueService:
 
             status=issue.status.value,
 
-            reporter_name=issue.reporter.name,
+            reporter_name=issue.reporter.name if issue.reporter else "Unknown",
 
-            reporter_email=issue.reporter.email,
+            reporter_email=issue.reporter.email if issue.reporter else "",
 
-            reporter_phone=issue.reporter.phone,
+            reporter_phone=issue.reporter.phone if issue.reporter else None,
 
             related_report_number=(
                 issue.related_report.report_number
@@ -249,11 +314,15 @@ class SystemIssueService:
                 else None
             ),
 
+            remarks=issue.remarks,
+
             attachments=attachments,
 
             created_at=issue.created_at,
 
             updated_at=issue.updated_at,
+
+            closed_at=issue.closed_at,
         )
     
     def update_issue_status(

@@ -15,6 +15,8 @@ from schemas.city_admin import (
     CityAdminResponse,
     CityAdminActivationRequest,
     CityAdminActivationResponse,
+    CityAdminCitizenResponse,
+    CityAdminDepartmentAdminResponse,
 )
 from authentication.dependencies import require_city_admin
 from services.city_admin_service import CityAdminService
@@ -38,15 +40,10 @@ def create_city_admin(
         require_super_admin()
     ),
 ):
-
     service = CityAdminService(db)
-
     try:
-
         return service.create_city_admin(request)
-
     except ValueError as e:
-
         raise HTTPException(
             status_code=400,
             detail=str(e),
@@ -77,10 +74,37 @@ def activate_city_admin(
             status_code=400,
             detail=str(e),
         )
+@router.get(
+    "/citizens",
+    response_model=list[CityAdminCitizenResponse],
+    summary="List All Citizens",
+)
+def get_citizens(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_city_admin()),
+):
+    service = CityAdminService(db)
+
+    return service.get_citizens()
+
+@router.get(
+    "/department-admins",
+    response_model=list[CityAdminDepartmentAdminResponse],
+    summary="List All Department Admins",
+)
+def get_department_admins(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_city_admin()),
+):
+    service = CityAdminService(db)
+
+    return service.get_department_admins()
+
 @router.patch(
     "/citizens/{citizen_id}/block",
     summary="Block Citizen",
 )
+
 def block_citizen(
     citizen_id: int,
     request: BlockCitizenRequest,

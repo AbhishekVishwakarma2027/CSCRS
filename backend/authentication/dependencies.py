@@ -129,3 +129,9 @@ def require_admin():
         UserRole.DEPARTMENT_ADMIN,
         UserRole.SUPER_ADMIN,
     )
+
+def require_admin_reports():
+    return require_roles(
+        UserRole.CITY_ADMIN,
+        UserRole.DEPARTMENT_ADMIN,
+    )

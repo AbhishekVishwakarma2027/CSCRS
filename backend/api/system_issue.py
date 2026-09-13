@@ -19,6 +19,7 @@ from schemas.system_issue import (
     SystemIssueCreate,
     SystemIssueResponse,
     SystemIssueListItem,
+    MySystemIssueItem,
     SystemIssueDetailResponse,
     SystemIssueStatusUpdate,
     MessageResponse,
@@ -150,6 +151,28 @@ def export_system_issues(
         format=format,
     )
 @router.get(
+    "/my",
+    response_model=list[MySystemIssueItem],
+    summary="Get My System Issues",
+    description="Retrieve list of system issues created by the currently authenticated user.",
+)
+def get_my_issues(
+    status: str | None = Query(None),
+    category: SystemIssueCategory | None = Query(None),
+    search: str | None = Query(None),
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    service = SystemIssueService(db)
+    return service.get_my_issues(
+        reporter_id=current_user.id,
+        status=status,
+        category=category,
+        search=search,
+    )
+
+
+@router.get(
     "/{issue_number}",
     response_model=SystemIssueDetailResponse,
 )
@@ -163,19 +186,11 @@ def get_issue_detail(
 
 ):
 
-    allowed_roles = {
-        UserRole.SUPER_ADMIN,
-        UserRole.CITY_ADMIN,
-    }
-    if current_user.role not in allowed_roles:
-        raise HTTPException(
-            status_code=403,
-            detail="You are not authorized.",
-        )
     service = SystemIssueService(db)
 
     return service.get_issue_detail(
         issue_number=issue_number,
+        current_user=current_user,
     )
 @router.patch(
     "/{issue_number}/status",

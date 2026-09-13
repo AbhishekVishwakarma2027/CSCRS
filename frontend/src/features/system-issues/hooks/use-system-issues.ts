@@ -1,12 +1,15 @@
 import { useQuery } from '@tanstack/react-query'
 import type { SystemIssueFilters } from '../services/system-issues.service'
 import { systemIssuesService } from '../services/system-issues.service'
-import type { SystemIssueListItem, SystemIssueDetail } from '../types'
+import type { SystemIssueListItem, MySystemIssueItem, SystemIssueDetail } from '../types'
 
 export const SYSTEM_ISSUES_QUERY_KEYS = {
   all: ['system-issues'] as const,
   lists: () => [...SYSTEM_ISSUES_QUERY_KEYS.all, 'list'] as const,
   list: (filters: SystemIssueFilters) => [...SYSTEM_ISSUES_QUERY_KEYS.lists(), filters] as const,
+  myLists: () => [...SYSTEM_ISSUES_QUERY_KEYS.all, 'myList'] as const,
+  myList: (filters: Omit<SystemIssueFilters, 'reporter'>) =>
+    [...SYSTEM_ISSUES_QUERY_KEYS.myLists(), filters] as const,
   details: () => [...SYSTEM_ISSUES_QUERY_KEYS.all, 'detail'] as const,
   detail: (issueNumber: string) => [...SYSTEM_ISSUES_QUERY_KEYS.details(), issueNumber] as const,
 }
@@ -19,6 +22,17 @@ export function useSystemIssuesQuery(filters: SystemIssueFilters = {}) {
     queryKey: SYSTEM_ISSUES_QUERY_KEYS.list(filters),
     queryFn: ({ signal }) => systemIssuesService.getIssues(filters, signal),
     staleTime: 5 * 60 * 1000,
+  })
+}
+
+/**
+ * Fetch system issues created by the current user.
+ */
+export function useMySystemIssuesQuery(filters: Omit<SystemIssueFilters, 'reporter'> = {}) {
+  return useQuery<MySystemIssueItem[], Error>({
+    queryKey: SYSTEM_ISSUES_QUERY_KEYS.myList(filters),
+    queryFn: ({ signal }) => systemIssuesService.getMyIssues(filters, signal),
+    staleTime: 2 * 60 * 1000,
   })
 }
 

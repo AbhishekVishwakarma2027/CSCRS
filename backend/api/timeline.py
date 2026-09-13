@@ -6,22 +6,22 @@ from fastapi import (
 
 from sqlalchemy.orm import Session
 
-from authentication.dependencies import require_citizen
+from authentication.dependencies import require_citizen, require_admin_reports
 from database.dependencies import get_db
 from database.models.user import User
 
-from schemas.timeline import TimelineResponse
+from schemas.timeline import TimelineResponse, AdminTimelineResponse
 from services.timeline_service import TimelineService
 
 router = APIRouter(
     prefix="/reports",
-    tags=["Citizen Timeline"],
 )
 
 
 @router.get(
     "/{report_id}/timeline",
     response_model=TimelineResponse,
+    tags=["Citizen Timeline"],
 )
 def get_timeline(
     report_id: int,
@@ -51,3 +51,25 @@ def get_timeline(
         )
 
     return timeline
+
+@router.get(
+    "/{report_id}/admin/timeline",
+    response_model=AdminTimelineResponse,
+    tags=["Admin Reports"],
+)
+def get_admin_timeline_api(
+    report_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin_reports()),
+):
+    service = TimelineService(db)
+    timeline = service.get_admin_timeline(
+        report_id=report_id,
+        admin_user=current_user,
+    )
+    if timeline is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Report not found.",
+        )
+    return timeline

@@ -1,6 +1,8 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload, selectinload
 
 from database.models.report import Report
+from database.models.assignment import Assignment
+from database.models.resolution import Resolution
 from schemas.report import ReportCreateInternal
 from sqlalchemy import and_
 from sqlalchemy import or_
@@ -346,3 +348,22 @@ def get_reports_by_citizen(
         )
         .all()
     )
+
+def get_admin_report_full(
+    db: Session,
+    report_id: int,
+) -> Report | None:
+    return (
+        db.query(Report)
+        .options(
+            joinedload(Report.citizen),
+            joinedload(Report.department),
+            joinedload(Report.resolution_ai),
+            selectinload(Report.assignments).joinedload(Assignment.worker),
+            selectinload(Report.images),
+            selectinload(Report.detections),
+            joinedload(Report.resolution).selectinload(Resolution.attempts)
+        )
+        .filter(Report.id == report_id)
+        .first()
+    )

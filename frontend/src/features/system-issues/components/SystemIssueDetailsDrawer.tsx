@@ -201,6 +201,17 @@ export function SystemIssueDetailsDrawer({
                     {activeIssue?.description || 'Loading detailed description...'}
                   </p>
                 </div>
+
+                {activeIssue?.remarks && (
+                  <div className="rounded-xl border border-blue-200 bg-blue-50/60 p-3.5 dark:border-blue-900/40 dark:bg-blue-950/20">
+                    <span className="block text-[10px] font-black tracking-wider text-blue-700 uppercase dark:text-blue-400">
+                      Admin Remarks / Resolution Notes
+                    </span>
+                    <p className="mt-1 text-[13px] font-bold text-neutral-800 dark:text-neutral-200">
+                      {activeIssue.remarks}
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </div>

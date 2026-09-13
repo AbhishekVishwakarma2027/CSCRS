@@ -141,6 +141,21 @@ class CityAdminService:
         return {
             "message": "City Admin account activated successfully."
         }
+    
+    def get_citizens(
+        self,
+    ):
+        return UserCRUD.get_citizens(
+            self.db,
+        )
+    
+    def get_department_admins(
+        self,
+    ):
+        return UserCRUD.get_all_department_admins(
+            self.db,
+        )
+    
     def block_citizen(
         self,
         citizen_id: int,

@@ -63,6 +63,8 @@ class SystemIssueCRUD:
 
         search: str | None = None,
 
+        reporter_id: int | None = None,
+
     ):
 
         query = (
@@ -70,9 +72,21 @@ class SystemIssueCRUD:
             .options(
                 joinedload(
                     SystemIssue.reporter,
-                )
+                ),
+                joinedload(
+                    SystemIssue.related_report,
+                ),
+                joinedload(
+                    SystemIssue.attachments,
+                ),
             )
         )
+
+        if reporter_id is not None:
+
+            query = query.filter(
+                SystemIssue.reporter_id == reporter_id,
+            )
 
         if status:
 

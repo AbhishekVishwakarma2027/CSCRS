@@ -1,3 +1,4 @@
+import os
 from sqlalchemy.orm import Session
 
 from database.crud import report as report_crud
@@ -753,3 +754,71 @@ class ReportService:
             "report_number": report.report_number,
             "status": report.status.value,
         }
+
+    def get_admin_report_details(
+        self,
+        report_id: int,
+        admin_user,
+    ):
+        report = report_crud.get_admin_report_full(
+            self.db,
+            report_id,
+        )
+
+        if report is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Report not found.",
+            )
+
+        if admin_user.role == UserRole.DEPARTMENT_ADMIN:
+            if report.department_id != admin_user.department_id:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Access denied: Report does not belong to your department.",
+                )
+        
+        return report
+
+    def get_admin_secure_image(
+        self,
+        report_id: int,
+        image_type: str,
+        admin_user,
+    ):
+        report = report_crud.get_report_by_id(self.db, report_id)
+
+        if report is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Report not found.",
+            )
+
+        if admin_user.role == UserRole.DEPARTMENT_ADMIN:
+            if report.department_id != admin_user.department_id:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Access denied.",
+                )
+
+        image = None
+        if image_type.lower() == "original":
+            image = report_image_crud.get_original_image(self.db, report_id)
+        elif image_type.lower() == "annotated":
+            image = report_image_crud.get_annotated_image(self.db, report_id)
+        elif image_type.lower() == "resolution":
+            image = report_image_crud.get_latest_resolution_image(self.db, report_id)
+        
+        if image is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Image not found.",
+            )
+
+        if not os.path.exists(image.image_path):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Image file not found on disk.",
+            )
+
+        return image

@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react'
-import { AlertCircle, FilePlus, Loader2 } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { AlertCircle, FilePlus, Loader2, ListCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { systemIssuesService } from '../services/system-issues.service'
 import { SystemIssueCategory } from '../types'
@@ -7,6 +8,7 @@ import { toast } from 'sonner'
 import { useAuth } from '@/hooks/use-auth'
 import { UserRole } from '@/types/auth.types'
 import { reportsService } from '@/features/reports/services/reports.service'
+import { PATHS } from '@/routes/paths'
 
 export default function SubmitIssuePage() {
   const { user } = useAuth()
@@ -58,8 +60,7 @@ export default function SubmitIssuePage() {
         setIsReportVerified('invalid')
         setVerifiedReportDetails(null)
       }
-    } catch (err) {
-      console.error(err)
+    } catch {
       setIsReportVerified('invalid')
       setVerifiedReportDetails(null)
     }
@@ -129,6 +130,7 @@ export default function SubmitIssuePage() {
         msg: string
       }
       const err = error as { response?: { data?: { detail?: string | ValidationError[] } } }
+      // eslint-disable-next-line no-console
       console.error(err)
       let errorMsg = err.response?.data?.detail || 'Failed to submit issue report.'
 
@@ -146,14 +148,28 @@ export default function SubmitIssuePage() {
   return (
     <div className="mx-auto max-w-2xl space-y-6 pb-10 text-left select-none">
       {/* Header Banner */}
-      <div className="dark:border-neutral-850 flex shrink-0 flex-col gap-1.5 border-b border-neutral-100 pb-4">
-        <h1 className="dark:text-blue-455 flex items-center gap-1.5 text-2xl font-black tracking-widest text-[#0A3C7D] uppercase">
-          <AlertCircle className="h-5.5 w-5.5" />
-          Submit System Issue
-        </h1>
-        <p className="text-neutral-450 mt-1 text-[13px] font-semibold dark:text-neutral-500">
-          Report application bugs, operational latency, configuration failures, or interface issues.
-        </p>
+      <div className="dark:border-neutral-850 flex shrink-0 flex-col gap-3 border-b border-neutral-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="dark:text-blue-455 flex items-center gap-1.5 text-2xl font-black tracking-widest text-[#0A3C7D] uppercase">
+            <AlertCircle className="h-5.5 w-5.5" />
+            Submit System Issue
+          </h1>
+          <p className="text-neutral-450 mt-1 text-[13px] font-semibold dark:text-neutral-500">
+            Report application bugs, operational latency, configuration failures, or interface
+            issues.
+          </p>
+        </div>
+
+        <Link to={PATHS.MY_ISSUES}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="dark:hover:bg-neutral-850 h-9 shrink-0 border-neutral-200 text-xs font-bold text-[#0A3C7D] hover:bg-neutral-100 dark:border-neutral-800 dark:text-blue-400"
+          >
+            <ListCheck className="mr-1.5 h-4 w-4" />
+            My System Issues
+          </Button>
+        </Link>
       </div>
 
       {/* Submit Form Card */}

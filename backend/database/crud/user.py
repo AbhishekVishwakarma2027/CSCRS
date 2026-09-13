@@ -56,7 +56,32 @@ class UserCRUD:
             )
             .all()
         )
+    @staticmethod
+    def get_citizens(
+        db: Session,
+    ) -> list[User]:
 
+        return (
+            db.query(User)
+            .filter(
+                User.role == UserRole.CITIZEN,
+            )
+            .order_by(User.id.asc())
+            .all()
+        )
+    @staticmethod
+    def get_all_department_admins(
+        db: Session,
+    ) -> list[User]:
+
+        return (
+            db.query(User)
+            .filter(
+                User.role == UserRole.DEPARTMENT_ADMIN,
+            )
+            .order_by(User.id.asc())
+            .all()
+        )
     @staticmethod
     def create(
         db: Session,

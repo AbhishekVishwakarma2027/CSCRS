@@ -8,6 +8,8 @@ import type {
   ReportFilters,
   ReportResponseApi,
   TimelineResponse,
+  AdminReportDetailsResponseApi,
+  AdminTimelineResponse,
 } from '../types'
 
 /**
@@ -200,6 +202,53 @@ export const reportsService = {
    */
   async downloadDepartmentReport(signal?: AbortSignal): Promise<Blob> {
     const { data } = await apiClient.get<Blob>('/api/v1/reports/department/download', {
+      responseType: 'blob',
+      signal,
+    })
+    return data
+  },
+  /**
+   * Fetch the Admin version of report details.
+   */
+  async getAdminReportDetails(
+    reportId: number,
+    signal?: AbortSignal
+  ): Promise<AdminReportDetailsResponseApi> {
+    const { data } = await apiClient.get<AdminReportDetailsResponseApi>(
+      `/api/v1/reports/${reportId}/admin`,
+      {
+        signal,
+      }
+    )
+    return data
+  },
+
+  /**
+   * Fetch the Admin chronological timeline of a specific report.
+   */
+  async getAdminReportTimeline(
+    reportId: number,
+    signal?: AbortSignal
+  ): Promise<AdminTimelineResponse> {
+    const { data } = await apiClient.get<AdminTimelineResponse>(
+      `/api/v1/reports/${reportId}/admin/timeline`,
+      {
+        signal,
+      }
+    )
+    return data
+  },
+
+  /**
+   * Download the Admin image as a Blob (Authenticated).
+   */
+  async getAdminReportImage(
+    reportId: number,
+    type: 'original' | 'annotated' | 'resolution',
+    signal?: AbortSignal
+  ): Promise<Blob> {
+    const { data } = await apiClient.get<Blob>(`/api/v1/reports/${reportId}/admin/image`, {
+      params: { type },
       responseType: 'blob',
       signal,
     })

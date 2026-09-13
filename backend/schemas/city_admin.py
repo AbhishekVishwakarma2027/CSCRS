@@ -1,5 +1,6 @@
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from database.enums import BlockType
+from datetime import datetime
 
 class CityAdminCreate(BaseModel):
 
@@ -27,6 +28,39 @@ class CityAdminResponse(BaseModel):
 
     phone: str | None
 
+class CityAdminCitizenResponse(BaseModel):
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+    id: int
+    name: str
+    email: EmailStr
+    phone: str | None
+
+    is_active: bool
+    is_email_verified: bool
+    is_blocked: bool
+    created_at: datetime
+
+class CityAdminDepartmentAdminResponse(BaseModel):
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+    id: int
+    name: str
+    email: EmailStr
+    phone: str | None
+
+    department_id: int | None
+
+    is_active: bool
+    is_email_verified: bool
+    is_blocked: bool
+    created_at: datetime
 
 class CityAdminActivationRequest(BaseModel):
 

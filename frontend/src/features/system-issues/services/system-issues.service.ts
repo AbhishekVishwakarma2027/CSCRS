@@ -1,6 +1,7 @@
 import { apiClient } from '@/services/api'
 import type {
   SystemIssueListItem,
+  MySystemIssueItem,
   SystemIssueDetail,
   SystemIssueCategory,
   SystemIssueStatus,
@@ -30,8 +31,22 @@ export const systemIssuesService = {
   },
 
   /**
+   * Fetch system issues submitted by the currently authenticated user.
+   */
+  async getMyIssues(
+    filters?: Omit<SystemIssueFilters, 'reporter'>,
+    signal?: AbortSignal
+  ): Promise<MySystemIssueItem[]> {
+    const { data } = await apiClient.get<MySystemIssueItem[]>('/api/v1/issues/my', {
+      params: filters,
+      signal,
+    })
+    return data
+  },
+
+  /**
    * Fetch details of a specific system issue by issue number.
-   * Access: Super Admin, City Admin
+   * Access: Super Admin, City Admin, or Issue Reporter
    */
   async getIssueDetail(issueNumber: string, signal?: AbortSignal): Promise<SystemIssueDetail> {
     const { data } = await apiClient.get<SystemIssueDetail>(`/api/v1/issues/${issueNumber}`, {

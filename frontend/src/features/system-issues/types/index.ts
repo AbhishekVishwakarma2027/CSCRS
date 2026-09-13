@@ -49,6 +49,20 @@ export interface SystemIssueAttachment {
   file_size: number
 }
 
+export interface MySystemIssueItem {
+  issue_number: string
+  title: string
+  description: string
+  category: SystemIssueCategory
+  status: SystemIssueStatus | string
+  remarks?: string | null
+  related_report_number?: string | null
+  attachments: SystemIssueAttachment[]
+  created_at: string
+  updated_at: string
+  closed_at?: string | null
+}
+
 export interface SystemIssueDetail {
   issue_number: string
   title: string
@@ -59,7 +73,9 @@ export interface SystemIssueDetail {
   reporter_email: string
   reporter_phone: string | null
   related_report_number: string | null
+  remarks?: string | null
   attachments: SystemIssueAttachment[]
   created_at: string
   updated_at: string
+  closed_at?: string | null
 }
