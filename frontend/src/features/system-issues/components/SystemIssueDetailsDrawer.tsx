@@ -1,13 +1,13 @@
 import React, { useEffect, useRef } from 'react'
 import { X, Activity, User, Mail, Phone, Calendar, Image as ImageIcon } from 'lucide-react'
 import { formatDate } from '@/utils/format'
-import type { SystemIssueListItem } from '../types'
+import type { SystemIssueListItem, MySystemIssueItem } from '../types'
 import { useSystemIssueDetailQuery } from '../hooks/use-system-issues'
 
 interface SystemIssueDetailsDrawerProps {
   isOpen: boolean
   onClose: () => void
-  issue: SystemIssueListItem | null
+  issue: SystemIssueListItem | MySystemIssueItem | null
 }
 
 export function SystemIssueDetailsDrawer({

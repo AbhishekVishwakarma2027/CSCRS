@@ -181,7 +181,8 @@ export function ReportDetailsDrawer({
   const detailsError = isAdmin ? adminDetailsError : citizenDetailsError
   const isTimelineLoading = isAdmin ? isAdminTimelineLoading : isCitizenTimelineLoading
   const timelineError = isAdmin ? adminTimelineError : citizenTimelineError
-  const details = isAdmin ? adminDetails : citizenDetails // For legacy ref if needed
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const details: any = isAdmin ? adminDetails : citizenDetails
 
   const [adminImageUrl, setAdminImageUrl] = useState<string | null>(null)
   const [isAdminImageLoading, setIsAdminImageLoading] = useState(false)
@@ -808,15 +809,8 @@ export function ReportDetailsDrawer({
               (!isAdmin && citizenTimelineData?.timeline?.length) ? (
               <div className="relative space-y-5.5 border-l border-neutral-200 pl-4.5 select-none dark:border-neutral-800">
                 {(isAdmin ? adminTimelineData?.timeline : citizenTimelineData?.timeline)?.map(
-                  (
-                    event: {
-                      title?: string
-                      action?: string
-                      description?: string
-                      details?: string
-                    },
-                    idx: number
-                  ) => (
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  (event: any, idx: number) => (
                     <div key={idx} className="group relative text-left">
                       <div className="absolute top-1 -left-[23px] h-2.5 w-2.5 rounded-full border border-white bg-[#0A3C7D] transition-transform group-hover:scale-125 dark:border-[#1E1E20] dark:bg-blue-600" />
                       <h4 className="text-[13px] font-extrabold text-neutral-800 dark:text-neutral-200">
@@ -833,7 +827,7 @@ export function ReportDetailsDrawer({
                       )}
                       <span className="dark:text-neutral-550 mt-1.5 block flex items-center gap-1 font-mono text-[11px] font-black tracking-wider text-neutral-400 uppercase">
                         <Calendar className="h-3 w-3" />
-                        {formatDate(event.created_at)}
+                        {formatDate(event.created_at || '')}
                       </span>
                     </div>
                   )
