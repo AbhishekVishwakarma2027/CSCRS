@@ -28,3 +28,4 @@ from .system_issue_attachment import (
 )
 from .login_audit import LoginAudit
 from .refresh_token import RefreshToken
+from .broadcast import Broadcast

@@ -79,11 +79,14 @@ class AnnouncementItemResponse(BaseModel):
     broadcast_id: str
     title: str
     message: str
+    target_role: str = "ALL"
     announcement_type: str
     starts_at: datetime | None = None
     ends_at: datetime | None = None
     created_at: datetime
     recipient_count: int
     lifecycle_state: str  # SCHEDULED, ACTIVE, EXPIRED
+    created_by: int | None = None
 
     model_config = ConfigDict(from_attributes=True)
+

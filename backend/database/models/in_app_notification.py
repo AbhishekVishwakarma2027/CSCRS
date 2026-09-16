@@ -61,23 +61,7 @@ class InAppNotification(Base):
         server_default=func.now(),
         nullable=False,
     )
-    starts_at = Column(
-        DateTime(timezone=True),
-        nullable=True,
-    )
-    ends_at = Column(
-        DateTime(timezone=True),
-        nullable=True,
-    )
-    announcement_type = Column(
-        String(30),
-        nullable=True,
-    )
-    broadcast_id = Column(
-        String(50),
-        nullable=True,
-        index=True,
-    )
+
     user = relationship(
         "User",
         lazy="joined",

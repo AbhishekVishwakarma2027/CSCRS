@@ -1,18 +1,14 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { Megaphone, AlertTriangle, Info, X } from 'lucide-react'
-import {
-  useNotificationsQuery,
-  useMarkNotificationReadMutation,
-} from '@/features/notifications/hooks/use-notifications'
+import { useActiveBroadcastsQuery } from '@/features/notifications/hooks/use-notifications'
 
 const DISMISSED_SESSION_KEY = 'cscrs_dismissed_announcement_ids'
 
 export function AnnouncementBanner() {
-  const { data: notifications = [] } = useNotificationsQuery()
-  const markAsReadMutation = useMarkNotificationReadMutation()
+  const { data: broadcasts = [] } = useActiveBroadcastsQuery()
 
-  // Track session-dismissed notification IDs
-  const [dismissedIds, setDismissedIds] = useState<number[]>(() => {
+  // Track session-dismissed broadcast IDs
+  const [dismissedIds, setDismissedIds] = useState<string[]>(() => {
     try {
       const saved = sessionStorage.getItem(DISMISSED_SESSION_KEY)
       return saved ? JSON.parse(saved) : []
@@ -30,39 +26,23 @@ export function AnnouncementBanner() {
     }
   }, [dismissedIds])
 
-  // Filter for active, un-dismissed, and currently eligible SYSTEM_ANNOUNCEMENT notifications
+  // Filter for active, un-dismissed broadcasts
   const activeAnnouncement = useMemo(() => {
-    const now = new Date()
-
-    const eligible = notifications.filter((n) => {
-      if (n.type !== 'SYSTEM_ANNOUNCEMENT') return false
-      if (dismissedIds.includes(n.id)) return false
-
-      // Schedule eligibility check
-      if (n.starts_at && new Date(n.starts_at) > now) return false
-      if (n.ends_at && new Date(n.ends_at) <= now) return false
-
-      return true
-    })
+    const eligible = broadcasts.filter((b) => !dismissedIds.includes(b.broadcast_id))
 
     if (eligible.length === 0) return null
 
-    // Pick the most recent announcement by created_at descending
+    // Pick the most recent broadcast by created_at descending
     return [...eligible].sort(
       (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     )[0]
-  }, [notifications, dismissedIds])
+  }, [broadcasts, dismissedIds])
 
   if (!activeAnnouncement) return null
 
   const handleDismiss = () => {
-    const id = activeAnnouncement.id
+    const id = activeAnnouncement.broadcast_id
     setDismissedIds((prev) => [...prev, id])
-
-    // Silently mark as read on backend if not already read
-    if (!activeAnnouncement.is_read) {
-      markAsReadMutation.mutate(id)
-    }
   }
 
   const annType = activeAnnouncement.announcement_type || 'INFORMATIONAL'

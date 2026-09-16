@@ -78,12 +78,14 @@ export interface AnnouncementItemResponse {
   broadcast_id: string
   title: string
   message: string
+  target_role?: string
   announcement_type: 'INFORMATIONAL' | 'MAINTENANCE' | 'URGENT_WARNING' | string
   starts_at?: string | null
   ends_at?: string | null
   created_at: string
   recipient_count: number
   lifecycle_state: 'SCHEDULED' | 'ACTIVE' | 'EXPIRED' | string
+  created_by?: number | null
 }
 
 export interface AuditLogFilters {

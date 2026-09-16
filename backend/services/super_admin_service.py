@@ -179,6 +179,7 @@ class SuperAdminService:
         announcement_type: str | None = "INFORMATIONAL",
         starts_at: datetime | None = None,
         ends_at: datetime | None = None,
+        created_by: int | None = None,
     ) -> AnnouncementResponse:
         now = datetime.now(timezone.utc)
 
@@ -198,44 +199,57 @@ class SuperAdminService:
             except KeyError:
                 pass
 
-        recipients = query.all()
-        notification_service = InAppNotificationService(self.db)
+        recipient_count = query.count()
 
-        import uuid
-        broadcast_id = f"bcast_{uuid.uuid4().hex[:12]}"
-
-        for user in recipients:
-            notification_service.create_notification(
-                user_id=user.id,
-                report_id=None,
-                title=title,
-                message=message,
-                notification_type="SYSTEM_ANNOUNCEMENT",
-                starts_at=starts_at,
-                ends_at=ends_at,
-                announcement_type=announcement_type or "INFORMATIONAL",
-                broadcast_id=broadcast_id,
-            )
+        import database.crud.broadcast as broadcast_crud
+        broadcast = broadcast_crud.create_broadcast(
+            self.db,
+            title=title,
+            message=message,
+            target_role=target_role or "ALL",
+            announcement_type=announcement_type or "INFORMATIONAL",
+            starts_at=starts_at,
+            ends_at=ends_at,
+            recipient_count=recipient_count,
+            created_by=created_by,
+        )
 
         return AnnouncementResponse(
             success=True,
-            recipient_count=len(recipients),
-            message=f"Broadcast announcement sent to {len(recipients)} users.",
-            broadcast_id=broadcast_id,
+            recipient_count=recipient_count,
+            message=f"Broadcast announcement created for {recipient_count} users.",
+            broadcast_id=broadcast.broadcast_id,
         )
 
     def get_announcements(self) -> list[dict]:
-        import database.crud.in_app_notification as notification_crud
-        return notification_crud.get_announcements_summary(self.db)
+        import database.crud.broadcast as broadcast_crud
+        broadcasts = broadcast_crud.get_all_broadcasts(self.db)
+        results = []
+        for b in broadcasts:
+            lifecycle_state = broadcast_crud.compute_derived_lifecycle_state(b)
+            results.append({
+                "broadcast_id": b.broadcast_id,
+                "title": b.title,
+                "message": b.message,
+                "target_role": b.target_role,
+                "announcement_type": b.announcement_type,
+                "starts_at": b.starts_at,
+                "ends_at": b.ends_at,
+                "created_at": b.created_at,
+                "recipient_count": b.recipient_count,
+                "lifecycle_state": lifecycle_state,
+                "created_by": b.created_by,
+            })
+        return results
 
     def end_announcement(self, broadcast_id: str) -> dict:
-        import database.crud.in_app_notification as notification_crud
-        updated_count = notification_crud.end_announcement(self.db, broadcast_id)
-        if updated_count == 0:
+        import database.crud.broadcast as broadcast_crud
+        broadcast = broadcast_crud.end_broadcast(self.db, broadcast_id)
+        if not broadcast:
             raise ValueError(f"No active announcement found with broadcast ID '{broadcast_id}'.")
         return {
             "success": True,
-            "message": f"Announcement ended for all {updated_count} recipient notifications.",
+            "message": f"Announcement ended successfully.",
             "broadcast_id": broadcast_id,
-            "updated_count": updated_count,
+            "updated_count": 1,
         }

@@ -1,11 +1,22 @@
 import { apiClient } from '@/services/api'
 import type { NotificationItem, UnreadNotificationCount } from '../types'
+import type { AnnouncementItemResponse } from '@/features/super-admin/types'
 
 export const notificationsService = {
   async getNotifications(signal?: AbortSignal): Promise<NotificationItem[]> {
     const { data } = await apiClient.get<NotificationItem[]>('/api/v1/notifications', {
       signal,
     })
+    return data
+  },
+
+  async getActiveBroadcasts(signal?: AbortSignal): Promise<AnnouncementItemResponse[]> {
+    const { data } = await apiClient.get<AnnouncementItemResponse[]>(
+      '/api/v1/announcements/active',
+      {
+        signal,
+      }
+    )
     return data
   },
 

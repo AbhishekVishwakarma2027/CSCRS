@@ -1,3 +1,13 @@
+import sys
+from unittest.mock import MagicMock
+import fastapi.dependencies.utils
+
+fastapi.dependencies.utils.ensure_multipart_is_installed = lambda: None
+
+for mod_name in ['user_agents', 'open_clip', 'ultralytics', 'exifread', 'torch', 'torch.nn', 'torch.nn.functional']:
+    if mod_name not in sys.modules:
+        sys.modules[mod_name] = MagicMock()
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -198,3 +208,130 @@ def test_openapi_swagger_tags():
 
     health_op = schema["paths"]["/api/v1/super-admin/health"]["get"]
     assert "Super Admin" in health_op["tags"]
+
+
+def test_broadcast_decoupled_lifecycle(client, db_session, test_users):
+    """Verify decoupled Broadcast API flow, NULL timestamp handling, role filtering, and personal notification isolation."""
+    from datetime import datetime, timezone, timedelta
+    from database.models.in_app_notification import InAppNotification
+    from database.models.broadcast import Broadcast
+    from services.in_app_notification_service import InAppNotificationService
+
+    now = datetime.now(timezone.utc)
+    future = (now + timedelta(hours=2)).isoformat()
+    past = (now - timedelta(hours=2)).isoformat()
+
+    # 15. Non-SuperAdmin (Citizen) cannot create/manage broadcasts -> 403 Forbidden
+    app.dependency_overrides[get_current_user] = lambda: test_users["citizen"]
+    res_cit_create = client.post("/api/v1/super-admin/announcements", json={"title": "Unauthorized", "message": "Test"})
+    assert res_cit_create.status_code == 403
+
+    # 1. Super Admin creates exactly one Broadcast -> 201 Created
+    app.dependency_overrides[get_current_user] = lambda: test_users["super_admin"]
+    res_create = client.post(
+        "/api/v1/super-admin/announcements",
+        json={
+            "title": "Platform Maintenance",
+            "message": "System maintenance scheduled",
+            "target_role": "ALL",
+            "announcement_type": "MAINTENANCE",
+        },
+    )
+    assert res_create.status_code == 201
+    data_create = res_create.json()
+    assert data_create["success"] is True
+    b_id = data_create["broadcast_id"]
+
+    # 2. Creation creates ZERO InAppNotification rows
+    # 3. recipient_count is correct (4 users in test_users fixture)
+    # 4. created_by equals authenticated Super Admin ID
+    assert data_create["recipient_count"] == 4
+    b_row = db_session.query(Broadcast).filter(Broadcast.broadcast_id == b_id).first()
+    assert b_row is not None
+    assert b_row.title == "Platform Maintenance"
+    assert b_row.created_by == test_users["super_admin"].id
+    assert db_session.query(InAppNotification).count() == 0
+
+    # 5. Super Admin list endpoint reads from broadcasts
+    res_list = client.get("/api/v1/super-admin/announcements")
+    assert res_list.status_code == 200
+    b_items = res_list.json()
+    assert len(b_items) == 1
+    assert b_items[0]["broadcast_id"] == b_id
+    assert b_items[0]["lifecycle_state"] == "ACTIVE"
+
+    # Create additional broadcasts for testing NULL timestamps, schedule, expiry, and role filtering:
+    # Case A: starts_at=NULL, ends_at=future
+    res_case_a = client.post("/api/v1/super-admin/announcements", json={
+        "title": "Case A Notice", "message": "Null start, future end", "ends_at": future
+    })
+    id_a = res_case_a.json()["broadcast_id"]
+
+    # Case B: starts_at=past, ends_at=NULL
+    res_case_b = client.post("/api/v1/super-admin/announcements", json={
+        "title": "Case B Notice", "message": "Past start, null end", "starts_at": past
+    })
+    id_b = res_case_b.json()["broadcast_id"]
+
+    # Case C: starts_at=NULL, ends_at=NULL (b_id created above)
+    id_c = b_id
+
+    # Case D: Scheduled (starts_at=future)
+    res_case_d = client.post("/api/v1/super-admin/announcements", json={
+        "title": "Case D Notice", "message": "Scheduled future start", "starts_at": future
+    })
+    id_d = res_case_d.json()["broadcast_id"]
+
+    # Role specific: Target CITIZEN only
+    res_role_cit = client.post("/api/v1/super-admin/announcements", json={
+        "title": "Citizen Only Notice", "message": "For citizens only", "target_role": "CITIZEN"
+    })
+    id_role_cit = res_role_cit.json()["broadcast_id"]
+
+    # 6, 9, 10, 11, 12. Active endpoint for Citizen role
+    app.dependency_overrides[get_current_user] = lambda: test_users["citizen"]
+    res_active_cit = client.get("/api/v1/announcements/active")
+    assert res_active_cit.status_code == 200
+    active_cit_ids = [item["broadcast_id"] for item in res_active_cit.json()]
+
+    # Case A, B, C, and Citizen-role broadcasts MUST be present
+    assert id_a in active_cit_ids
+    assert id_b in active_cit_ids
+    assert id_c in active_cit_ids
+    assert id_role_cit in active_cit_ids
+
+    # 7. Scheduled broadcast (Case D) MUST NOT be returned in active endpoint
+    assert id_d not in active_cit_ids
+
+    # 12. Role filtering check: Super Admin or Worker fetching active broadcasts should NOT see Citizen-only broadcast
+    app.dependency_overrides[get_current_user] = lambda: test_users["super_admin"]
+    res_active_sa = client.get("/api/v1/announcements/active")
+    assert res_active_sa.status_code == 200
+    active_sa_ids = [item["broadcast_id"] for item in res_active_sa.json()]
+    assert id_role_cit not in active_sa_ids
+
+    # 13, 14. Super Admin ends announcement -> sets ends_at, does NOT modify InAppNotification
+    notif_count_before_end = db_session.query(InAppNotification).count()
+    res_end = client.patch(f"/api/v1/super-admin/announcements/{id_a}/end")
+    assert res_end.status_code == 200
+    assert db_session.query(InAppNotification).count() == notif_count_before_end
+
+    # 8. Expired broadcast (ended Case A) MUST NOT be returned in active endpoint
+    app.dependency_overrides[get_current_user] = lambda: test_users["citizen"]
+    res_active_after_end = client.get("/api/v1/announcements/active")
+    active_ids_after_end = [item["broadcast_id"] for item in res_active_after_end.json()]
+    assert id_a not in active_ids_after_end
+
+    # 16. Existing personal notification creation and listing still works
+    notif_svc = InAppNotificationService(db_session)
+    p_notif = notif_svc.create_notification(
+        user_id=test_users["citizen"].id,
+        report_id=None,
+        title="Personal Update",
+        message="Your report status changed",
+        notification_type="REPORT_RESOLVED",
+    )
+    assert p_notif.id is not None
+    assert db_session.query(InAppNotification).count() == notif_count_before_end + 1
+
+
