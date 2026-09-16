@@ -10,6 +10,7 @@ import { TableFilterHeader } from '../components/TableFilterHeader'
 import { ReportsTable } from '../components/ReportsTable'
 import { ReportDetailsDrawer } from '../components/ReportDetailsDrawer'
 import { ConfirmationDialog } from '../components/ConfirmationDialog'
+import { TransferRequestModal } from '../components/TransferRequestModal'
 import type { ReportListItem } from '../types'
 import {
   useReportsListQuery,
@@ -18,6 +19,11 @@ import {
   useCancelReportMutation,
   useReopenReportMutation,
 } from '../hooks/use-reports'
+import {
+  usePendingRequestsQuery,
+  useApproveForwardMutation,
+} from '@/features/forward-requests/hooks/use-forward-requests'
+import type { ForwardReasonType } from '@/features/forward-requests/types'
 
 const CANCELLATION_REASONS = [
   { value: 'DUPLICATE', label: 'Duplicate Report' },
@@ -33,7 +39,7 @@ export default function ReportsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
 
   const activeRole = user?.role || UserRole.CITY_ADMIN
-  const isCityAdmin = activeRole === UserRole.CITY_ADMIN || activeRole === UserRole.SUPER_ADMIN
+  const isCityAdmin = activeRole === UserRole.CITY_ADMIN
   const isDeptAdmin = activeRole === UserRole.DEPARTMENT_ADMIN
 
   // ─── 1. Persistent Layout Preferences (localStorage) ──────────────────────────
@@ -131,8 +137,8 @@ export default function ReportsPage() {
   }
 
   // ─── 3. Queries and Mutations ───────────────────────────────────────────────
-  // Fetch department lookup mapping (authorized only for City Admins/Super Admins)
-  const { data: deptsData } = useDepartmentsQuery(isCityAdmin)
+  // Fetch department lookup mapping (authorized for City Admins, Super Admins, and Department Admins)
+  const { data: deptsData } = useDepartmentsQuery(isCityAdmin || isDeptAdmin)
   const departmentsMap = useMemo<Record<number, string>>(() => {
     const mapping: Record<number, string> = {}
     if (deptsData) {
@@ -169,6 +175,13 @@ export default function ReportsPage() {
   const assignMutation = useAssignReportMutation()
   const cancelMutation = useCancelReportMutation()
   const reopenMutation = useReopenReportMutation()
+
+  // Forward Requests
+  const { data: pendingForwards = [] } = usePendingRequestsQuery()
+  const approveForwardMutation = useApproveForwardMutation()
+  const [selectedReportForTransfer, setSelectedReportForTransfer] = useState<ReportListItem | null>(
+    null
+  )
 
   // ─── 4. Details Drawer & Confirmation Dialogs Toggles ────────────────────────
   const [selectedReportForDetails, setSelectedReportForDetails] = useState<ReportListItem | null>(
@@ -249,6 +262,44 @@ export default function ReportsPage() {
       toast.error(apiError.response?.data?.detail || 'Reopening failed')
     }
   }
+  // Executes report transfer / forward request approval
+  const handleExecuteTransfer = async (data: {
+    department_id: number
+    reason_type: ForwardReasonType
+    remarks: string
+  }) => {
+    if (!selectedReportForTransfer) return
+
+    const pendingReq = pendingForwards.find((p) => p.report_id === selectedReportForTransfer.id)
+
+    try {
+      if (pendingReq) {
+        await approveForwardMutation.mutateAsync({
+          requestId: pendingReq.id,
+          payload: {
+            department_id: data.department_id,
+            reason_type: data.reason_type,
+            remarks: data.remarks,
+          },
+        })
+        toast.success(
+          `Report #${selectedReportForTransfer.report_number} forward request approved and routed to destination department!`
+        )
+      } else {
+        toast.error(
+          'No pending worker forward request found for this report. The report must be flagged by the assigned worker before routing.'
+        )
+        return
+      }
+
+      refetch()
+      setSelectedReportForTransfer(null)
+    } catch (err) {
+      console.error(err)
+      const apiError = err as { response?: { data?: { detail?: string } } }
+      toast.error(apiError.response?.data?.detail || 'Failed to process report transfer request.')
+    }
+  }
 
   // ─── 6. Pagination Navigation ──────────────────────────────────────────────
   const handlePageChange = (newPage: number) => {
@@ -325,6 +376,7 @@ export default function ReportsPage() {
         onAssign={handleAssign}
         onCancel={setActiveCancelId}
         onReopen={setActiveReopenId}
+        onTransfer={setSelectedReportForTransfer}
       />
 
       {/* 4. Pagination Controls Footer - Always rendered when loaded successfully */}
@@ -530,6 +582,10 @@ export default function ReportsPage() {
         onClose={() => setSelectedReportForDetails(null)}
         report={selectedReportForDetails}
         departmentsMap={departmentsMap}
+        onTransfer={(r) => {
+          setSelectedReportForDetails(null)
+          setSelectedReportForTransfer(r)
+        }}
       />
 
       <ConfirmationDialog
@@ -554,6 +610,15 @@ export default function ReportsPage() {
         isSubmitting={reopenMutation.isPending}
         onConfirm={executeReopen}
         onCancel={() => setIsReopenConfirmOpen(false)}
+      />
+
+      {/* ─── TRANSFER / FORWARD MODAL DIALOG ────────────────────────────────────── */}
+      <TransferRequestModal
+        isOpen={!!selectedReportForTransfer}
+        onClose={() => setSelectedReportForTransfer(null)}
+        report={selectedReportForTransfer}
+        onSubmit={handleExecuteTransfer}
+        isSubmitting={approveForwardMutation.isPending}
       />
     </div>
   )

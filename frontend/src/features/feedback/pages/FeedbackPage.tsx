@@ -1,9 +1,13 @@
 import React, { useState, useMemo } from 'react'
-import { MessageSquare, AlertCircle, TrendingUp, Star, Loader2 } from 'lucide-react'
+import { MessageSquare, AlertCircle, TrendingUp, Star, Loader2, Download } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { useFeedbackSummaryQuery, useSubmitFeedbackMutation } from '../hooks/use-feedback'
+import {
+  useFeedbackSummaryQuery,
+  useSubmitFeedbackMutation,
+  useExportFeedbackMutation,
+} from '../hooks/use-feedback'
 import { FeedbackDistribution } from '../components/FeedbackDistribution'
 import { useAuth } from '@/hooks/use-auth'
 import { UserRole } from '@/types/auth.types'
@@ -13,6 +17,25 @@ export default function FeedbackPage() {
   const isDeptAdmin = user?.role === UserRole.DEPARTMENT_ADMIN
   const { data: summary, isLoading, error, refetch } = useFeedbackSummaryQuery(!isDeptAdmin)
   const submitFeedbackMutation = useSubmitFeedbackMutation()
+  const exportFeedbackMutation = useExportFeedbackMutation()
+
+  const handleExportFeedback = async (format: 'csv' | 'xlsx') => {
+    try {
+      const blob = await exportFeedbackMutation.mutateAsync(format)
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `citizen_feedback.${format}`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+      toast.success(`Feedback dataset exported successfully as ${format.toUpperCase()}.`)
+    } catch (err: unknown) {
+      console.error(err)
+      toast.error('Failed to export feedback dataset.')
+    }
+  }
 
   // State to manage feedback submission
   const [rating, setRating] = useState<number>(0)
@@ -158,14 +181,41 @@ export default function FeedbackPage() {
       ) : (
         <>
           {/* 1. Header Banner */}
-          <div className="flex shrink-0 flex-col gap-1.5 pb-4 select-none">
-            <h1 className="text-2xl font-black tracking-tight text-neutral-800 dark:text-white">
-              Citizen Feedback Registry
-            </h1>
-            <p className="text-[13px] leading-relaxed font-semibold text-neutral-500 dark:text-neutral-400">
-              Overview aggregate ratings statistics, download detailed comments log, and audit
-              service metrics.
-            </p>
+          <div className="flex flex-col gap-4 pb-4 select-none sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h1 className="text-2xl font-black tracking-tight text-neutral-800 dark:text-white">
+                Citizen Feedback Registry
+              </h1>
+              <p className="text-[13px] leading-relaxed font-semibold text-neutral-500 dark:text-neutral-400">
+                Overview aggregate ratings statistics, download detailed comments log, and audit
+                service metrics.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={exportFeedbackMutation.isPending}
+                onClick={() => handleExportFeedback('csv')}
+                className="flex items-center gap-1.5 text-xs font-bold dark:border-neutral-800"
+              >
+                <Download className="h-3.5 w-3.5" />
+                Export CSV
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={exportFeedbackMutation.isPending}
+                onClick={() => handleExportFeedback('xlsx')}
+                className="flex items-center gap-1.5 text-xs font-bold dark:border-neutral-800"
+              >
+                <Download className="h-3.5 w-3.5" />
+                Export XLSX
+              </Button>
+            </div>
           </div>
 
           {/* 2. Loading / Connection Error States */}

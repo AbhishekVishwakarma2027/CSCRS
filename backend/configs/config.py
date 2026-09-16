@@ -95,6 +95,20 @@ OTP_RESEND_COOLDOWN_SECONDS = int(
     )
 )
 
+MAX_LOGIN_ATTEMPTS = int(
+    os.getenv(
+        "MAX_LOGIN_ATTEMPTS",
+        5,
+    )
+)
+
+ACCOUNT_LOCK_MINUTES = int(
+    os.getenv(
+        "ACCOUNT_LOCK_MINUTES",
+        30,
+    )
+)
+
 # ==========================
 # Application Configuration
 # ==========================

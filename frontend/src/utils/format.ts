@@ -49,3 +49,14 @@ export function getMediaUrl(url: string | null): string {
 
   return url
 }
+
+/**
+ * Formats an AI confidence percentage (0-100 scale) to a string with exactly 2 decimal places.
+ * Examples: 56.74 -> "56.74%", 87.3 -> "87.30%", 99 -> "99.00%"
+ */
+export function formatConfidence(value: number | null | undefined): string {
+  if (value === null || value === undefined || Number.isNaN(Number(value))) {
+    return 'N/A'
+  }
+  return `${Number(value).toFixed(2)}%`
+}

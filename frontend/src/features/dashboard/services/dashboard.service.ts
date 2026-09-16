@@ -2,6 +2,7 @@ import { apiClient } from '@/services/api'
 import type {
   CityDashboardSummaryResponse,
   DepartmentDashboardResponse,
+  DepartmentStatisticsItem,
   IssueStatisticsItem,
   StatusStatisticsItem,
   PriorityStatisticsItem,
@@ -24,6 +25,19 @@ export const dashboardService = {
     const { data } = await apiClient.get<
       CityDashboardSummaryResponse | DepartmentDashboardResponse
     >(url, { signal })
+    return data
+  },
+
+  /**
+   * Fetch aggregate department statistics including worker counts and resolution times.
+   */
+  async getDepartmentStats(signal?: AbortSignal): Promise<DepartmentStatisticsItem[]> {
+    const { data } = await apiClient.get<DepartmentStatisticsItem[]>(
+      '/api/v1/dashboard/departments',
+      {
+        signal,
+      }
+    )
     return data
   },
 

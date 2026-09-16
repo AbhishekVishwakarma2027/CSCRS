@@ -8,6 +8,8 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   [UserRole.SUPER_ADMIN]: 'Super Admin',
   [UserRole.CITY_ADMIN]: 'City Admin',
   [UserRole.DEPARTMENT_ADMIN]: 'Department Admin',
+  [UserRole.CITIZEN]: 'Citizen',
+  [UserRole.WORKER]: 'Field Worker',
 }
 
 /**

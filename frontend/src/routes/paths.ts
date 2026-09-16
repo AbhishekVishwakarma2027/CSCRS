@@ -29,6 +29,7 @@ export const PATHS = {
   WORKERS: '/workers',
   MANUAL_REVIEW: '/resolutions/manual-review',
   FORWARD_REQUESTS: '/forward-requests',
+  SUPER_ADMIN_GOVERNANCE: '/super-admin/governance',
   NOTIFICATIONS: '/notifications',
 
   // Error states

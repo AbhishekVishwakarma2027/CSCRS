@@ -32,6 +32,9 @@ const ForwardRequestsPage = lazy(
   () => import('@/features/forward-requests/pages/ForwardRequestsPage')
 )
 const NotificationsPage = lazy(() => import('@/features/notifications/pages/NotificationsPage'))
+const SuperAdminGovernancePage = lazy(
+  () => import('@/features/super-admin/pages/SuperAdminGovernancePage')
+)
 const UnauthorizedPage = lazy(() => import('@/features/auth/pages/UnauthorizedPage'))
 const NotFoundPage = lazy(() => import('@/features/auth/pages/NotFoundPage'))
 const LandingPage = lazy(() => import('@/pages/LandingPage'))
@@ -132,7 +135,9 @@ export const router = createBrowserRouter([
   // Protected routes wrapped in persistent AppLayout
   {
     element: (
-      <ProtectedRoute>
+      <ProtectedRoute
+        roles={[UserRole.SUPER_ADMIN, UserRole.CITY_ADMIN, UserRole.DEPARTMENT_ADMIN]}
+      >
         <AppLayout />
       </ProtectedRoute>
     ),
@@ -148,9 +153,11 @@ export const router = createBrowserRouter([
       {
         path: PATHS.REPORTS,
         element: (
-          <Suspense fallback={<PageLoader />}>
-            <ReportsPage />
-          </Suspense>
+          <ProtectedRoute roles={[UserRole.CITY_ADMIN, UserRole.DEPARTMENT_ADMIN]}>
+            <Suspense fallback={<PageLoader />}>
+              <ReportsPage />
+            </Suspense>
+          </ProtectedRoute>
         ),
       },
       {
@@ -193,6 +200,16 @@ export const router = createBrowserRouter([
           <ProtectedRoute roles={[UserRole.SUPER_ADMIN]}>
             <Suspense fallback={<PageLoader />}>
               <SystemHealthPage />
+            </Suspense>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: PATHS.SUPER_ADMIN_GOVERNANCE,
+        element: (
+          <ProtectedRoute roles={[UserRole.SUPER_ADMIN]}>
+            <Suspense fallback={<PageLoader />}>
+              <SuperAdminGovernancePage />
             </Suspense>
           </ProtectedRoute>
         ),

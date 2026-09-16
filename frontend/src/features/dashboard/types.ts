@@ -36,6 +36,10 @@ export interface DepartmentStatisticsItem {
   department_id: number
   department_name: string
   total_reports: number
+  total_workers?: number
+  active_workers?: number
+  inactive_workers?: number
+  average_resolution_time_hours?: number
 }
 
 export interface IssueStatisticsItem {

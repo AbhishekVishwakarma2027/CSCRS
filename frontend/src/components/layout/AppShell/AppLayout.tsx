@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Outlet } from 'react-router-dom'
 import { Sidebar } from '../Sidebar/Sidebar'
 import { Header } from '../Topbar/Header'
+import { AnnouncementBanner } from '../Topbar/AnnouncementBanner'
 import { Footer } from '../Footer'
 
 export function AppLayout() {
@@ -35,6 +36,9 @@ export function AppLayout() {
       >
         {/* Top Header Bar */}
         <Header onToggleSidebar={() => setIsMobileOpen(true)} />
+
+        {/* Global Broadcast Announcement Banner */}
+        <AnnouncementBanner />
 
         {/* Dynamic Page Content Viewport */}
         <main className="flex-grow overflow-y-auto p-4 focus:outline-none sm:p-6 lg:p-8">

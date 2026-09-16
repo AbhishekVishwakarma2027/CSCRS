@@ -45,6 +45,7 @@ export const reportsService = {
         status: filters.status || undefined,
         priority: filters.priority || undefined,
         issue_type: filters.issue_type || undefined,
+        department_id: filters.department_id || undefined,
       },
       signal,
     })

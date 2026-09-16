@@ -13,6 +13,7 @@ from database.models.user import User
 from schemas.city_admin import (
     CityAdminCreate,
     CityAdminResponse,
+    CityAdminItemResponse,
     CityAdminActivationRequest,
     CityAdminActivationResponse,
     CityAdminCitizenResponse,
@@ -27,6 +28,21 @@ router = APIRouter(
     prefix="/city-admins",
     tags=["City Admin"],
 )
+
+@router.get(
+    "",
+    response_model=list[CityAdminItemResponse],
+    summary="List All City Admins",
+)
+def get_city_admins(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        require_super_admin()
+    ),
+):
+    service = CityAdminService(db)
+    return service.get_city_admins()
+
 
 @router.post(
     "",

@@ -4,7 +4,9 @@ import {
   useDashboardStatus,
   useDashboardPriorities,
   useDashboardIssues,
+  useDashboardSummary,
 } from '../hooks/use-dashboard'
+import type { DepartmentDashboardResponse } from '../types'
 import { Card } from '@/components/ui/card'
 import {
   ResponsiveContainer,
@@ -33,6 +35,7 @@ import {
   FileImage,
   FileSpreadsheet,
   ExternalLink,
+  Users,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -529,6 +532,225 @@ export function IssueCategoryChart() {
           </BarChart>
         </ResponsiveContainer>
       </div>
+    </ChartStateWrapper>
+  )
+}
+
+// ─── Department Admin Widgets ────────────────────────────────────────────────
+
+// 5. Department Report Status Donut Chart
+export function DeptStatusChart({ deptData }: { deptData: DepartmentDashboardResponse | null }) {
+  const { isLoading, error, refetch } = useDashboardSummary()
+
+  const rawData = deptData
+    ? [
+        { name: 'Pending', value: deptData.pending_reports, color: COLOR_PENDING },
+        { name: 'Assigned', value: deptData.assigned_reports, color: COLOR_ASSIGNED },
+        { name: 'In Progress', value: deptData.in_progress_reports, color: COLOR_IN_PROGRESS },
+        { name: 'Resolved', value: deptData.resolved_reports, color: COLOR_RESOLVED },
+        { name: 'Cancelled', value: deptData.cancelled_reports, color: COLOR_CRITICAL },
+        { name: 'Reopened', value: deptData.reopened_reports, color: COLOR_INDIGO },
+      ]
+    : []
+
+  const activeSlices = rawData.filter((item) => item.value > 0)
+  const totalReports = rawData.reduce((sum, item) => sum + item.value, 0)
+
+  return (
+    <ChartStateWrapper
+      title="Department Status Distribution"
+      ariaLabel="Telemetry pie chart showing department report breakdown by status"
+      icon={<PieIcon className="h-4 w-4 text-[#0D9488]" />}
+      isLoading={isLoading}
+      error={error}
+      isEmpty={totalReports === 0}
+      refetch={refetch}
+    >
+      <ResponsiveContainer width="100%" height="100%">
+        <PieChart>
+          <Pie
+            data={rawData}
+            cx="50%"
+            cy="45%"
+            innerRadius={55}
+            outerRadius={75}
+            paddingAngle={activeSlices.length > 1 ? 3 : 0}
+            dataKey="value"
+            isAnimationActive={true}
+          >
+            {rawData.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={entry.color} />
+            ))}
+          </Pie>
+          <Tooltip
+            formatter={(value: unknown) => {
+              const numericVal = typeof value === 'number' ? value : Number(value) || 0
+              const percentage =
+                totalReports > 0 ? ((numericVal / totalReports) * 100).toFixed(1) : '0'
+              return [`${numericVal} reports (${percentage}%)`, 'Volume']
+            }}
+            contentStyle={{
+              background: '#FFFFFF',
+              border: '1px solid #E2E8F0',
+              borderRadius: '8px',
+              fontSize: '11px',
+              fontWeight: 'black',
+              boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+            }}
+          />
+          <Legend
+            verticalAlign="bottom"
+            height={36}
+            iconSize={8}
+            iconType="circle"
+            wrapperStyle={{ fontSize: '10px', fontWeight: 'bold', paddingTop: '8px' }}
+          />
+        </PieChart>
+      </ResponsiveContainer>
+    </ChartStateWrapper>
+  )
+}
+
+// 6. Department Workforce Utilization Donut Chart
+export function DeptWorkforceChart({ deptData }: { deptData: DepartmentDashboardResponse | null }) {
+  const { isLoading, error, refetch } = useDashboardSummary()
+
+  const rawData = deptData
+    ? [
+        { name: 'Available Workers', value: deptData.available_workers, color: COLOR_RESOLVED },
+        { name: 'Busy Workers', value: deptData.busy_workers, color: COLOR_ASSIGNED },
+      ]
+    : []
+
+  const activeSlices = rawData.filter((item) => item.value > 0)
+  const totalWorkers = rawData.reduce((sum, item) => sum + item.value, 0)
+
+  return (
+    <ChartStateWrapper
+      title="Workforce Allocation"
+      ariaLabel="Telemetry pie chart showing available versus busy field workers"
+      icon={<Users className="h-4 w-4 text-[#22C55E]" />}
+      isLoading={isLoading}
+      error={error}
+      isEmpty={totalWorkers === 0}
+      refetch={refetch}
+    >
+      <ResponsiveContainer width="100%" height="100%">
+        <PieChart>
+          <Pie
+            data={rawData}
+            cx="50%"
+            cy="45%"
+            innerRadius={55}
+            outerRadius={75}
+            paddingAngle={activeSlices.length > 1 ? 3 : 0}
+            dataKey="value"
+            isAnimationActive={true}
+          >
+            {rawData.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={entry.color} />
+            ))}
+          </Pie>
+          <Tooltip
+            formatter={(value: unknown) => {
+              const numericVal = typeof value === 'number' ? value : Number(value) || 0
+              const percentage =
+                totalWorkers > 0 ? ((numericVal / totalWorkers) * 100).toFixed(1) : '0'
+              return [`${numericVal} workers (${percentage}%)`, 'Count']
+            }}
+            contentStyle={{
+              background: '#FFFFFF',
+              border: '1px solid #E2E8F0',
+              borderRadius: '8px',
+              fontSize: '11px',
+              fontWeight: 'black',
+              boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+            }}
+          />
+          <Legend
+            verticalAlign="bottom"
+            height={36}
+            iconSize={8}
+            iconType="circle"
+            wrapperStyle={{ fontSize: '10px', fontWeight: 'bold', paddingTop: '8px' }}
+          />
+        </PieChart>
+      </ResponsiveContainer>
+    </ChartStateWrapper>
+  )
+}
+
+// 7. Department Transfer Requests Breakdown Bar Chart
+export function DeptForwardRequestsChart({
+  deptData,
+}: {
+  deptData: DepartmentDashboardResponse | null
+}) {
+  const { isLoading, error, refetch } = useDashboardSummary()
+
+  const chartData = deptData
+    ? [
+        { name: 'Pending', count: deptData.forward_requests_pending, color: COLOR_ASSIGNED },
+        { name: 'Accepted', count: deptData.forward_requests_accepted, color: COLOR_RESOLVED },
+        { name: 'Rejected', count: deptData.forward_requests_rejected, color: COLOR_CRITICAL },
+      ]
+    : []
+
+  const totalForwards = chartData.reduce((sum, item) => sum + item.count, 0)
+
+  return (
+    <ChartStateWrapper
+      title="Transfer Requests Analytics"
+      ariaLabel="Telemetry bar chart showing transfer request volume by decision state"
+      icon={<BarChart2 className="h-4 w-4 text-indigo-500" />}
+      isLoading={isLoading}
+      error={error}
+      isEmpty={totalForwards === 0}
+      refetch={refetch}
+    >
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={chartData} margin={{ top: 20, right: 15, left: -20, bottom: 5 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" vertical={false} />
+          <XAxis
+            dataKey="name"
+            stroke="#64748B"
+            fontSize={10}
+            fontWeight="bold"
+            tickLine={false}
+            axisLine={false}
+          />
+          <YAxis
+            stroke="#64748B"
+            fontSize={10}
+            fontWeight="bold"
+            tickLine={false}
+            axisLine={false}
+            allowDecimals={false}
+          />
+          <Tooltip
+            cursor={{ fill: 'transparent' }}
+            contentStyle={{
+              background: '#FFFFFF',
+              border: '1px solid #E2E8F0',
+              borderRadius: '8px',
+              fontSize: '11px',
+              fontWeight: 'black',
+              boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+            }}
+          />
+          <Bar
+            dataKey="count"
+            name="Requests"
+            radius={[4, 4, 0, 0]}
+            isAnimationActive={true}
+            label={{ position: 'top', fill: '#64748B', fontSize: 10, fontWeight: 'bold' }}
+          >
+            {chartData.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={entry.color} />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
     </ChartStateWrapper>
   )
 }

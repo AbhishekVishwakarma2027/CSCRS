@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation } from '@tanstack/react-query'
 import type { SystemIssueFilters } from '../services/system-issues.service'
 import { systemIssuesService } from '../services/system-issues.service'
 import type { SystemIssueListItem, MySystemIssueItem, SystemIssueDetail } from '../types'
@@ -45,5 +45,29 @@ export function useSystemIssueDetailQuery(issueNumber: string | null) {
     queryFn: ({ signal }) => systemIssuesService.getIssueDetail(issueNumber!, signal),
     enabled: !!issueNumber,
     staleTime: 30 * 1000,
+  })
+}
+
+/**
+ * Mutation to update system issue status and remarks (Super Admin only).
+ */
+export function useUpdateSystemIssueStatusMutation() {
+  return useMutation({
+    mutationFn: ({
+      issueNumber,
+      payload,
+    }: {
+      issueNumber: string
+      payload: { status: string; remarks?: string }
+    }) => systemIssuesService.updateIssueStatus(issueNumber, payload),
+  })
+}
+
+/**
+ * Mutation to export system issues as Blob (Super Admin only).
+ */
+export function useExportSystemIssuesMutation() {
+  return useMutation({
+    mutationFn: (format: 'csv' | 'excel') => systemIssuesService.exportIssues(format),
   })
 }

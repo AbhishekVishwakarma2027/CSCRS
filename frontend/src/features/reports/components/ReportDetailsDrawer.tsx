@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
+import { formatConfidence } from '@/utils/format'
 import {
   X,
   ExternalLink,
@@ -19,6 +20,7 @@ import {
   MoveDown,
   MoveLeft,
   MoveRight,
+  ArrowLeftRight,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { formatDate } from '@/utils/format'
@@ -70,6 +72,7 @@ interface ReportDetailsDrawerProps {
   onClose: () => void
   report: ReportListItem | null
   departmentsMap: Record<number, string>
+  onTransfer?: (report: ReportListItem) => void
 }
 
 export function ReportDetailsDrawer({
@@ -77,6 +80,7 @@ export function ReportDetailsDrawer({
   onClose,
   report,
   departmentsMap,
+  onTransfer,
 }: ReportDetailsDrawerProps) {
   const drawerRef = useRef<HTMLDivElement>(null)
 
@@ -313,13 +317,31 @@ export function ReportDetailsDrawer({
               Reference: {report.report_number}
             </span>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-neutral-450 dark:hover:bg-neutral-850 flex size-8 cursor-pointer items-center justify-center rounded-lg border border-transparent transition-colors outline-none hover:bg-neutral-100 hover:text-neutral-700 focus:border-[#0A3C7D] dark:focus:border-blue-500"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            {isDeptAdmin &&
+              onTransfer &&
+              ['Pending', 'Assigned', 'In Progress', 'Reopened'].includes(report.status) && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="xs"
+                  onClick={() => {
+                    onTransfer(report)
+                  }}
+                  className="flex h-8 items-center gap-1.5 border-blue-200 text-xs font-extrabold text-[#0A3C7D] hover:bg-blue-50 dark:border-blue-900 dark:text-blue-400 dark:hover:bg-blue-950/20"
+                >
+                  <ArrowLeftRight className="h-3.5 w-3.5" />
+                  Transfer / Forward
+                </Button>
+              )}
+            <button
+              type="button"
+              onClick={onClose}
+              className="text-neutral-450 dark:hover:bg-neutral-850 flex size-8 cursor-pointer items-center justify-center rounded-lg border border-transparent transition-colors outline-none hover:bg-neutral-100 hover:text-neutral-700 focus:border-[#0A3C7D] dark:focus:border-blue-500"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
         {/* Content Viewport scrollable */}
@@ -515,14 +537,62 @@ export function ReportDetailsDrawer({
 
           {/* SECTION E: IMAGES WITH ZOOM & PAN */}
           <div className="dark:border-neutral-850 space-y-4 rounded-xl border border-neutral-200/60 bg-neutral-50/50 p-4 dark:bg-[#1E1E20]">
-            <h3 className="dark:border-neutral-850 flex items-center gap-1.5 border-b border-neutral-200/40 pb-2 text-[18px] font-black tracking-wider text-neutral-400 uppercase dark:text-neutral-500">
-              <ImageIcon className="h-4 w-4 shrink-0 text-blue-500" />
-              Attached Proof Image
+            <h3 className="dark:border-neutral-850 flex items-center justify-between border-b border-neutral-200/40 pb-2 text-[18px] font-black tracking-wider text-neutral-400 uppercase dark:text-neutral-500">
+              <span className="flex items-center gap-1.5">
+                <ImageIcon className="h-4 w-4 shrink-0 text-blue-500" />
+                Attached Proof Image
+              </span>
+              {originalImageUrl && (
+                <button
+                  type="button"
+                  onClick={() => window.open(originalImageUrl, '_blank')}
+                  className="flex items-center gap-1 text-[11px] font-bold text-[#0A3C7D] hover:underline dark:text-blue-400"
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  Open in New Tab
+                </button>
+              )}
             </h3>
+
+            {/* Always-Visible Image Navigation Tabs */}
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant={activeImageTab === 'original' ? 'default' : 'outline'}
+                size="xs"
+                onClick={() => {
+                  setActiveImageTab('original')
+                  handleResetImage()
+                }}
+                className={`h-7 cursor-pointer text-[10px] font-bold ${
+                  activeImageTab === 'original'
+                    ? 'bg-[#0A3C7D] hover:bg-[#0A3C7D]/95'
+                    : 'dark:border-neutral-800'
+                }`}
+              >
+                Original Photo
+              </Button>
+              <Button
+                type="button"
+                variant={activeImageTab === 'annotated' ? 'default' : 'outline'}
+                size="xs"
+                onClick={() => {
+                  setActiveImageTab('annotated')
+                  handleResetImage()
+                }}
+                className={`h-7 cursor-pointer text-[10px] font-bold ${
+                  activeImageTab === 'annotated'
+                    ? 'bg-[#0A3C7D] hover:bg-[#0A3C7D]/95'
+                    : 'dark:border-neutral-800'
+                }`}
+              >
+                Annotated Preview
+              </Button>
+            </div>
 
             {isDetailsLoading || (isAdmin && isAdminImageLoading) ? (
               <div className="dark:bg-neutral-850 flex aspect-video animate-pulse items-center justify-center rounded-lg bg-neutral-200 text-neutral-400">
-                Loading...
+                Loading proof image...
               </div>
             ) : (!isAdmin && detailsError) || (isAdmin && adminImageError) ? (
               <div className="dark:bg-neutral-850/40 flex aspect-video flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-neutral-300 bg-neutral-100/50 p-4 text-center dark:border-neutral-800">
@@ -537,42 +607,6 @@ export function ReportDetailsDrawer({
               </div>
             ) : originalImageUrl ? (
               <div className="space-y-3">
-                {/* Image Navigation Tab */}
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    variant={activeImageTab === 'original' ? 'default' : 'outline'}
-                    size="xs"
-                    onClick={() => {
-                      setActiveImageTab('original')
-                      handleResetImage()
-                    }}
-                    className={`h-7 cursor-pointer text-[10px] font-bold ${
-                      activeImageTab === 'original'
-                        ? 'bg-[#0A3C7D] hover:bg-[#0A3C7D]/95'
-                        : 'dark:border-neutral-800'
-                    }`}
-                  >
-                    Original Photo
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={activeImageTab === 'annotated' ? 'default' : 'outline'}
-                    size="xs"
-                    onClick={() => {
-                      setActiveImageTab('annotated')
-                      handleResetImage()
-                    }}
-                    className={`h-7 cursor-pointer text-[10px] font-bold ${
-                      activeImageTab === 'annotated'
-                        ? 'bg-[#0A3C7D] hover:bg-[#0A3C7D]/95'
-                        : 'dark:border-neutral-800'
-                    }`}
-                  >
-                    Annotated Preview
-                  </Button>
-                </div>
-
                 {/* Viewport Frame */}
                 <div
                   className={`relative flex items-center justify-center overflow-hidden rounded-lg border border-neutral-800 bg-neutral-900 transition-all duration-300 ${
@@ -588,7 +622,10 @@ export function ReportDetailsDrawer({
                       transform: `scale(${imgZoom}) translate(${imgPanX}px, ${imgPanY}px)`,
                       transition: 'transform 0.15s ease-out',
                     }}
-                    className="pointer-events-none max-h-full max-w-full object-contain select-none"
+                    className="max-h-full max-w-full cursor-pointer object-contain transition-opacity select-none hover:opacity-95"
+                    onClick={() => {
+                      if (originalImageUrl) window.open(originalImageUrl, '_blank')
+                    }}
                     onError={(e) => {
                       ;(e.target as HTMLImageElement).src =
                         'data:image/svg+xml;charset=utf-8,%3Csvg xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 width%3D%2260%22 height%3D%2260%22 viewBox%3D%220 0 24 24%22 fill%3D%22none%22 stroke%3D%22%23F43F5E%22 stroke-width%3D%221.5%22 stroke-linecap%3D%22round%22 stroke-linejoin%3D%22round%22%3E%3Cpath d%3D%22m21 16-4-4-4 4%22%2F%3E%3Cpath d%3D%22m17 2-3 3%22%2F%3E%3Cpath d%3D%22m2 22 20-20%22%2F%3E%3Cpath d%3D%22M22 16V9c0-1.1-.9-2-2-2h-3%22%2F%3E%3Cpath d%3D%22M7 7H4c-1.1 0-2 .9-2 2v9c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2%22%2F%3E%3C%2Fsvg%3E'
@@ -665,6 +702,15 @@ export function ReportDetailsDrawer({
 
                     <button
                       type="button"
+                      onClick={() => window.open(originalImageUrl, '_blank')}
+                      className="cursor-pointer rounded p-1 text-blue-400 transition-colors hover:bg-neutral-800"
+                      title="Open Fullscreen in New Tab"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    </button>
+
+                    <button
+                      type="button"
                       onClick={() => setImgIsFullscreen(!imgIsFullscreen)}
                       className="cursor-pointer rounded p-1 transition-colors hover:bg-neutral-800"
                       title={imgIsFullscreen ? 'Minimize' : 'Maximize'}
@@ -679,9 +725,28 @@ export function ReportDetailsDrawer({
                 </div>
               </div>
             ) : (
-              <p className="text-neutral-450 font-semibold italic dark:text-neutral-500">
-                No images available.
-              </p>
+              <div className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-neutral-300 bg-neutral-100/50 p-6 text-center dark:border-neutral-800 dark:bg-neutral-900/40">
+                <AlertCircle className="h-6 w-6 text-amber-500" />
+                <p className="text-xs font-bold text-neutral-700 dark:text-neutral-300">
+                  {activeImageTab === 'annotated'
+                    ? 'AI Annotated image is not available for this report.'
+                    : 'Original photo is not available for this report.'}
+                </p>
+                {activeImageTab === 'annotated' && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="xs"
+                    onClick={() => {
+                      setActiveImageTab('original')
+                      handleResetImage()
+                    }}
+                    className="mt-1 h-7 border-blue-200 text-xs font-extrabold text-[#0A3C7D] hover:bg-blue-50 dark:border-blue-900 dark:text-blue-400 dark:hover:bg-blue-950/20"
+                  >
+                    Switch to Original Photo
+                  </Button>
+                )}
+              </div>
             )}
           </div>
 
@@ -713,7 +778,7 @@ export function ReportDetailsDrawer({
                     AI Confidence Score
                   </span>
                   <span className="mt-1 block font-mono font-bold text-neutral-800 dark:text-neutral-200">
-                    {(details.ai_confidence * 100).toFixed(1)}%
+                    {formatConfidence(details.ai_confidence)}
                   </span>
                 </div>
                 <div>

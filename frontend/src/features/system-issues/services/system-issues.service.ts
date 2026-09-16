@@ -66,6 +66,44 @@ export const systemIssuesService = {
     })
     return data
   },
+
+  /**
+   * Fetch a system issue attachment securely as a Blob using the authenticated apiClient.
+   */
+  async getAttachmentBlob(filePath: string, signal?: AbortSignal): Promise<Blob> {
+    const normalizedPath = filePath.replace(/\\/g, '/')
+    const cleanPath = normalizedPath.startsWith('/') ? normalizedPath : `/${normalizedPath}`
+    const { data } = await apiClient.get<Blob>(cleanPath, {
+      responseType: 'blob',
+      signal,
+    })
+    return data
+  },
+
+  /**
+   * Update a system issue status and remarks (Super Admin only).
+   */
+  async updateIssueStatus(
+    issueNumber: string,
+    payload: { status: SystemIssueStatus | string; remarks?: string }
+  ): Promise<{ message: string }> {
+    const { data } = await apiClient.patch<{ message: string }>(
+      `/api/v1/issues/${issueNumber}/status`,
+      payload
+    )
+    return data
+  },
+
+  /**
+   * Export all system issues as a CSV or Excel Blob (Super Admin only).
+   */
+  async exportIssues(format: 'csv' | 'excel' = 'csv'): Promise<Blob> {
+    const { data } = await apiClient.get<Blob>('/api/v1/issues/export', {
+      params: { format },
+      responseType: 'blob',
+    })
+    return data
+  },
 }
 
 export interface SystemIssueResponse {

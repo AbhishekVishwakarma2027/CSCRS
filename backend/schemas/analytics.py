@@ -37,6 +37,10 @@ class DepartmentStatisticsItem(BaseModel):
     department_id: int
     department_name: str
     total_reports: int
+    total_workers: int = 0
+    active_workers: int = 0
+    inactive_workers: int = 0
+    average_resolution_time_hours: float = 0.0
 
 class IssueStatisticsItem(BaseModel):
 

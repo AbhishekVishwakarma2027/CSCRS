@@ -49,27 +49,56 @@ class AssignmentService:
         )
 
         if existing_assignment:
+            if is_forward_assignment:
+                # Cancel/close previous assignment in source department and free previous worker
+                AssignmentCRUD.update_assignment_status(
+                    self.db,
+                    existing_assignment,
+                    AssignmentStatus.CANCELLED,
+                )
+                old_worker_profile = AssignmentCRUD.get_worker_profile(
+                    self.db,
+                    existing_assignment.worker_id,
+                )
+                if old_worker_profile:
+                    old_worker_profile.is_available = True
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="Report is already assigned.",
+                )
 
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Report is already assigned.",
-            )
-        if report.status != ReportStatus.PENDING:
-
+        if report.status != ReportStatus.PENDING and not is_forward_assignment:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail=f"Cannot assign report with status '{report.status.value}'.",
             )
+
         worker = self._select_best_worker(
             department_id=report.department_id,
+            allow_none=is_forward_assignment,
         )
 
         if worker is None:
-
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="No suitable worker found.",
-            )
+            if is_forward_assignment:
+                AssignmentCRUD.update_report_status(
+                    self.db,
+                    report,
+                    ReportStatus.PENDING,
+                )
+                AuditLogService(self.db).log(
+                    report_id=report.id,
+                    user_id=assigned_by,
+                    action="FORWARD_ACCEPTED_PENDING_BACKLOG",
+                    details="Accepted forward request; report queued in department backlog.",
+                )
+                self.db.commit()
+                return None
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="No suitable worker found.",
+                )
         
         profile = AssignmentCRUD.get_worker_profile(
             self.db,
@@ -77,13 +106,13 @@ class AssignmentService:
         )
         
         if profile is None:
-
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Worker profile not found.",
             )
 
-
+        # Mark selected worker profile as unavailable/busy
+        profile.is_available = False
 
         assignment = Assignment(
             report_id=report.id,
@@ -127,13 +156,13 @@ class AssignmentService:
             notification_type="NEW_ASSIGNMENT",
         )
 
-
         return assignment
 
     def _select_best_worker(
         self,
         *,
         department_id: int,
+        allow_none: bool = False,
     ):
         """
         Worker Selection Strategy
@@ -155,7 +184,8 @@ class AssignmentService:
         )
 
         if not workers:
-
+            if allow_none:
+                return None
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="No available workers found.",

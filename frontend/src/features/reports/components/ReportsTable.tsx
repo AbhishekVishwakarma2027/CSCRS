@@ -18,6 +18,7 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
+  ArrowLeftRight,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { formatDate } from '@/utils/format'
@@ -71,6 +72,7 @@ interface ReportsTableProps {
   onAssign: (reportId: number) => void
   onCancel: (reportId: number) => void
   onReopen: (reportId: number) => void
+  onTransfer?: (report: ReportListItem) => void
 }
 
 export function ReportsTable({
@@ -86,6 +88,7 @@ export function ReportsTable({
   onAssign,
   onCancel,
   onReopen,
+  onTransfer,
 }: ReportsTableProps) {
   const [activeActionRow, setActiveActionRow] = useState<number | null>(null)
   const [sorting, setSorting] = useState<SortingState>([])
@@ -228,6 +231,8 @@ export function ReportsTable({
         const isAssignable = isDeptAdmin && status === 'Pending'
         const isCancellable = isDeptAdmin && ['Pending', 'Assigned', 'In Progress'].includes(status)
         const isReopenable = isDeptAdmin && status === 'Cancelled'
+        const isTransferrable =
+          isDeptAdmin && ['Pending', 'Assigned', 'In Progress', 'Reopened'].includes(status)
 
         return (
           <div className="relative pr-2 text-right">
@@ -306,6 +311,19 @@ export function ReportsTable({
                         Reopen Issue
                       </button>
                     )}
+                    {isTransferrable && onTransfer && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onTransfer(report)
+                          setActiveActionRow(null)
+                        }}
+                        className="dark:hover:bg-neutral-850 flex w-full cursor-pointer items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs font-bold text-neutral-700 hover:bg-neutral-50 dark:text-neutral-300"
+                      >
+                        <ArrowLeftRight className="h-3.5 w-3.5 text-blue-500" />
+                        Transfer / Forward
+                      </button>
+                    )}
 
                     {/* Copy ID available for all roles */}
                     <button
@@ -339,6 +357,7 @@ export function ReportsTable({
     onAssign,
     onCancel,
     onReopen,
+    onTransfer,
   ])
 
   // TanStack Table Instance
@@ -514,6 +533,8 @@ export function ReportsTable({
           const isCancellable =
             isDeptAdmin && ['Pending', 'Assigned', 'In Progress'].includes(valStatus)
           const isReopenable = isDeptAdmin && valStatus === 'Cancelled'
+          const isTransferrable =
+            isDeptAdmin && ['Pending', 'Assigned', 'In Progress', 'Reopened'].includes(valStatus)
 
           return (
             <div
@@ -613,6 +634,19 @@ export function ReportsTable({
                             >
                               <RotateCcw className="h-3 w-3 text-emerald-500" />
                               Reopen Issue
+                            </button>
+                          )}
+                          {isTransferrable && onTransfer && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                onTransfer(report)
+                                setActiveActionRow(null)
+                              }}
+                              className="dark:hover:bg-neutral-850 flex w-full cursor-pointer items-center gap-2 rounded-lg px-2 py-1 text-left text-xs font-bold text-neutral-700 hover:bg-neutral-50 dark:text-neutral-300"
+                            >
+                              <ArrowLeftRight className="h-3 w-3 text-blue-500" />
+                              Transfer / Forward
                             </button>
                           )}
                           <button

@@ -9,11 +9,35 @@ export interface WorkerCreatePayload {
   designation: string
 }
 
+export interface WorkerDirectoryItem {
+  id: number
+  user_id: number
+  name: string
+  email: string
+  phone: string | null
+  department_id: number
+  employee_code: string
+  designation: string
+  phone_extension: string | null
+  is_available: boolean
+  is_active: boolean
+  is_email_verified: boolean
+  is_blocked: boolean
+  joined_at: string
+}
+
 export interface MessageResponse {
   message: string
 }
 
 export const workersService = {
+  async getWorkers(signal?: AbortSignal): Promise<WorkerDirectoryItem[]> {
+    const { data } = await apiClient.get<WorkerDirectoryItem[]>('/api/v1/admins/workers', {
+      signal,
+    })
+    return data
+  },
+
   async inviteWorker(payload: WorkerCreatePayload): Promise<UserProfile> {
     const { data } = await apiClient.post<UserProfile>('/api/v1/workers', payload)
     return data

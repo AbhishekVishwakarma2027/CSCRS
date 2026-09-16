@@ -66,16 +66,20 @@ apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config as typeof error.config & { _retry?: boolean }
+    const url = originalRequest?.url || ''
+    const isAuthEndpoint =
+      url.includes('/api/v1/auth/login') || url.includes('/api/v1/auth/refresh')
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
       const refreshToken = tokenStore.getRefreshToken()
 
       if (!refreshToken) {
         // No refresh token available — force logout
         tokenStore.clearTokens()
         queryClient.clear()
-        // TODO: If a centralized authentication redirect handler is introduced in the future, this redirect should be routed through it.
-        window.location.href = '/login'
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login'
+        }
         return Promise.reject(error)
       }
 
@@ -108,8 +112,9 @@ apiClient.interceptors.response.use(
         tokenStore.clearTokens()
         queryClient.clear()
         refreshQueue = []
-        // TODO: If a centralized authentication redirect handler is introduced in the future, this redirect should be routed through it.
-        window.location.href = '/login'
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login'
+        }
         return Promise.reject(error)
       } finally {
         isRefreshing = false

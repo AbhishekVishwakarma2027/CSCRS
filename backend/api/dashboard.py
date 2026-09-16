@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from authentication.dependencies import (
     require_city_admin,
     require_department_admin,
+    require_city_or_super_admin,
 )
 from database.models.user import User
 from database.dependencies import get_db
@@ -70,7 +71,7 @@ def dashboard_summary(
 )
 def get_feedback_dashboard(
     current_user: User = Depends(
-        require_city_admin()
+        require_city_or_super_admin()
     ),
     db: Session = Depends(get_db),
 ):
@@ -85,7 +86,7 @@ def get_feedback_dashboard(
 )
 def department_statistics(
     current_user: User = Depends(
-        require_city_admin(),
+        require_city_or_super_admin(),
     ),
     db: Session = Depends(get_db),
 ):
@@ -99,7 +100,7 @@ def department_statistics(
 )
 def issue_statistics(
     current_user: User = Depends(
-        require_city_admin(),
+        require_city_or_super_admin(),
     ),
     db: Session = Depends(get_db),
 ):
@@ -113,7 +114,7 @@ def issue_statistics(
 )
 def status_statistics(
     current_user: User = Depends(
-        require_city_admin(),
+        require_city_or_super_admin(),
     ),
     db: Session = Depends(get_db),
 ):
@@ -127,7 +128,7 @@ def status_statistics(
 )
 def priority_statistics(
     current_user: User = Depends(
-        require_city_admin(),
+        require_city_or_super_admin(),
     ),
     db: Session = Depends(get_db),
 ):
@@ -142,7 +143,7 @@ def priority_statistics(
 def monthly_trend(
     year: int,
     current_user: User = Depends(
-        require_city_admin(),
+        require_city_or_super_admin(),
     ),
     db: Session = Depends(
         get_db,
@@ -161,7 +162,7 @@ def monthly_trend(
 def recent_reports(
     limit: int = 10,
     current_user: User = Depends(
-        require_city_admin(),
+        require_city_or_super_admin(),
     ),
     db: Session = Depends(
         get_db,
@@ -180,7 +181,7 @@ def recent_reports(
 def high_priority_reports(
     limit: int = 10,
     current_user: User = Depends(
-        require_city_admin(),
+        require_city_or_super_admin(),
     ),
     db: Session = Depends(
         get_db,
@@ -198,7 +199,7 @@ def high_priority_reports(
 )
 def dashboard_insights(
     current_user: User = Depends(
-        require_city_admin(),
+        require_city_or_super_admin(),
     ),
     db: Session = Depends(
         get_db,
@@ -235,7 +236,7 @@ def top_workers(
     department_id: int,
     limit: int = 5,
     current_user: User = Depends(
-        require_city_admin(),
+        require_city_or_super_admin(),
     ),
     db: Session = Depends(get_db),
 ):

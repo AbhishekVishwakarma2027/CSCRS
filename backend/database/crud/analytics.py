@@ -1,8 +1,7 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, case, extract
 from database.models.department import Department
 from database.models.report import Report
-from sqlalchemy import extract
 from sqlalchemy.orm import Query
 from schemas.analytics import DashboardFilter
 from database.enums import (
@@ -251,8 +250,7 @@ def get_dashboard_summary(
 def get_department_statistics(
     db: Session,
 ):
-
-    return (
+    dept_reports = (
         db.query(
             Department.id.label("department_id"),
             Department.name.label("department_name"),
@@ -272,6 +270,76 @@ def get_department_statistics(
         )
         .all()
     )
+
+    worker_counts = (
+        db.query(
+            WorkerProfile.department_id.label("department_id"),
+            func.count(WorkerProfile.id).label("total_workers"),
+            func.sum(
+                case(
+                    (
+                        (User.is_active == True) & (User.is_blocked == False),
+                        1,
+                    ),
+                    else_=0,
+                )
+            ).label("active_workers"),
+            func.sum(
+                case(
+                    (
+                        (User.is_active == False) | (User.is_blocked == True),
+                        1,
+                    ),
+                    else_=0,
+                )
+            ).label("inactive_workers"),
+        )
+        .join(User, User.id == WorkerProfile.user_id)
+        .filter(User.role == UserRole.WORKER)
+        .group_by(WorkerProfile.department_id)
+        .all()
+    )
+    worker_map = {row.department_id: row for row in worker_counts}
+
+    resolutions = (
+        db.query(
+            Report.department_id,
+            Report.created_at,
+            Resolution.resolved_at,
+        )
+        .join(Resolution, Resolution.report_id == Report.id)
+        .filter(Report.status.in_([ReportStatus.RESOLVED, ReportStatus.CLOSED]))
+        .all()
+    )
+
+    dept_resolution_times = {}
+    for dept_id, created_at, resolved_at in resolutions:
+        if created_at and resolved_at:
+            diff_hours = (resolved_at - created_at).total_seconds() / 3600.0
+            if diff_hours >= 0:
+                dept_resolution_times.setdefault(dept_id, []).append(diff_hours)
+
+    result = []
+    for dept in dept_reports:
+        w_stats = worker_map.get(dept.department_id)
+        res_times = dept_resolution_times.get(dept.department_id, [])
+        avg_res_time = (
+            round(sum(res_times) / len(res_times), 2) if res_times else 0.0
+        )
+
+        result.append(
+            {
+                "department_id": dept.department_id,
+                "department_name": dept.department_name,
+                "total_reports": dept.total_reports,
+                "total_workers": int(w_stats.total_workers) if w_stats else 0,
+                "active_workers": int(w_stats.active_workers) if w_stats else 0,
+                "inactive_workers": int(w_stats.inactive_workers) if w_stats else 0,
+                "average_resolution_time_hours": avg_res_time,
+            }
+        )
+
+    return result
 def get_issue_statistics(
     db: Session,
 ):

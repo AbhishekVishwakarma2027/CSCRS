@@ -69,6 +69,7 @@ export interface ReportFilters {
   status?: string
   priority?: string
   issue_type?: string
+  department_id?: number
   page?: number
   page_size?: number
 }

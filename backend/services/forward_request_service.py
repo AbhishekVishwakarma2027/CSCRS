@@ -98,6 +98,25 @@ class ForwardRequestService:
             details="Worker flagged report for department review.",
         )
 
+        dept_admins = UserCRUD.get_department_admins(
+            self.db,
+            report.department_id,
+        )
+
+        for admin in dept_admins:
+            InAppNotificationService(
+                self.db,
+            ).create_notification(
+                user_id=admin.id,
+                report_id=report.id,
+                title="New Forward Request",
+                message=(
+                    f"Worker {worker.name} requested to forward report #{report.report_number}.\n\n"
+                    f"Reason: {request.reason}"
+                ),
+                notification_type="FORWARD_REQUEST",
+            )
+
         self.db.commit()
 
         self.db.refresh(
@@ -105,6 +124,7 @@ class ForwardRequestService:
         )
 
         return forward_request
+
     def get_pending_requests(
         self,
         department_admin,
@@ -187,16 +207,13 @@ class ForwardRequestService:
 
             "worker": {
 
-                # Sirf naam.
-                # Email / phone expose nahi karna.
-
                 "id": worker.id,
 
                 "name": worker.name,
 
-                "email": None,
+                "email": worker.email,
 
-                "phone": None,
+                "phone": worker.phone,
             },
 
             "report": {

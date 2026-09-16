@@ -66,6 +66,7 @@ def get_departments(
         require_roles(
             UserRole.SUPER_ADMIN,
             UserRole.CITY_ADMIN,
+            UserRole.DEPARTMENT_ADMIN,
         )
     ),
 ):

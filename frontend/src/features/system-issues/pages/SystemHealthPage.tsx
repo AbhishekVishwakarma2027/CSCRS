@@ -7,13 +7,16 @@ import {
   RotateCcw,
   SlidersHorizontal,
   Check,
+  Download,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
+import { UserRole } from '@/types/auth.types'
 import { Button } from '@/components/ui/button'
+import { toast } from 'sonner'
 
 import { SystemIssuesTable } from '../components/SystemIssuesTable'
 import { SystemIssueDetailsDrawer } from '../components/SystemIssueDetailsDrawer'
-import { useSystemIssuesQuery } from '../hooks/use-system-issues'
+import { useSystemIssuesQuery, useExportSystemIssuesMutation } from '../hooks/use-system-issues'
 import type { SystemIssueListItem } from '../types'
 import { SystemIssueCategory, SystemIssueStatus } from '../types'
 
@@ -40,8 +43,29 @@ const ALL_COLUMNS = [
 ]
 
 export default function SystemHealthPage() {
-  useAuth()
+  const { user } = useAuth()
+  const isSuperAdmin = user?.role === UserRole.SUPER_ADMIN
+  const exportIssuesMutation = useExportSystemIssuesMutation()
+
   const [searchParams, setSearchParams] = useSearchParams()
+
+  const handleExport = async (format: 'csv' | 'excel') => {
+    try {
+      const blob = await exportIssuesMutation.mutateAsync(format)
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `system_issues_${format}.${format === 'csv' ? 'csv' : 'xlsx'}`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+      toast.success(`System issues exported successfully as ${format.toUpperCase()}.`)
+    } catch (err: unknown) {
+      console.error(err)
+      toast.error('Failed to export system issues.')
+    }
+  }
 
   // ─── 1. URL Parameter Sync ───────────────────────────────────────────────
   const pageParam = Number(searchParams.get('page')) || 1
@@ -206,6 +230,33 @@ export default function SystemHealthPage() {
             Monitor and track system performance issues, bugs, and feedback logs reported by users.
           </p>
         </div>
+
+        {isSuperAdmin && (
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={exportIssuesMutation.isPending}
+              onClick={() => handleExport('csv')}
+              className="flex items-center gap-1.5 text-xs font-bold dark:border-neutral-800"
+            >
+              <Download className="h-3.5 w-3.5" />
+              Export CSV
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={exportIssuesMutation.isPending}
+              onClick={() => handleExport('excel')}
+              className="flex items-center gap-1.5 text-xs font-bold dark:border-neutral-800"
+            >
+              <Download className="h-3.5 w-3.5" />
+              Export Excel
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* 2. Search Toolbar */}

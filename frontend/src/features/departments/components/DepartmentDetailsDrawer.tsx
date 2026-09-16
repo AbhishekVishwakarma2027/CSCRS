@@ -1,8 +1,14 @@
-import React, { useEffect, useRef } from 'react'
-import { X, Building2, User, Mail, Phone, Clock, Activity, AlertCircle } from 'lucide-react'
+import React, { useEffect, useRef, useMemo } from 'react'
+import { X, Building2, User, Mail, Phone, Clock, Activity, ShieldCheck } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
 import { formatDate } from '@/utils/format'
 import type { DepartmentUI } from '../types'
+import { useAuth } from '@/hooks/use-auth'
+import { UserRole } from '@/types/auth.types'
 import { useDepartmentDetailQuery } from '../hooks/use-departments'
+import { useDepartmentAdminsQuery } from '@/features/user-directories/hooks/use-user-directories'
+import { reportsService } from '@/features/reports/services/reports.service'
+import { dashboardService } from '@/features/dashboard/services/dashboard.service'
 
 interface DepartmentDetailsDrawerProps {
   isOpen: boolean
@@ -65,6 +71,9 @@ export function DepartmentDetailsDrawer({
     return () => window.removeEventListener('keydown', handleTab)
   }, [isOpen])
 
+  const { user } = useAuth()
+  const isSuperAdmin = user?.role === UserRole.SUPER_ADMIN
+
   // Call detail API hook (enabled when drawer is open)
   const departmentId = department?.id || 0
   const { data: detailData, isLoading } = useDepartmentDetailQuery(
@@ -72,10 +81,65 @@ export function DepartmentDetailsDrawer({
     isOpen && !!departmentId
   )
 
+  // Fetch cached department admins list to find head of department (only for non-SUPER_ADMIN)
+  const { data: departmentAdmins = [] } = useDepartmentAdminsQuery(isOpen && !isSuperAdmin)
+
+  const deptAdmin = useMemo(() => {
+    if (!departmentId) return null
+    return departmentAdmins.find((admin) => admin.department_id === departmentId) || null
+  }, [departmentAdmins, departmentId])
+
+  // Fetch enriched department operational statistics (worker counts & resolution time)
+  const { data: departmentStatsList = [] } = useQuery({
+    queryKey: ['dashboard-department-stats'],
+    queryFn: ({ signal }) => dashboardService.getDepartmentStats(signal),
+    enabled: isOpen,
+    staleTime: 60 * 1000,
+  })
+
+  const deptStats = useMemo(() => {
+    if (!departmentId) return null
+    return departmentStatsList.find((s) => s.department_id === departmentId) || null
+  }, [departmentStatsList, departmentId])
+
+  // Fetch live department-specific report operational metrics
+  const { data: reportStats, isLoading: isLoadingStats } = useQuery({
+    queryKey: ['department-report-stats', departmentId],
+    queryFn: async ({ signal }) => {
+      if (!departmentId) return { pending: 0, assigned: 0, inProgress: 0, resolved: 0 }
+      const [pendingRes, assignedRes, inProgressRes, resolvedRes] = await Promise.all([
+        reportsService.getCityReports(
+          { department_id: departmentId, status: 'Pending', page_size: 1 },
+          signal
+        ),
+        reportsService.getCityReports(
+          { department_id: departmentId, status: 'Assigned', page_size: 1 },
+          signal
+        ),
+        reportsService.getCityReports(
+          { department_id: departmentId, status: 'In Progress', page_size: 1 },
+          signal
+        ),
+        reportsService.getCityReports(
+          { department_id: departmentId, status: 'Resolved', page_size: 1 },
+          signal
+        ),
+      ])
+      return {
+        pending: pendingRes.total_items,
+        assigned: assignedRes.total_items,
+        inProgress: inProgressRes.total_items,
+        resolved: resolvedRes.total_items,
+      }
+    },
+    enabled: isOpen && !!departmentId,
+    staleTime: 60 * 1000,
+  })
+
   if (!isOpen || !department) return null
 
-  // Resolve current active general department properties
-  const activeDept = detailData ? detailData : department
+  // Resolve current active general department properties safely
+  const activeDept = detailData || department
 
   return (
     <>
@@ -196,47 +260,70 @@ export function DepartmentDetailsDrawer({
             )}
           </div>
 
-          {/* CONTACT INFO (PLACEHOLDERS) */}
-          <div className="dark:border-neutral-850 space-y-3.5 rounded-xl border border-neutral-200/60 bg-neutral-50/50 p-4 dark:bg-[#1E1E20]">
-            <h3 className="dark:border-neutral-850 flex items-center gap-1.5 border-b border-neutral-200/40 pb-2 text-[18px] font-black tracking-wider text-neutral-400 uppercase dark:text-neutral-500">
-              <User className="h-4 w-4 shrink-0 text-blue-500" />
-              Administrative Contact Registry
-            </h3>
+          {/* CONTACT INFO (ADMINISTRATIVE CONTACT REGISTRY) */}
+          {!isSuperAdmin && (
+            <div className="dark:border-neutral-850 space-y-3.5 rounded-xl border border-neutral-200/60 bg-neutral-50/50 p-4 dark:bg-[#1E1E20]">
+              <h3 className="dark:border-neutral-850 flex items-center gap-1.5 border-b border-neutral-200/40 pb-2 text-[18px] font-black tracking-wider text-neutral-400 uppercase dark:text-neutral-500">
+                <User className="h-4 w-4 shrink-0 text-blue-500" />
+                Administrative Contact Registry
+              </h3>
 
-            <div className="grid grid-cols-2 gap-x-4 gap-y-3.5">
-              <div>
-                <span className="text-neutral-450 block text-[9px] font-black tracking-wider uppercase dark:text-neutral-500">
-                  Department Head
-                </span>
-                <span className="dark:text-neutral-550 mt-1 block flex items-center gap-1 font-semibold text-neutral-500 italic">
-                  <User className="h-3.5 w-3.5 shrink-0 text-neutral-400" />
-                  Not Assigned
-                </span>
-              </div>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-3.5">
+                <div>
+                  <span className="text-neutral-450 block text-[9px] font-black tracking-wider uppercase dark:text-neutral-500">
+                    Department Head
+                  </span>
+                  {deptAdmin ? (
+                    <span className="mt-1 flex items-center gap-1.5 font-bold text-neutral-800 dark:text-neutral-200">
+                      <User className="h-3.5 w-3.5 shrink-0 text-blue-500" />
+                      {deptAdmin.name}
+                    </span>
+                  ) : (
+                    <span className="dark:text-neutral-550 mt-1 block flex items-center gap-1 font-semibold text-neutral-500 italic">
+                      <User className="h-3.5 w-3.5 shrink-0 text-neutral-400" />
+                      Not Assigned
+                    </span>
+                  )}
+                </div>
 
-              <div>
-                <span className="text-neutral-450 block text-[9px] font-black tracking-wider uppercase dark:text-neutral-500">
-                  Contact Email
-                </span>
-                <span className="dark:text-neutral-550 mt-1 block flex items-center gap-1 font-semibold text-neutral-500 italic">
-                  <Mail className="h-3.5 w-3.5 shrink-0 text-neutral-400" />
-                  No Registry Email
-                </span>
-              </div>
+                <div>
+                  <span className="text-neutral-450 block text-[9px] font-black tracking-wider uppercase dark:text-neutral-500">
+                    Contact Email
+                  </span>
+                  {deptAdmin ? (
+                    <span className="mt-1 flex items-center gap-1.5 font-bold text-blue-600 dark:text-blue-400">
+                      <Mail className="h-3.5 w-3.5 shrink-0 text-blue-500" />
+                      {deptAdmin.email}
+                    </span>
+                  ) : (
+                    <span className="dark:text-neutral-550 mt-1 block flex items-center gap-1 font-semibold text-neutral-500 italic">
+                      <Mail className="h-3.5 w-3.5 shrink-0 text-neutral-400" />
+                      No Registry Email
+                    </span>
+                  )}
+                </div>
 
-              <div>
-                <span className="text-neutral-450 block text-[9px] font-black tracking-wider uppercase dark:text-neutral-500">
-                  Contact Number
-                </span>
-                <span className="dark:text-neutral-550 mt-1 block flex items-center gap-1 font-semibold text-neutral-500 italic">
-                  <Phone className="h-3.5 w-3.5 shrink-0 text-neutral-400" />
-                  No phone registered
-                </span>
+                <div>
+                  <span className="text-neutral-450 block text-[9px] font-black tracking-wider uppercase dark:text-neutral-500">
+                    Contact Number
+                  </span>
+                  {deptAdmin?.phone ? (
+                    <span className="mt-1 flex items-center gap-1.5 font-bold text-neutral-800 dark:text-neutral-200">
+                      <Phone className="h-3.5 w-3.5 shrink-0 text-blue-500" />
+                      {deptAdmin.phone}
+                    </span>
+                  ) : (
+                    <span className="dark:text-neutral-550 mt-1 block flex items-center gap-1 font-semibold text-neutral-500 italic">
+                      <Phone className="h-3.5 w-3.5 shrink-0 text-neutral-400" />
+                      No phone registered
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
-          {/* SECTION 2: OPERATIONAL STATISTICS (Renders required cards with placeholders) */}
+          {/* SECTION 2: OPERATIONAL STATISTICS */}
           <div className="dark:border-neutral-850 space-y-4 rounded-xl border border-neutral-200/60 bg-neutral-50/50 p-4 dark:bg-[#1E1E20]">
             <h3 className="dark:border-neutral-850 flex items-center gap-1.5 border-b border-neutral-200/40 pb-2 text-[18px] font-black tracking-wider text-neutral-400 uppercase dark:text-neutral-500">
               <Activity className="h-4 w-4 shrink-0 text-blue-500" />
@@ -244,13 +331,13 @@ export function DepartmentDetailsDrawer({
             </h3>
 
             <div className="grid grid-cols-2 gap-2.5 md:grid-cols-3">
-              {/* Card 1: Workers Count */}
+              {/* Card 1: Total Workers */}
               <div className="rounded-lg border border-neutral-200 bg-white p-2.5 dark:border-neutral-800 dark:bg-[#1A1A1C]">
                 <span className="text-neutral-450 block text-[11px] font-black uppercase dark:text-neutral-500">
                   Total Workers
                 </span>
-                <span className="dark:text-neutral-550 mt-1 block font-mono text-xs text-neutral-400 italic">
-                  N/A
+                <span className="mt-1 block font-mono text-sm font-black text-neutral-800 dark:text-neutral-200">
+                  {deptStats?.total_workers !== undefined ? deptStats.total_workers : 'N/A'}
                 </span>
               </div>
 
@@ -259,8 +346,8 @@ export function DepartmentDetailsDrawer({
                 <span className="text-neutral-450 block text-[11px] font-black uppercase dark:text-neutral-500">
                   Active Workers
                 </span>
-                <span className="dark:text-neutral-555 mt-1 block font-mono text-xs text-neutral-400 italic">
-                  N/A
+                <span className="mt-1 block font-mono text-sm font-black text-emerald-600 dark:text-emerald-400">
+                  {deptStats?.active_workers !== undefined ? deptStats.active_workers : 'N/A'}
                 </span>
               </div>
 
@@ -269,8 +356,8 @@ export function DepartmentDetailsDrawer({
                 <span className="text-neutral-450 block text-[11px] font-black uppercase dark:text-neutral-500">
                   Inactive Workers
                 </span>
-                <span className="dark:text-neutral-555 mt-1 block font-mono text-xs text-neutral-400 italic">
-                  N/A
+                <span className="mt-1 block font-mono text-sm font-black text-rose-600 dark:text-rose-400">
+                  {deptStats?.inactive_workers !== undefined ? deptStats.inactive_workers : 'N/A'}
                 </span>
               </div>
 
@@ -279,8 +366,10 @@ export function DepartmentDetailsDrawer({
                 <span className="text-neutral-450 block text-[11px] font-black uppercase dark:text-neutral-500">
                   Avg Resolution Time
                 </span>
-                <span className="dark:text-neutral-555 mt-1 block font-mono text-xs text-neutral-400 italic">
-                  N/A
+                <span className="mt-1 block font-mono text-sm font-black text-blue-600 dark:text-blue-400">
+                  {deptStats?.average_resolution_time_hours !== undefined
+                    ? `${deptStats.average_resolution_time_hours} hrs`
+                    : 'N/A'}
                 </span>
               </div>
 
@@ -289,8 +378,8 @@ export function DepartmentDetailsDrawer({
                 <span className="text-neutral-450 block text-[11px] font-black uppercase dark:text-neutral-500">
                   Pending Reports
                 </span>
-                <span className="dark:text-neutral-555 mt-1 block font-mono text-xs text-neutral-400 italic">
-                  N/A
+                <span className="mt-1 block font-mono text-sm font-black text-amber-600 dark:text-amber-400">
+                  {isLoadingStats ? '...' : (reportStats?.pending ?? 0)}
                 </span>
               </div>
 
@@ -299,8 +388,8 @@ export function DepartmentDetailsDrawer({
                 <span className="text-neutral-450 block text-[11px] font-black uppercase dark:text-neutral-500">
                   Assigned Reports
                 </span>
-                <span className="dark:text-neutral-555 mt-1 block font-mono text-xs text-neutral-400 italic">
-                  N/A
+                <span className="mt-1 block font-mono text-sm font-black text-blue-600 dark:text-blue-400">
+                  {isLoadingStats ? '...' : (reportStats?.assigned ?? 0)}
                 </span>
               </div>
 
@@ -309,8 +398,8 @@ export function DepartmentDetailsDrawer({
                 <span className="text-neutral-450 block text-[11px] font-black uppercase dark:text-neutral-500">
                   In Progress
                 </span>
-                <span className="dark:text-neutral-555 mt-1 block font-mono text-xs text-neutral-400 italic">
-                  N/A
+                <span className="mt-1 block font-mono text-sm font-black text-indigo-600 dark:text-indigo-400">
+                  {isLoadingStats ? '...' : (reportStats?.inProgress ?? 0)}
                 </span>
               </div>
 
@@ -319,18 +408,17 @@ export function DepartmentDetailsDrawer({
                 <span className="text-neutral-450 block text-[11px] font-black uppercase dark:text-neutral-500">
                   Resolved Reports
                 </span>
-                <span className="dark:text-neutral-555 mt-1 block font-mono text-xs text-neutral-400 italic">
-                  N/A
+                <span className="mt-1 block font-mono text-sm font-black text-emerald-600 dark:text-emerald-400">
+                  {isLoadingStats ? '...' : (reportStats?.resolved ?? 0)}
                 </span>
               </div>
             </div>
 
             <div className="dark:bg-neutral-850 mt-2 flex items-start gap-2.5 rounded-lg border border-neutral-200/40 bg-neutral-100 p-3 select-none dark:border-neutral-800">
-              <AlertCircle className="mt-0.5 h-4.5 w-4.5 shrink-0 text-[#0A3C7D] dark:text-blue-400" />
+              <ShieldCheck className="mt-0.5 h-4.5 w-4.5 shrink-0 text-[#0A3C7D] dark:text-blue-400" />
               <p className="text-[13px] leading-relaxed font-semibold text-neutral-500 dark:text-neutral-400">
-                Operational metrics are restricted under current administrative APIs. When backend
-                update hooks are released, these widgets will populate without requiring UI layout
-                refactoring.
+                Operational telemetry and report metrics are synchronized live from city
+                administration analytics.
               </p>
             </div>
           </div>

@@ -67,7 +67,8 @@ export function ForwardRequestsDetailsDrawer({
   const getImageUrl = (path: string | null | undefined) => {
     if (!path) return undefined
     if (path.startsWith('http://') || path.startsWith('https://')) return path
-    const cleanPath = path.startsWith('/') ? path : `/${path}`
+    const normalizedPath = path.replace(/\\/g, '/')
+    const cleanPath = normalizedPath.startsWith('/') ? normalizedPath : `/${normalizedPath}`
     return `${APP_CONFIG.apiBaseUrl}${cleanPath}`
   }
 
@@ -170,21 +171,50 @@ export function ForwardRequestsDetailsDrawer({
                 </div>
               </div>
 
-              {/* original image */}
+              {/* Report Images Section: Original Uploaded Image & AI Annotated Image */}
               {(detail.images.original_image || detail.images.annotated_image) && (
                 <div className="space-y-3">
                   <h4 className="text-neutral-450 flex items-center gap-1.5 text-xs font-black tracking-wider uppercase dark:text-neutral-500">
                     <FileImage className="h-4 w-4 text-blue-500" />
-                    Uploaded Report Image
+                    Report Visual Evidence
                   </h4>
-                  <div className="relative max-w-sm overflow-hidden rounded-xl border border-neutral-200 bg-neutral-50 p-1 dark:border-neutral-800 dark:bg-neutral-900">
-                    <img
-                      src={getImageUrl(
-                        detail.images.annotated_image || detail.images.original_image
-                      )}
-                      alt="Civic report"
-                      className="h-44 w-full rounded-lg object-cover"
-                    />
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    {detail.images.original_image && (
+                      <div className="space-y-1.5">
+                        <span className="text-[10px] font-black tracking-wider text-neutral-500 uppercase dark:text-neutral-400">
+                          Uploaded Report Image
+                        </span>
+                        <div className="relative overflow-hidden rounded-xl border border-neutral-200 bg-neutral-50 p-1 dark:border-neutral-800 dark:bg-neutral-900">
+                          <img
+                            src={getImageUrl(detail.images.original_image)}
+                            alt="Uploaded Civic report"
+                            className="h-44 w-full cursor-pointer rounded-lg object-cover transition-opacity hover:opacity-95"
+                            onClick={() => {
+                              const url = getImageUrl(detail.images.original_image)
+                              if (url) window.open(url, '_blank')
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                    {detail.images.annotated_image && (
+                      <div className="space-y-1.5">
+                        <span className="text-[10px] font-black tracking-wider text-blue-600 uppercase dark:text-blue-400">
+                          AI Annotated Image
+                        </span>
+                        <div className="relative overflow-hidden rounded-xl border border-blue-100 bg-neutral-50 p-1 dark:border-blue-900/40 dark:bg-neutral-900">
+                          <img
+                            src={getImageUrl(detail.images.annotated_image)}
+                            alt="AI Annotated report"
+                            className="h-44 w-full cursor-pointer rounded-lg object-cover transition-opacity hover:opacity-95"
+                            onClick={() => {
+                              const url = getImageUrl(detail.images.annotated_image)
+                              if (url) window.open(url, '_blank')
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -199,15 +229,21 @@ export function ForwardRequestsDetailsDrawer({
                   <div className="space-y-1.5 text-xs font-semibold text-neutral-700 dark:text-neutral-300">
                     <p className="flex justify-between">
                       <span className="text-neutral-400">Name:</span>
-                      <span>{detail.worker.name}</span>
+                      <span className="font-bold text-neutral-800 dark:text-neutral-100">
+                        {detail.worker.name}
+                      </span>
                     </p>
-                    <p className="flex justify-between">
+                    <p className="flex justify-between gap-2">
                       <span className="text-neutral-400">Email:</span>
-                      <span className="select-all">{detail.worker.email || 'N/A'}</span>
+                      <span className="truncate text-right font-medium text-neutral-700 select-all dark:text-neutral-300">
+                        {detail.worker.email || 'N/A'}
+                      </span>
                     </p>
                     <p className="flex justify-between">
                       <span className="text-neutral-400">Phone:</span>
-                      <span>{detail.worker.phone || 'N/A'}</span>
+                      <span className="font-medium text-neutral-700 select-all dark:text-neutral-300">
+                        {detail.worker.phone || 'N/A'}
+                      </span>
                     </p>
                   </div>
                 </div>
@@ -415,7 +451,9 @@ export function ForwardRequestsDetailsDrawer({
                   </Button>
                 </div>
               </form>
-            ) : isIncoming && detail.status === 'Approved By Source' ? (
+            ) : isIncoming &&
+              (detail.status === 'Approved By Source' ||
+                detail.status === 'Waiting Destination') ? (
               /* Incoming decision options: Accept, or Decline */
               <div className="flex items-center justify-end gap-2.5">
                 <Button

@@ -28,3 +28,12 @@ export function useSubmitFeedbackMutation() {
       feedbackService.submitFeedback(payload),
   })
 }
+
+/**
+ * Mutation hook to export feedback as Blob.
+ */
+export function useExportFeedbackMutation() {
+  return useMutation({
+    mutationFn: (format: 'xlsx' | 'csv') => feedbackService.exportFeedback(format),
+  })
+}

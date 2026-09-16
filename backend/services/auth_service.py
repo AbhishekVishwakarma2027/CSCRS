@@ -1,3 +1,5 @@
+import math
+from configs.config import MAX_LOGIN_ATTEMPTS, ACCOUNT_LOCK_MINUTES
 from authentication.security import (
     create_refresh_token,
     create_access_token_with_metadata,
@@ -162,27 +164,25 @@ class AuthService:
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid email or password.",
             )
-        if (
-            user.account_locked_until
-            and user.account_locked_until > datetime.now(timezone.utc)
-        ):
+        if user.account_locked_until:
+            if user.account_locked_until > datetime.now(timezone.utc):
+                remaining_seconds = (
+                    user.account_locked_until - datetime.now(timezone.utc)
+                ).total_seconds()
+                remaining_minutes = max(1, math.ceil(remaining_seconds / 60))
 
-            remaining_minutes = (
-                int(
-                    (
-                        user.account_locked_until
-                        - datetime.now(timezone.utc)
-                    ).total_seconds() / 60
-                ) + 1
-            )
+                raise HTTPException(
+                    status_code=status.HTTP_423_LOCKED,
+                    detail=(
+                        f"Your account has been temporarily locked. "
+                        f"Please try again after {remaining_minutes} minute(s)."
+                    ),
+                )
+            else:
+                user.account_locked_until = None
+                user.failed_login_attempts = 0
+                self.db.commit()
 
-            raise HTTPException(
-                status_code=status.HTTP_423_LOCKED,
-                detail=(
-                    f"Account is temporarily locked. "
-                    f"Try again in {remaining_minutes} minute(s)."
-                ),
-            )
         if not verify_password(
             password,
             user.password_hash,
@@ -202,16 +202,14 @@ class AuthService:
 
             user.failed_login_attempts += 1
 
-            if user.failed_login_attempts >= 5:
+            if user.failed_login_attempts >= MAX_LOGIN_ATTEMPTS:
 
                 user.account_locked_until = (
                     datetime.now(timezone.utc)
                     + timedelta(
-                        minutes=30,
+                        minutes=ACCOUNT_LOCK_MINUTES,
                     )
                 )
-
-            
 
             LoginAuditCRUD.create(
                 db=self.db,
@@ -234,9 +232,21 @@ class AuthService:
             )
 
             self.db.commit()
+
+            if user.failed_login_attempts >= MAX_LOGIN_ATTEMPTS:
+                raise HTTPException(
+                    status_code=status.HTTP_423_LOCKED,
+                    detail=(
+                        f"Your account has been temporarily locked. "
+                        f"Please try again after {ACCOUNT_LOCK_MINUTES} minute(s)."
+                    ),
+                )
+
+            remaining_attempts = MAX_LOGIN_ATTEMPTS - user.failed_login_attempts
+            attempts_suffix = "attempt" if remaining_attempts == 1 else "attempts"
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid email or password.",
+                detail=f"Invalid credentials. {remaining_attempts} login {attempts_suffix} remaining.",
             )
 
         if not user.is_email_verified:

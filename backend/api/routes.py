@@ -16,6 +16,7 @@ from api import profile
 from api.feedback import router as feedback_router
 from api.system_issue import router as system_issue
 from api.ai_dataset import router as ai_dataset_router
+from api.super_admin import router as super_admin_router
 from datetime import datetime, timezone
 from fastapi import HTTPException
 from sqlalchemy import text
@@ -85,3 +86,4 @@ router.include_router(profile.router,prefix="/api/v1",)
 router.include_router(feedback_router,prefix="/api/v1",)
 router.include_router(system_issue,prefix="/api/v1",)
 router.include_router(ai_dataset_router,prefix="/api/v1",)
+router.include_router(super_admin_router,prefix="/api/v1",)

@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 
+from database.enums import UserRole
 from database.models.user import User
 
 
@@ -50,3 +51,17 @@ class CityAdminCRUD:
             .filter(User.id == user_id)
             .first()
         )
+
+    @staticmethod
+    def get_all_city_admins(
+        db: Session,
+    ) -> list[User]:
+
+        return (
+            db.query(User)
+            .filter(
+                User.role == UserRole.CITY_ADMIN,
+            )
+            .order_by(User.id.asc())
+            .all()
+        )

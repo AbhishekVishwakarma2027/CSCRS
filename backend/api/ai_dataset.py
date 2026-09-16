@@ -21,7 +21,7 @@ from services.ai_dataset_service import AIDatasetService
 
 router = APIRouter(
     prefix="/ai-dataset",
-    tags=["AI Dataset"],
+    tags=["Super Admin"],
 )
 
 

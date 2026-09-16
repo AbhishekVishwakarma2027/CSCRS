@@ -10,6 +10,13 @@ import { loginSchema, type LoginFormValues } from '@/schemas/auth.schemas'
 import { authService } from '@/features/auth/services/auth.service'
 import { apiClient, tokenStore } from '@/services/api'
 import { PATHS } from '@/routes/paths'
+import { UserRole } from '@/types/auth.types'
+
+const ADMIN_ROLES: UserRole[] = [
+  UserRole.SUPER_ADMIN,
+  UserRole.CITY_ADMIN,
+  UserRole.DEPARTMENT_ADMIN,
+]
 
 // Layout/branding components
 import { AccessibilityBar, GovernmentHeader, Footer } from '@/components/landing'
@@ -52,7 +59,16 @@ export default function LoginPage() {
         // 3. Fetch authenticated user profile details
         const { data: profileData } = await apiClient.get('/api/v1/auth/me')
 
-        // 4. Update the global react auth context
+        // 4. Verify user has an authorized administrative role
+        if (!ADMIN_ROLES.includes(profileData.role)) {
+          tokenStore.clearTokens()
+          toast.error(
+            'Access Denied: The administrative portal is restricted to Super Admin, City Admin, and Department Admin accounts.'
+          )
+          return
+        }
+
+        // 5. Update the global react auth context
         setAuth(tokenData.access_token, tokenData.refresh_token, profileData)
 
         toast.success(`Welcome back, ${profileData.name || 'User'}`)
@@ -63,10 +79,14 @@ export default function LoginPage() {
         throw profileError
       }
     } catch (error) {
-      const err = error as { response?: { data?: { detail?: string } } }
-      // Handle backend specific error responses
-      const errorMessage =
-        err.response?.data?.detail || 'Authentication failed. Please check your credentials.'
+      const err = error as { response?: { data?: { detail?: string | Array<{ msg?: string }> } } }
+      const rawDetail = err.response?.data?.detail
+      let errorMessage = 'Authentication failed. Please check your credentials.'
+      if (typeof rawDetail === 'string') {
+        errorMessage = rawDetail
+      } else if (Array.isArray(rawDetail) && rawDetail.length > 0 && rawDetail[0]?.msg) {
+        errorMessage = rawDetail[0].msg
+      }
       toast.error(errorMessage)
     } finally {
       setIsSubmitting(false)

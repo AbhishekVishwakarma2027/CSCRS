@@ -19,6 +19,10 @@ class InAppNotificationService:
         title: str,
         message: str,
         notification_type: str,
+        starts_at=None,
+        ends_at=None,
+        announcement_type=None,
+        broadcast_id=None,
     ):
 
         return notification_crud.create_notification(
@@ -28,6 +32,10 @@ class InAppNotificationService:
             title=title,
             message=message,
             notification_type=notification_type,
+            starts_at=starts_at,
+            ends_at=ends_at,
+            announcement_type=announcement_type,
+            broadcast_id=broadcast_id,
         )
 
 

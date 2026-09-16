@@ -36,28 +36,6 @@ router = APIRouter(
 )
 
 
-@router.post(
-    "/{report_id}",
-    response_model=ForwardRequestResponse,
-)
-def create_forward_request(
-    report_id: int,
-    request: ForwardRequestCreate,
-    current_user: User = Depends(
-        require_worker(),
-    ),
-    db: Session = Depends(
-        get_db,
-    ),
-):
-
-    return ForwardRequestService(
-        db,
-    ).create_request(
-        report_id,
-        current_user,
-        request,
-    )
 @router.get(
     "/pending",
     response_model=list[ForwardRequestResponse],
@@ -215,3 +193,26 @@ def reject_forward_request(
             request.reason,
         )
     )
+
+@router.post(
+    "/{report_id}",
+    response_model=ForwardRequestResponse,
+)
+def create_forward_request(
+    report_id: int,
+    request: ForwardRequestCreate,
+    current_user: User = Depends(
+        require_worker(),
+    ),
+    db: Session = Depends(
+        get_db,
+    ),
+):
+
+    return ForwardRequestService(
+        db,
+    ).create_request(
+        report_id,
+        current_user,
+        request,
+    )

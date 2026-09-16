@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
-from authentication.dependencies import require_admin
+from authentication.dependencies import require_department_admin
 from database.dependencies import get_db
 from database.models.user import User
 
@@ -32,7 +32,7 @@ def assign_report(
 
     db: Session = Depends(get_db),
 
-    current_user: User = Depends(require_admin()),
+    current_user: User = Depends(require_department_admin()),
 
 ):
 

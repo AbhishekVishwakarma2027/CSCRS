@@ -107,7 +107,7 @@ def get_issues(
     if current_user.role not in allowed_roles:
         raise HTTPException(
             status_code=403,
-            detail="You are not authorized to export feedback.",
+            detail="You are not authorized to view system issues.",
         )
     service = SystemIssueService(db)
 

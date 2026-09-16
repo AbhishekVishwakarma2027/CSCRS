@@ -142,6 +142,13 @@ class CityAdminService:
             "message": "City Admin account activated successfully."
         }
     
+    def get_city_admins(
+        self,
+    ):
+        return CityAdminCRUD.get_all_city_admins(
+            self.db,
+        )
+
     def get_citizens(
         self,
     ):

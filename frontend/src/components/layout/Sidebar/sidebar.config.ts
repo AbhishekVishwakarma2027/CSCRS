@@ -1,4 +1,5 @@
 import { UserRole } from '@/types/auth.types'
+import { PATHS } from '@/routes/paths'
 
 export interface SidebarConfigItem {
   id: string
@@ -66,6 +67,13 @@ export const SIDEBAR_MENU_GROUPS: SidebarGroup[] = [
         icon: 'ArrowLeftRight',
         roles: [UserRole.DEPARTMENT_ADMIN],
       },
+      {
+        id: 'notifications',
+        title: 'Notifications',
+        path: PATHS.NOTIFICATIONS,
+        icon: 'Bell',
+        roles: [UserRole.SUPER_ADMIN, UserRole.CITY_ADMIN, UserRole.DEPARTMENT_ADMIN],
+      },
     ],
   },
   {
@@ -99,6 +107,13 @@ export const SIDEBAR_MENU_GROUPS: SidebarGroup[] = [
     id: 'system',
     title: 'Platform Maintenance',
     items: [
+      {
+        id: 'super-admin-governance',
+        title: 'Platform Governance',
+        path: PATHS.SUPER_ADMIN_GOVERNANCE,
+        icon: 'ShieldCheck',
+        roles: [UserRole.SUPER_ADMIN],
+      },
       {
         id: 'system-issues',
         title: 'System Health & Bugs',
