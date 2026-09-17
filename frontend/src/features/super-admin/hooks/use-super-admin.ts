@@ -20,7 +20,8 @@ export const SUPER_ADMIN_QUERY_KEYS = {
     [...SUPER_ADMIN_QUERY_KEYS.all, 'login-audits', filters] as const,
   health: () => [...SUPER_ADMIN_QUERY_KEYS.all, 'health'] as const,
   aiTelemetry: () => [...SUPER_ADMIN_QUERY_KEYS.all, 'ai-telemetry'] as const,
-  announcements: () => [...SUPER_ADMIN_QUERY_KEYS.all, 'announcements'] as const,
+  announcements: (lifecycleState: string = 'ALL', announcementType: string = 'ALL') =>
+    [...SUPER_ADMIN_QUERY_KEYS.all, 'announcements', lifecycleState, announcementType] as const,
 }
 
 /**
@@ -75,7 +76,8 @@ export function useBroadcastAnnouncementMutation() {
   return useMutation<AnnouncementResponse, Error, AnnouncementRequest>({
     mutationFn: (payload) => superAdminService.broadcastAnnouncement(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: SUPER_ADMIN_QUERY_KEYS.announcements() })
+      queryClient.invalidateQueries({ queryKey: SUPER_ADMIN_QUERY_KEYS.all })
+      queryClient.invalidateQueries({ queryKey: ['notifications'] })
     },
   })
 }
@@ -83,10 +85,14 @@ export function useBroadcastAnnouncementMutation() {
 /**
  * Hook to fetch system announcements lifecycle summary.
  */
-export function useAnnouncementsQuery() {
+export function useAnnouncementsQuery(
+  lifecycleState: string = 'ALL',
+  announcementType: string = 'ALL'
+) {
   return useQuery<AnnouncementItemResponse[], Error>({
-    queryKey: SUPER_ADMIN_QUERY_KEYS.announcements(),
-    queryFn: ({ signal }) => superAdminService.getAnnouncements(signal),
+    queryKey: SUPER_ADMIN_QUERY_KEYS.announcements(lifecycleState, announcementType),
+    queryFn: ({ signal }) =>
+      superAdminService.getAnnouncements(lifecycleState, announcementType, signal),
     staleTime: 15 * 1000,
   })
 }
@@ -99,7 +105,21 @@ export function useEndAnnouncementMutation() {
   return useMutation<{ success: boolean; message: string }, Error, string>({
     mutationFn: (broadcastId) => superAdminService.endAnnouncement(broadcastId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: SUPER_ADMIN_QUERY_KEYS.announcements() })
+      queryClient.invalidateQueries({ queryKey: SUPER_ADMIN_QUERY_KEYS.all })
+      queryClient.invalidateQueries({ queryKey: ['notifications'] })
+    },
+  })
+}
+
+/**
+ * Hook to delete a scheduled announcement.
+ */
+export function useDeleteAnnouncementMutation() {
+  const queryClient = useQueryClient()
+  return useMutation<{ success: boolean; message: string }, Error, string>({
+    mutationFn: (broadcastId) => superAdminService.deleteAnnouncement(broadcastId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: SUPER_ADMIN_QUERY_KEYS.all })
       queryClient.invalidateQueries({ queryKey: ['notifications'] })
     },
   })

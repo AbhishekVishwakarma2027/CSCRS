@@ -9,9 +9,6 @@ from schemas.super_admin import (
     PaginatedLoginAuditResponse,
     SystemHealthResponse,
     AITelemetryResponse,
-    AnnouncementRequest,
-    AnnouncementResponse,
-    AnnouncementItemResponse,
 )
 from services.super_admin_service import SuperAdminService
 
@@ -103,57 +100,3 @@ def get_ai_telemetry(
     service = SuperAdminService(db)
     return service.get_ai_telemetry()
 
-
-@router.post(
-    "/announcements",
-    response_model=AnnouncementResponse,
-    status_code=status.HTTP_201_CREATED,
-    summary="Broadcast System Announcement",
-)
-def broadcast_announcement(
-    request: AnnouncementRequest,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(require_super_admin()),
-):
-    service = SuperAdminService(db)
-    try:
-        return service.broadcast_announcement(
-            title=request.title,
-            message=request.message,
-            target_role=request.target_role,
-            announcement_type=request.announcement_type,
-            starts_at=request.starts_at,
-            ends_at=request.ends_at,
-            created_by=current_user.id,
-        )
-    except ValueError as err:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(err))
-
-
-@router.get(
-    "/announcements",
-    response_model=list[AnnouncementItemResponse],
-    summary="Get System Announcements Lifecycle Summary",
-)
-def get_announcements(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(require_super_admin()),
-):
-    service = SuperAdminService(db)
-    return service.get_announcements()
-
-
-@router.patch(
-    "/announcements/{broadcast_id}/end",
-    summary="End Active System Announcement",
-)
-def end_announcement(
-    broadcast_id: str,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(require_super_admin()),
-):
-    service = SuperAdminService(db)
-    try:
-        return service.end_announcement(broadcast_id)
-    except ValueError as err:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(err))

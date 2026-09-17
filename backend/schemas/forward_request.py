@@ -22,15 +22,27 @@ class ForwardRequestResponse(BaseModel):
 
     current_department_id: int
 
+    destination_department_id: Optional[int] = None
+
+    source_department_name: Optional[str] = None
+
+    destination_department_name: Optional[str] = None
+
+    worker_name: Optional[str] = None
+
+    reviewer_name: Optional[str] = None
+
     reason: str
 
     status: ForwardRequestStatus
 
-    decision_reason: Optional[str]
+    decision_reason: Optional[str] = None
 
-    reviewed_at: datetime | None
+    reviewed_at: Optional[datetime] = None
 
-    reviewed_by: Optional[int]
+    reviewed_by: Optional[int] = None
+
+    created_at: Optional[datetime] = None
 
 
     class Config:
@@ -43,17 +55,31 @@ class IncomingForwardRequestResponse(BaseModel):
 
     report_id: int
 
+    worker_id: Optional[int] = None
+
     current_department_id: int
+
+    destination_department_id: Optional[int] = None
+
+    source_department_name: Optional[str] = None
+
+    destination_department_name: Optional[str] = None
+
+    worker_name: Optional[str] = None
+
+    reviewer_name: Optional[str] = None
 
     reason: str
 
     status: ForwardRequestStatus
 
-    decision_reason: Optional[str]
+    decision_reason: Optional[str] = None
 
-    reviewed_at: datetime | None
+    reviewed_at: Optional[datetime] = None
 
-    reviewed_by: Optional[int]
+    reviewed_by: Optional[int] = None
+
+    created_at: Optional[datetime] = None
 
     class Config:
 
@@ -136,6 +162,14 @@ class ForwardRequestDetailResponse(BaseModel):
     status: ForwardRequestStatus
 
     reason: str
+
+    decision_reason: Optional[str] = None
+
+    reviewed_at: Optional[datetime] = None
+
+    reviewed_by: Optional[int] = None
+
+    reviewer_name: Optional[str] = None
 
     created_at: datetime
 

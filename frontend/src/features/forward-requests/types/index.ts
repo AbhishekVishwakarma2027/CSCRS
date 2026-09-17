@@ -18,23 +18,36 @@ export interface ForwardRequestResponse {
   id: number
   report_id: number
   worker_id: number
+  worker_name?: string | null
   current_department_id: number
+  destination_department_id?: number | null
+  source_department_name?: string | null
+  destination_department_name?: string | null
   reason: string
   status: ForwardRequestStatus
   decision_reason: string | null
   reviewed_at: string | null
   reviewed_by: number | null
+  reviewer_name?: string | null
+  created_at?: string | null
 }
 
 export interface IncomingForwardRequestResponse {
   id: number
   report_id: number
+  worker_id?: number | null
+  worker_name?: string | null
   current_department_id: number
+  destination_department_id?: number | null
+  source_department_name?: string | null
+  destination_department_name?: string | null
   reason: string
   status: ForwardRequestStatus
   decision_reason: string | null
   reviewed_at: string | null
   reviewed_by: number | null
+  reviewer_name?: string | null
+  created_at?: string | null
 }
 
 export interface ForwardRequestWorkerInfo {
@@ -86,6 +99,10 @@ export interface ForwardRequestDetailResponse {
   request_id: number
   status: ForwardRequestStatus
   reason: string
+  decision_reason?: string | null
+  reviewed_at?: string | null
+  reviewed_by?: number | null
+  reviewer_name?: string | null
   created_at: string
   worker: ForwardRequestWorkerInfo
   report: ForwardRequestReportInfo

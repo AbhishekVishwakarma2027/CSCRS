@@ -115,15 +115,15 @@ export default function ExportsPage() {
             </p>
           </div>
 
-          <div className="mt-6 flex items-center justify-between border-t border-neutral-100 pt-4 dark:border-neutral-800/60">
-            <span className="text-neutral-450 dark:text-neutral-555 text-[11px] font-black tracking-widest uppercase">
+          <div className="mt-6 flex items-center justify-between gap-2 border-t border-neutral-100 pt-4 dark:border-neutral-800/60">
+            <span className="text-neutral-450 shrink-0 text-[11px] font-black tracking-widest uppercase dark:text-neutral-400">
               Format: PDF
             </span>
             <Button
               type="button"
               disabled={isPerformanceLoading}
               onClick={handleExportPerformance}
-              className="flex h-9 min-w-[100px] cursor-pointer items-center justify-center gap-1.5 bg-[#0A3C7D] px-4 text-xs font-black tracking-wider text-white uppercase hover:bg-[#0A3C7D]/95 dark:bg-blue-600 dark:hover:bg-blue-500"
+              className="flex h-9 shrink-0 cursor-pointer items-center justify-center gap-1.5 bg-[#0A3C7D] px-4 text-xs font-black tracking-wider text-white uppercase hover:bg-[#0A3C7D]/95 dark:bg-blue-600 dark:hover:bg-blue-500"
             >
               {isPerformanceLoading ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -158,15 +158,15 @@ export default function ExportsPage() {
             </p>
           </div>
 
-          <div className="mt-6 flex flex-col items-stretch justify-between gap-4 border-t border-neutral-100 pt-4 sm:flex-row sm:items-center dark:border-neutral-800/60">
-            <div className="flex items-center gap-2">
-              <label className="text-neutral-450 dark:text-neutral-555 text-[11px] font-black tracking-wider uppercase">
+          <div className="mt-6 flex items-center justify-between gap-2 border-t border-neutral-100 pt-4 dark:border-neutral-800/60">
+            <div className="flex min-w-0 items-center gap-1.5">
+              <label className="text-neutral-450 shrink-0 text-[11px] font-black tracking-wider uppercase dark:text-neutral-400">
                 Format:
               </label>
               <select
                 value={feedbackFormat}
                 onChange={(e) => setFeedbackFormat(e.target.value as 'xlsx' | 'csv')}
-                className="h-8 rounded-lg border border-neutral-200 bg-white px-2 py-0.5 text-xs font-bold outline-none dark:border-neutral-800 dark:bg-[#1C1C1E] dark:text-neutral-200"
+                className="h-8 cursor-pointer rounded-lg border border-neutral-200 bg-white px-2 py-0.5 text-xs font-bold outline-none dark:border-neutral-800 dark:bg-[#1C1C1E] dark:text-neutral-200"
               >
                 <option value="xlsx">Excel (.xlsx)</option>
                 <option value="csv">CSV (.csv)</option>
@@ -177,7 +177,7 @@ export default function ExportsPage() {
               type="button"
               disabled={isFeedbackLoading}
               onClick={handleExportFeedback}
-              className="flex h-9 min-w-[100px] cursor-pointer items-center justify-center gap-1.5 bg-[#0A3C7D] px-4 text-xs font-black tracking-wider text-white uppercase hover:bg-[#0A3C7D]/95 dark:bg-blue-600 dark:hover:bg-blue-500"
+              className="flex h-9 shrink-0 cursor-pointer items-center justify-center gap-1.5 bg-[#0A3C7D] px-4 text-xs font-black tracking-wider text-white uppercase hover:bg-[#0A3C7D]/95 dark:bg-blue-600 dark:hover:bg-blue-500"
             >
               {isFeedbackLoading ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />

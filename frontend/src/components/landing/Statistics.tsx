@@ -1,11 +1,44 @@
+import { useEffect, useState } from 'react'
 import { CheckCircle2, Building2, Users2, ShieldAlert } from 'lucide-react'
 import { useCountUp } from '@/hooks/use-count-up'
+import {
+  publicService,
+  type PublicOverviewResponse,
+} from '@/features/public/services/public.service'
 
 export function Statistics() {
-  const issuesCount = useCountUp(124500, 2000)
-  const deptsCount = useCountUp(18, 1500)
-  const workersCount = useCountUp(3200, 1800)
-  const citiesCount = useCountUp(5, 1000)
+  const [data, setData] = useState<PublicOverviewResponse | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    let isMounted = true
+    const controller = new AbortController()
+
+    publicService
+      .getOverview(controller.signal)
+      .then((res) => {
+        if (isMounted) {
+          setData(res)
+          setIsLoading(false)
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          // In case of network failure, stop loading state without displaying fake metrics
+          setIsLoading(false)
+        }
+      })
+
+    return () => {
+      isMounted = false
+      controller.abort()
+    }
+  }, [])
+
+  const issuesCount = useCountUp(data?.reports_resolved ?? 0, 1500)
+  const deptsCount = useCountUp(data?.departments ?? 0, 1200)
+  const workersCount = useCountUp(data?.active_workers ?? 0, 1500)
+  const citiesCount = useCountUp(data?.covered_cities ?? 0, 800)
 
   return (
     <section
@@ -27,9 +60,13 @@ export function Statistics() {
               <CheckCircle2 className="h-6 w-6" />
             </div>
             <div>
-              <p className="text-neutral-850 text-2xl font-black">
-                {issuesCount.toLocaleString()}+
-              </p>
+              {isLoading ? (
+                <div className="h-8 w-20 animate-pulse rounded bg-neutral-200" />
+              ) : (
+                <p className="text-neutral-850 text-2xl font-black">
+                  {issuesCount.toLocaleString()}
+                </p>
+              )}
               <p className="text-neutral-450 text-[10px] font-bold tracking-wider uppercase">
                 Reports Resolved
               </p>
@@ -42,7 +79,11 @@ export function Statistics() {
               <Building2 className="h-6 w-6" />
             </div>
             <div>
-              <p className="text-neutral-855 text-2xl font-black">{deptsCount}</p>
+              {isLoading ? (
+                <div className="h-8 w-16 animate-pulse rounded bg-neutral-200" />
+              ) : (
+                <p className="text-neutral-855 text-2xl font-black">{deptsCount}</p>
+              )}
               <p className="text-neutral-450 text-[10px] font-bold tracking-wider uppercase">
                 Departments
               </p>
@@ -55,9 +96,13 @@ export function Statistics() {
               <Users2 className="h-6 w-6" />
             </div>
             <div>
-              <p className="text-neutral-850 text-2xl font-black">
-                {workersCount.toLocaleString()}+
-              </p>
+              {isLoading ? (
+                <div className="h-8 w-16 animate-pulse rounded bg-neutral-200" />
+              ) : (
+                <p className="text-neutral-850 text-2xl font-black">
+                  {workersCount.toLocaleString()}
+                </p>
+              )}
               <p className="text-neutral-450 text-[10px] font-bold tracking-wider uppercase">
                 Active Workers
               </p>
@@ -70,7 +115,11 @@ export function Statistics() {
               <ShieldAlert className="h-6 w-6" />
             </div>
             <div>
-              <p className="text-neutral-850 text-2xl font-black">{citiesCount}</p>
+              {isLoading ? (
+                <div className="h-8 w-12 animate-pulse rounded bg-neutral-200" />
+              ) : (
+                <p className="text-neutral-850 text-2xl font-black">{citiesCount}</p>
+              )}
               <p className="text-neutral-450 text-[10px] font-bold tracking-wider uppercase">
                 Covered Cities
               </p>

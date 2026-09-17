@@ -5,6 +5,7 @@ export interface WorkerCreatePayload {
   name: string
   email: string
   phone?: string
+  department_id?: number
   employee_code: string
   designation: string
 }

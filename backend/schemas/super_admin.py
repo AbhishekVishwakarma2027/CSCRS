@@ -24,10 +24,27 @@ class LoginAuditItem(BaseModel):
     id: int
     user_id: int | None = None
     email: str | None = None
+    role: str | None = None
     login_success: bool
+    failure_reason: str | None = None
     ip_address: str | None = None
     user_agent: str | None = None
+    browser: str | None = None
+    browser_version: str | None = None
+    operating_system: str | None = None
+    os_version: str | None = None
+    device_type: str | None = None
+    platform: str | None = None
+    city: str | None = None
+    state: str | None = None
+    country: str | None = None
+    request_path: str | None = None
+    http_method: str | None = None
+    login_source: str | None = None
     login_at: datetime | None = None
+    logout_at: datetime | None = None
+    session_id: str | None = None
+    jwt_id: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
 

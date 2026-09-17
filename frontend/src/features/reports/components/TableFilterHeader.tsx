@@ -161,7 +161,7 @@ export function TableFilterHeader({
       </div>
 
       {/* Right side: Density, Visibility Menu, Refresh Button */}
-      <div className="dark:border-neutral-850 flex shrink-0 items-center justify-end gap-2 border-t border-neutral-100 pt-3 md:border-t-0 md:pt-0">
+      <div className="dark:border-neutral-850 flex shrink-0 flex-wrap items-center justify-start gap-2 border-t border-neutral-100 pt-3 sm:justify-end md:border-t-0 md:pt-0">
         {/* Density Toggle Group */}
         <div className="flex items-center rounded-lg border border-neutral-200 bg-neutral-50/50 p-0.5 dark:border-neutral-800 dark:bg-[#1C1C1E]">
           <Button

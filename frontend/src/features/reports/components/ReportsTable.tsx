@@ -274,9 +274,7 @@ export function ReportsTable({
                       <button
                         type="button"
                         onClick={() => {
-                          toast.info(
-                            'Manual worker assignment is currently unavailable. The current system does not provide a worker-selection API for this action.'
-                          )
+                          onAssign(report.id)
                           setActiveActionRow(null)
                         }}
                         className="dark:hover:bg-neutral-850 flex w-full cursor-pointer items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs font-bold text-neutral-700 hover:bg-neutral-50 dark:text-neutral-300"
@@ -599,9 +597,7 @@ export function ReportsTable({
                             <button
                               type="button"
                               onClick={() => {
-                                toast.info(
-                                  'Manual worker assignment is currently unavailable. The current system does not provide a worker-selection API for this action.'
-                                )
+                                onAssign(report.id)
                                 setActiveActionRow(null)
                               }}
                               className="dark:hover:bg-neutral-850 flex w-full cursor-pointer items-center gap-2 rounded-lg px-2 py-1 text-left text-xs font-bold text-neutral-700 hover:bg-neutral-50 dark:text-neutral-300"

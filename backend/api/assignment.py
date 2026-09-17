@@ -40,6 +40,7 @@ def assign_report(
 
     return service.assign_worker(
         report_id=request.report_id,
+        worker_id=request.worker_id,
         assigned_by=current_user.id,
         remarks=request.remarks,
     )

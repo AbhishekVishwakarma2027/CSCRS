@@ -32,15 +32,17 @@ class WorkerService:
         name: str,
         email: str,
         phone: str | None,
-        department_id: int,
+        department_id: int | None = None,
         employee_code: str,
         designation: str,
-        phone_extension: str | None,
+        phone_extension: str | None = None,
     ) -> WorkerProfile:
         
         if current_user.role == UserRole.DEPARTMENT_ADMIN:
-
             department_id = current_user.department_id
+
+        if not department_id:
+            raise ValueError("Department ID is required to create a worker.")
 
         department = WorkerCRUD.get_department_by_id(
             self.db,

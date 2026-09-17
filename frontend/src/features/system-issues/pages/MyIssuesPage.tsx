@@ -93,15 +93,13 @@ export default function MyIssuesPage() {
       {/* Header Banner & Navigation Tabs */}
       <div className="flex flex-col gap-4 border-b border-neutral-200/80 pb-4 sm:flex-row sm:items-center sm:justify-between dark:border-neutral-800">
         <div>
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0A3C7D]/10 text-[#0A3C7D] dark:bg-blue-900/30 dark:text-blue-400">
-              <ListCheck className="h-5 w-5" />
-            </div>
-            <h1 className="text-2xl font-black tracking-widest text-[#0A3C7D] uppercase dark:text-blue-400">
+          <div className="flex items-center gap-2">
+            <h1 className="flex items-center gap-2 text-2xl font-black tracking-tight text-neutral-800 dark:text-white">
+              <ListCheck className="h-6 w-6 text-[#0A3C7D] dark:text-blue-400" />
               My System Issues
             </h1>
           </div>
-          <p className="mt-1 text-[13px] font-semibold text-neutral-500 dark:text-neutral-400">
+          <p className="mt-1 text-[13px] leading-relaxed font-semibold text-neutral-500 dark:text-neutral-400">
             Track status, admin feedback, and resolution updates for issues reported by you.
           </p>
         </div>

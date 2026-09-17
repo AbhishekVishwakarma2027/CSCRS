@@ -16,6 +16,13 @@ export function useIncomingRequestsQuery() {
   })
 }
 
+export function useRejectedRequestsQuery() {
+  return useQuery({
+    queryKey: ['rejected-forwards'],
+    queryFn: ({ signal }) => forwardRequestsService.getRejectedRequests(signal),
+  })
+}
+
 export function useForwardDetailsQuery(requestId: number | null) {
   return useQuery({
     queryKey: ['forward-details', requestId],
@@ -37,6 +44,7 @@ export function useApproveForwardMutation() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pending-forwards'] })
       queryClient.invalidateQueries({ queryKey: ['incoming-forwards'] })
+      queryClient.invalidateQueries({ queryKey: ['rejected-forwards'] })
     },
   })
 }
@@ -49,6 +57,7 @@ export function useRejectForwardMutation() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pending-forwards'] })
       queryClient.invalidateQueries({ queryKey: ['incoming-forwards'] })
+      queryClient.invalidateQueries({ queryKey: ['rejected-forwards'] })
     },
   })
 }
@@ -60,6 +69,7 @@ export function useAcceptForwardMutation() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pending-forwards'] })
       queryClient.invalidateQueries({ queryKey: ['incoming-forwards'] })
+      queryClient.invalidateQueries({ queryKey: ['rejected-forwards'] })
     },
   })
 }
@@ -72,6 +82,7 @@ export function useDeclineForwardMutation() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pending-forwards'] })
       queryClient.invalidateQueries({ queryKey: ['incoming-forwards'] })
+      queryClient.invalidateQueries({ queryKey: ['rejected-forwards'] })
     },
   })
 }

@@ -27,6 +27,16 @@ export const forwardRequestsService = {
     return data
   },
 
+  async getRejectedRequests(signal?: AbortSignal): Promise<ForwardRequestResponse[]> {
+    const { data } = await apiClient.get<ForwardRequestResponse[]>(
+      '/api/v1/forward-requests/rejected',
+      {
+        signal,
+      }
+    )
+    return data
+  },
+
   async getRequestDetails(
     requestId: number,
     signal?: AbortSignal

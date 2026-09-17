@@ -84,19 +84,19 @@ export default function FeedbackPage() {
       {isDeptAdmin ? (
         <div className="mx-auto max-w-2xl space-y-6">
           {/* Header Banner */}
-          <div className="dark:border-neutral-850 flex shrink-0 flex-col gap-1.5 border-b border-neutral-100 pb-4">
-            <h1 className="dark:text-blue-455 flex items-center gap-1.5 text-2xl font-black tracking-widest text-[#0A3C7D] uppercase">
-              <MessageSquare className="h-5.5 w-5.5" />
+          <div className="flex flex-col gap-1.5 border-b border-neutral-100 pb-4 dark:border-neutral-800">
+            <h1 className="flex items-center gap-2 text-2xl font-black tracking-tight text-neutral-800 dark:text-white">
+              <MessageSquare className="h-6 w-6 text-[#0A3C7D] dark:text-blue-400" />
               Give Platform Feedback
             </h1>
-            <p className="text-neutral-455 dark:text-neutral-550 mt-1 text-[13px] font-semibold">
+            <p className="mt-1 text-[13px] leading-relaxed font-semibold text-neutral-500 dark:text-neutral-400">
               Provide ratings and suggestions to help improve our crowdsourced civic issue
               resolution platform.
             </p>
           </div>
 
           {/* Submit Form Card */}
-          <div className="dark:border-neutral-850 rounded-xl border border-neutral-200/60 bg-neutral-50/50 p-6 dark:bg-[#1E1E20]">
+          <Card className="border border-neutral-200 bg-white p-6 shadow-xs dark:border-neutral-800 dark:bg-[#1C1C1E]">
             <form onSubmit={handleFeedbackSubmit} className="space-y-5">
               {/* Rating Selector */}
               <div>
@@ -176,7 +176,7 @@ export default function FeedbackPage() {
                 </Button>
               </div>
             </form>
-          </div>
+          </Card>
         </div>
       ) : (
         <>

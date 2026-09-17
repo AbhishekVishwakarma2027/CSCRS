@@ -13,6 +13,7 @@ export const PATHS = {
   ACTIVATE_ADMIN: '/admins/activate',
   ACTIVATE_CITY_ADMIN: '/city-admins/activate',
   ACTIVATE_WORKER: '/workers/activate',
+  PUBLIC_UPDATE_DETAIL: '/updates/:slug',
 
   // Authenticated — foundation
   DASHBOARD: '/dashboard',

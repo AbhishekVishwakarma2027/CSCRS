@@ -80,7 +80,16 @@ def test_users(db_session):
         is_active=True,
         is_blocked=False,
     )
-    db_session.add_all([super_admin, city_admin, dept_admin, citizen])
+    worker = User(
+        name="Worker",
+        email="worker@cscrs.gov.in",
+        password_hash="hashed_pw",
+        role=UserRole.WORKER,
+        department_id=dept.id,
+        is_active=True,
+        is_blocked=False,
+    )
+    db_session.add_all([super_admin, city_admin, dept_admin, citizen, worker])
     db_session.commit()
 
     return {
@@ -88,6 +97,7 @@ def test_users(db_session):
         "city_admin": city_admin,
         "dept_admin": dept_admin,
         "citizen": citizen,
+        "worker": worker,
         "department": dept,
     }
 
@@ -243,9 +253,9 @@ def test_broadcast_decoupled_lifecycle(client, db_session, test_users):
     b_id = data_create["broadcast_id"]
 
     # 2. Creation creates ZERO InAppNotification rows
-    # 3. recipient_count is correct (4 users in test_users fixture)
+    # 3. recipient_count is correct (5 users in test_users fixture)
     # 4. created_by equals authenticated Super Admin ID
-    assert data_create["recipient_count"] == 4
+    assert data_create["recipient_count"] == 5
     b_row = db_session.query(Broadcast).filter(Broadcast.broadcast_id == b_id).first()
     assert b_row is not None
     assert b_row.title == "Platform Maintenance"
@@ -322,7 +332,39 @@ def test_broadcast_decoupled_lifecycle(client, db_session, test_users):
     active_ids_after_end = [item["broadcast_id"] for item in res_active_after_end.json()]
     assert id_a not in active_ids_after_end
 
-    # 16. Existing personal notification creation and listing still works
+    # 15. Lifecycle state query parameter filtering (ALL, ACTIVE, SCHEDULED, EXPIRED)
+    app.dependency_overrides[get_current_user] = lambda: test_users["super_admin"]
+
+    res_filter_all = client.get("/api/v1/super-admin/announcements?lifecycle_state=ALL")
+    assert res_filter_all.status_code == 200
+    assert len(res_filter_all.json()) >= 4
+
+    res_filter_active = client.get("/api/v1/super-admin/announcements?lifecycle_state=ACTIVE")
+    assert res_filter_active.status_code == 200
+    active_states = [item["lifecycle_state"] for item in res_filter_active.json()]
+    assert all(st == "ACTIVE" for st in active_states)
+
+    res_filter_sched = client.get("/api/v1/super-admin/announcements?lifecycle_state=SCHEDULED")
+    assert res_filter_sched.status_code == 200
+    sched_ids = [item["broadcast_id"] for item in res_filter_sched.json()]
+    assert id_d in sched_ids
+
+    res_filter_exp = client.get("/api/v1/super-admin/announcements?lifecycle_state=EXPIRED")
+    assert res_filter_exp.status_code == 200
+    exp_ids = [item["broadcast_id"] for item in res_filter_exp.json()]
+    assert id_a in exp_ids
+
+    # 16. Announcement type and combined query parameter filtering
+    res_type_maint = client.get("/api/v1/super-admin/announcements?announcement_type=MAINTENANCE")
+    assert res_type_maint.status_code == 200
+    assert len(res_type_maint.json()) >= 1
+    assert all(item["announcement_type"] == "MAINTENANCE" for item in res_type_maint.json())
+
+    res_combined = client.get("/api/v1/super-admin/announcements?lifecycle_state=ACTIVE&announcement_type=MAINTENANCE")
+    assert res_combined.status_code == 200
+    assert all(item["lifecycle_state"] == "ACTIVE" and item["announcement_type"] == "MAINTENANCE" for item in res_combined.json())
+
+    # 17. Existing personal notification creation and listing still works
     notif_svc = InAppNotificationService(db_session)
     p_notif = notif_svc.create_notification(
         user_id=test_users["citizen"].id,
@@ -333,5 +375,107 @@ def test_broadcast_decoupled_lifecycle(client, db_session, test_users):
     )
     assert p_notif.id is not None
     assert db_session.query(InAppNotification).count() == notif_count_before_end + 1
+
+
+def test_broadcast_delete_endpoint(client, db_session, test_users):
+    """Verify DELETE /api/v1/super-admin/announcements/{broadcast_id} authorization, lifecycle safety, and data safety."""
+    from datetime import datetime, timezone, timedelta
+    from database.models.broadcast import Broadcast
+    from database.models.in_app_notification import InAppNotification
+
+    now = datetime.now(timezone.utc)
+    future_start = (now + timedelta(hours=5)).isoformat()
+    future_end = (now + timedelta(hours=10)).isoformat()
+    past_start = (now - timedelta(hours=5)).isoformat()
+    past_end = (now - timedelta(hours=1)).isoformat()
+
+    # Create 3 broadcasts in different states
+    # 1. SCHEDULED
+    app.dependency_overrides[get_current_user] = lambda: test_users["super_admin"]
+    res_sched = client.post("/api/v1/super-admin/announcements", json={
+        "title": "Scheduled Announcement",
+        "message": "Future event",
+        "starts_at": future_start,
+        "ends_at": future_end,
+    })
+    assert res_sched.status_code == 201
+    sched_id = res_sched.json()["broadcast_id"]
+
+    # 2. ACTIVE
+    res_act = client.post("/api/v1/super-admin/announcements", json={
+        "title": "Active Announcement",
+        "message": "Current event",
+        "starts_at": past_start,
+        "ends_at": future_end,
+    })
+    assert res_act.status_code == 201
+    act_id = res_act.json()["broadcast_id"]
+
+    # 3. EXPIRED (created directly via CRUD to set past timestamps)
+    import database.crud.broadcast as broadcast_crud
+    exp_b = broadcast_crud.create_broadcast(
+        db_session,
+        title="Expired Announcement",
+        message="Past event",
+        target_role="ALL",
+        announcement_type="INFORMATIONAL",
+        starts_at=now - timedelta(hours=5),
+        ends_at=now - timedelta(hours=1),
+        recipient_count=5,
+        created_by=test_users["super_admin"].id,
+    )
+    exp_id = exp_b.broadcast_id
+
+    # Create a dummy personal notification to verify it's untouched
+    personal_notif = InAppNotification(
+        user_id=test_users["citizen"].id,
+        title="Personal Notice",
+        message="Your report was updated",
+        type="REPORT_RESOLVED"
+    )
+    db_session.add(personal_notif)
+    db_session.commit()
+    initial_notif_count = db_session.query(InAppNotification).count()
+
+    # Verify RBAC: Non-SuperAdmin roles get 403 Forbidden
+    for role_name in ["city_admin", "dept_admin", "worker", "citizen"]:
+        app.dependency_overrides[get_current_user] = lambda r=role_name: test_users[r]
+        res_403 = client.delete(f"/api/v1/super-admin/announcements/{sched_id}")
+        assert res_403.status_code == 403, f"Expected 403 for role {role_name}"
+
+    # Verify Nonexistent broadcast returns 404
+    app.dependency_overrides[get_current_user] = lambda: test_users["super_admin"]
+    res_404 = client.delete("/api/v1/super-admin/announcements/non_existent_broadcast_id")
+    assert res_404.status_code == 404
+
+    # Verify ACTIVE broadcast delete attempt returns 409 Conflict
+    res_active_del = client.delete(f"/api/v1/super-admin/announcements/{act_id}")
+    assert res_active_del.status_code == 409
+    assert "ACTIVE" in res_active_del.json()["detail"]
+
+    # Verify EXPIRED broadcast delete attempt returns 409 Conflict
+    res_exp_del = client.delete(f"/api/v1/super-admin/announcements/{exp_id}")
+    assert res_exp_del.status_code == 409
+    assert "EXPIRED" in res_exp_del.json()["detail"]
+
+    # Verify SUPER_ADMIN CAN delete SCHEDULED broadcast
+    initial_broadcast_count = db_session.query(Broadcast).count()
+    res_del_sched = client.delete(f"/api/v1/super-admin/announcements/{sched_id}")
+    assert res_del_sched.status_code == 200
+    assert res_del_sched.json()["success"] is True
+
+    # Verify exactly one Broadcast row was deleted
+    assert db_session.query(Broadcast).count() == initial_broadcast_count - 1
+    assert db_session.query(Broadcast).filter(Broadcast.broadcast_id == sched_id).first() is None
+
+    # Verify personal InAppNotification rows are completely unchanged
+    assert db_session.query(InAppNotification).count() == initial_notif_count
+
+    # Verify ACTIVE broadcast can still be ended using existing End Announcement action
+    res_end = client.patch(f"/api/v1/super-admin/announcements/{act_id}/end")
+    assert res_end.status_code == 200
+    act_row = db_session.query(Broadcast).filter(Broadcast.broadcast_id == act_id).first()
+    assert act_row.ends_at is not None
+
 
 

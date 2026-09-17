@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { AlertCircle, FilePlus, Loader2, ListCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 import { systemIssuesService } from '../services/system-issues.service'
 import { SystemIssueCategory } from '../types'
 import { toast } from 'sonner'
@@ -148,13 +149,13 @@ export default function SubmitIssuePage() {
   return (
     <div className="mx-auto max-w-2xl space-y-6 pb-10 text-left select-none">
       {/* Header Banner */}
-      <div className="dark:border-neutral-850 flex shrink-0 flex-col gap-3 border-b border-neutral-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 border-b border-neutral-100 pb-4 sm:flex-row sm:items-center sm:justify-between dark:border-neutral-800">
         <div>
-          <h1 className="dark:text-blue-455 flex items-center gap-1.5 text-2xl font-black tracking-widest text-[#0A3C7D] uppercase">
-            <AlertCircle className="h-5.5 w-5.5" />
+          <h1 className="flex items-center gap-2 text-2xl font-black tracking-tight text-neutral-800 dark:text-white">
+            <AlertCircle className="h-6 w-6 text-[#0A3C7D] dark:text-blue-400" />
             Submit System Issue
           </h1>
-          <p className="text-neutral-450 mt-1 text-[13px] font-semibold dark:text-neutral-500">
+          <p className="mt-1 text-[13px] leading-relaxed font-semibold text-neutral-500 dark:text-neutral-400">
             Report application bugs, operational latency, configuration failures, or interface
             issues.
           </p>
@@ -164,7 +165,7 @@ export default function SubmitIssuePage() {
           <Button
             variant="outline"
             size="sm"
-            className="dark:hover:bg-neutral-850 h-9 shrink-0 border-neutral-200 text-xs font-bold text-[#0A3C7D] hover:bg-neutral-100 dark:border-neutral-800 dark:text-blue-400"
+            className="h-9 shrink-0 border-neutral-200 text-xs font-bold text-[#0A3C7D] hover:bg-neutral-100 dark:border-neutral-800 dark:text-blue-400"
           >
             <ListCheck className="mr-1.5 h-4 w-4" />
             My System Issues
@@ -173,7 +174,7 @@ export default function SubmitIssuePage() {
       </div>
 
       {/* Submit Form Card */}
-      <div className="dark:border-neutral-850 rounded-xl border border-neutral-200/60 bg-neutral-50/50 p-6 dark:bg-[#1E1E20]">
+      <Card className="border border-neutral-200 bg-white p-6 shadow-xs dark:border-neutral-800 dark:bg-[#1C1C1E]">
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Category */}
           <div>
@@ -326,7 +327,7 @@ export default function SubmitIssuePage() {
             </Button>
           </div>
         </form>
-      </div>
+      </Card>
     </div>
   )
 }

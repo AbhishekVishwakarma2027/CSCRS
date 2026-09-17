@@ -89,24 +89,18 @@ class DepartmentForwardRequestCRUD:
     def get_department_pending_requests(
         db: Session,
         department_id: int,
+        include_history: bool = False,
     ):
-
-        return (
-            db.query(
-                DepartmentForwardRequest,
-            )
-            .filter(
-                DepartmentForwardRequest.current_department_id
-                == department_id,
-                DepartmentForwardRequest.status
-                == ForwardRequestStatus.PENDING,
-            )
-            .order_by(
-                DepartmentForwardRequest.created_at.desc(),
-            )
-            .all()
+        query = db.query(DepartmentForwardRequest).filter(
+            DepartmentForwardRequest.current_department_id == department_id
         )
-
+        if not include_history:
+            query = query.filter(
+                DepartmentForwardRequest.status == ForwardRequestStatus.PENDING
+            )
+        return query.order_by(
+            DepartmentForwardRequest.created_at.desc()
+        ).all()
 
     @staticmethod
     def save(
@@ -117,6 +111,7 @@ class DepartmentForwardRequestCRUD:
         db.add(request)
 
         return request
+
     @staticmethod
     def update_status(
         db: Session,
@@ -128,28 +123,7 @@ class DepartmentForwardRequestCRUD:
         )
 
         return request
-    
-    @staticmethod
-    def get_department_pending_requests(
-        db: Session,
-        department_id: int,
-    ):
 
-        return (
-            db.query(
-                DepartmentForwardRequest,
-            )
-            .filter(
-                DepartmentForwardRequest.current_department_id
-                == department_id,
-                DepartmentForwardRequest.status
-                == ForwardRequestStatus.PENDING,
-            )
-            .order_by(
-                DepartmentForwardRequest.created_at.desc(),
-            )
-            .all()
-        )
     @staticmethod
     def get_request_details(
         db: Session,
@@ -157,6 +131,7 @@ class DepartmentForwardRequestCRUD:
     ):
         SourceDepartment = aliased(Department)
         DestinationDepartment = aliased(Department)
+        ReviewerUser = aliased(User)
         return (
             db.query(
                 DepartmentForwardRequest,
@@ -164,6 +139,7 @@ class DepartmentForwardRequestCRUD:
                 User,
                 SourceDepartment,
                 DestinationDepartment,
+                ReviewerUser,
             )
             .join(
                 Report,
@@ -191,24 +167,48 @@ class DepartmentForwardRequestCRUD:
                 DestinationDepartment.id
                 == DepartmentForwardRequest.destination_department_id,
             )
+            .outerjoin(
+                ReviewerUser,
+                ReviewerUser.id
+                == DepartmentForwardRequest.reviewed_by,
+            )
             .first()
         )
+
     @staticmethod
     def get_destination_pending_requests(
         db: Session,
         department_id: int,
+        include_history: bool = False,
     ):
-        return (
-            db.query(
-                DepartmentForwardRequest,
+        query = db.query(DepartmentForwardRequest).filter(
+            DepartmentForwardRequest.destination_department_id == department_id
+        )
+        if not include_history:
+            query = query.filter(
+                DepartmentForwardRequest.status == ForwardRequestStatus.WAITING_DESTINATION
             )
+        return query.order_by(
+            DepartmentForwardRequest.created_at.desc()
+        ).all()
+
+    @staticmethod
+    def get_department_rejected_requests(
+        db: Session,
+        department_id: int,
+    ):
+        from sqlalchemy import or_
+        return (
+            db.query(DepartmentForwardRequest)
             .filter(
-                DepartmentForwardRequest.destination_department_id
-                == department_id,
-                DepartmentForwardRequest.status
-                == ForwardRequestStatus.WAITING_DESTINATION,
+                or_(
+                    DepartmentForwardRequest.current_department_id == department_id,
+                    DepartmentForwardRequest.destination_department_id == department_id,
+                ),
+                DepartmentForwardRequest.status == ForwardRequestStatus.REJECTED,
             )
             .order_by(
+                DepartmentForwardRequest.reviewed_at.desc(),
                 DepartmentForwardRequest.created_at.desc(),
             )
             .all()

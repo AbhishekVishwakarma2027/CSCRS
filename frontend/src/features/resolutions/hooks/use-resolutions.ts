@@ -1,10 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { resolutionsService } from '../services/resolutions.service'
 
-export function usePendingReviewsQuery() {
+export function usePendingReviewsQuery(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ['pending-reviews'],
     queryFn: ({ signal }) => resolutionsService.getPendingReviews(signal),
+    enabled: options?.enabled ?? true,
   })
 }
 

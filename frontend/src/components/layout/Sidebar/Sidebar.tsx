@@ -5,6 +5,7 @@ import { ChevronRight, PanelLeftClose, PanelLeft } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { UserRole } from '@/types/auth.types'
 import { SIDEBAR_MENU_GROUPS, type SidebarConfigItem } from './sidebar.config'
+import { usePendingReviewsQuery } from '@/features/resolutions/hooks/use-resolutions'
 
 // Helper component to render icons dynamically
 function SidebarIcon({ name, className = 'w-4 h-4' }: { name: string; className?: string }) {
@@ -31,6 +32,11 @@ export function Sidebar({
   const { user } = useAuth()
   const location = useLocation()
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({})
+
+  // Dynamic live count for Department Admin manual verification
+  const isDeptAdmin = user?.role === UserRole.DEPARTMENT_ADMIN
+  const { data: pendingReviews } = usePendingReviewsQuery({ enabled: isDeptAdmin })
+  const pendingCount = isDeptAdmin && pendingReviews ? pendingReviews.length : 0
 
   // Filter groups and items by user role
   const visibleGroups = useMemo(() => {
@@ -146,8 +152,22 @@ export function Sidebar({
         ? 'Give Feedback'
         : item.title
 
+    const itemBadge =
+      item.id === 'resolutions' && isDeptAdmin
+        ? pendingCount > 0
+          ? pendingCount
+          : undefined
+        : item.badge
+
     return (
-      <Link key={item.id} to={item.path} className={baseItemClasses}>
+      <Link
+        key={item.id}
+        to={item.path}
+        onClick={() => {
+          if (isMobileOpen) onMobileClose()
+        }}
+        className={baseItemClasses}
+      >
         <div className="flex min-w-0 items-center space-x-2.5">
           <SidebarIcon name={item.icon} className="h-4 w-4 shrink-0" />
           {(!isCollapsed || isMobileOpen) && (
@@ -155,9 +175,9 @@ export function Sidebar({
           )}
         </div>
 
-        {item.badge && (!isCollapsed || isMobileOpen) && (
+        {itemBadge !== undefined && (!isCollapsed || isMobileOpen) && (
           <span className="shrink-0 rounded border border-[#0D9488]/15 bg-[#0D9488]/10 px-1.5 py-0.5 text-[10px] font-black text-[#0D9488] transition-all">
-            {item.badge}
+            {itemBadge}
           </span>
         )}
       </Link>
@@ -169,7 +189,13 @@ export function Sidebar({
     <div className="flex h-full flex-col border-r border-neutral-200 bg-white dark:border-neutral-800 dark:bg-[#1C1C1E]">
       {/* Brand logo header */}
       <div className="flex h-16 items-center border-b border-neutral-100 px-4 select-none dark:border-neutral-800">
-        <Link to="/dashboard" className="group flex cursor-pointer items-center space-x-3">
+        <Link
+          to="/dashboard"
+          onClick={() => {
+            if (isMobileOpen) onMobileClose()
+          }}
+          className="group flex cursor-pointer items-center space-x-3"
+        >
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#0A3C7D] text-base font-black text-white shadow-sm transition-colors duration-200 group-hover:bg-[#0D9488]">
             C
           </div>

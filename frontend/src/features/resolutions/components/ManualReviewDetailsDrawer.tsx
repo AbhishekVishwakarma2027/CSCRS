@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   X,
   FileImage,
@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { APP_CONFIG } from '@/config/app.config'
+import { reportsService } from '@/features/reports/services/reports.service'
 import type { ManualReviewDetail } from '../types'
 
 interface ManualReviewDetailsDrawerProps {
@@ -37,6 +38,56 @@ export function ManualReviewDetailsDrawer({
 }: ManualReviewDetailsDrawerProps) {
   const [rejectReason, setRejectReason] = useState('')
   const [showRejectForm, setShowRejectForm] = useState(false)
+  const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null)
+  const [resolutionImageUrl, setResolutionImageUrl] = useState<string | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (originalImageUrl) URL.revokeObjectURL(originalImageUrl)
+      if (resolutionImageUrl) URL.revokeObjectURL(resolutionImageUrl)
+    }
+  }, [originalImageUrl, resolutionImageUrl])
+
+  useEffect(() => {
+    if (!isOpen || !reportId || !detail) return
+
+    let isMounted = true
+
+    const loadImages = async () => {
+      try {
+        const origType = detail.annotated_image_path ? 'annotated' : 'original'
+        const origBlob = await reportsService.getAdminReportImage(reportId, origType)
+        if (isMounted) {
+          const origUrl = URL.createObjectURL(origBlob)
+          setOriginalImageUrl((prev) => {
+            if (prev) URL.revokeObjectURL(prev)
+            return origUrl
+          })
+        }
+      } catch {
+        if (isMounted) setOriginalImageUrl(null)
+      }
+
+      try {
+        const resBlob = await reportsService.getAdminReportImage(reportId, 'resolution')
+        if (isMounted) {
+          const resUrl = URL.createObjectURL(resBlob)
+          setResolutionImageUrl((prev) => {
+            if (prev) URL.revokeObjectURL(prev)
+            return resUrl
+          })
+        }
+      } catch {
+        if (isMounted) setResolutionImageUrl(null)
+      }
+    }
+
+    loadImages()
+
+    return () => {
+      isMounted = false
+    }
+  }, [isOpen, reportId, detail])
 
   if (!isOpen) return null
 
@@ -120,6 +171,7 @@ export function ManualReviewDetailsDrawer({
                     </span>
                     <img
                       src={
+                        originalImageUrl ||
                         getImageUrl(detail.annotated_image_path || detail.original_image_path) ||
                         '/placeholder-image.png'
                       }
@@ -134,7 +186,11 @@ export function ManualReviewDetailsDrawer({
                       Worker Resolution
                     </span>
                     <img
-                      src={getImageUrl(detail.resolution_image_path) || '/placeholder-image.png'}
+                      src={
+                        resolutionImageUrl ||
+                        getImageUrl(detail.resolution_image_path) ||
+                        '/placeholder-image.png'
+                      }
                       alt="Worker resolution"
                       className="h-44 w-full rounded-lg object-cover transition-transform duration-300 group-hover:scale-105"
                     />

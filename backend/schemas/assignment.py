@@ -62,6 +62,8 @@ class AssignmentCreate(BaseModel):
 
     report_id: int
 
+    worker_id: int | None = None
+
     remarks: str | None = None
 
 class WorkerAssignmentResponse(BaseModel):

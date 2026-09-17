@@ -79,17 +79,25 @@ export function useReportsListQuery(role: string, filters: ReportFilters) {
 }
 
 /**
- * Mutation to auto-assign a report to a worker.
+ * Mutation to assign a report to a worker (manually or auto).
  */
 export function useAssignReportMutation() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ reportId, remarks }: { reportId: number; remarks?: string }) =>
-      reportsService.assignReport(reportId, remarks),
+    mutationFn: ({
+      reportId,
+      workerId,
+      remarks,
+    }: {
+      reportId: number
+      workerId?: number
+      remarks?: string
+    }) => reportsService.assignReport(reportId, workerId, remarks),
     onSuccess: () => {
       // Invalidate queries to sync states citywide
       queryClient.invalidateQueries({ queryKey: REPORTS_QUERY_KEYS.all })
+      queryClient.invalidateQueries({ queryKey: ['workers'] })
       queryClient.invalidateQueries({ queryKey: ['dashboard'] })
       queryClient.invalidateQueries({ queryKey: ['notifications'] })
     },

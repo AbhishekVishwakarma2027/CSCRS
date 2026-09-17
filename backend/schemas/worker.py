@@ -8,7 +8,7 @@ class WorkerCreate(BaseModel):
 
     email: EmailStr
 
-    department_id: int
+    department_id: int | None = None
 
     employee_code: str = Field(
         min_length=2,

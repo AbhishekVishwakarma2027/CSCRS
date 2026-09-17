@@ -91,10 +91,18 @@ export const superAdminService = {
   /**
    * Fetch list of system announcements lifecycle summary.
    */
-  async getAnnouncements(signal?: AbortSignal): Promise<AnnouncementItemResponse[]> {
+  async getAnnouncements(
+    lifecycleState: string = 'ALL',
+    announcementType: string = 'ALL',
+    signal?: AbortSignal
+  ): Promise<AnnouncementItemResponse[]> {
     const { data } = await apiClient.get<AnnouncementItemResponse[]>(
       '/api/v1/super-admin/announcements',
       {
+        params: {
+          lifecycle_state: lifecycleState,
+          announcement_type: announcementType,
+        },
         signal,
       }
     )
@@ -106,6 +114,14 @@ export const superAdminService = {
    */
   async endAnnouncement(broadcastId: string): Promise<{ success: boolean; message: string }> {
     const { data } = await apiClient.patch(`/api/v1/super-admin/announcements/${broadcastId}/end`)
+    return data
+  },
+
+  /**
+   * Delete a scheduled announcement by broadcast ID.
+   */
+  async deleteAnnouncement(broadcastId: string): Promise<{ success: boolean; message: string }> {
+    const { data } = await apiClient.delete(`/api/v1/super-admin/announcements/${broadcastId}`)
     return data
   },
 

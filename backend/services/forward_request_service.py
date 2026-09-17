@@ -125,18 +125,72 @@ class ForwardRequestService:
 
         return forward_request
 
+    def _enrich_requests(self, requests):
+        if not requests:
+            return []
+
+        dept_ids = {r.current_department_id for r in requests if r.current_department_id}.union(
+            {r.destination_department_id for r in requests if r.destination_department_id}
+        )
+        user_ids = {r.worker_id for r in requests if r.worker_id}.union(
+            {r.reviewed_by for r in requests if r.reviewed_by}
+        )
+
+        from database.models.department import Department
+        from database.models.user import User
+
+        depts = {d.id: d.name for d in self.db.query(Department).filter(Department.id.in_(dept_ids)).all()} if dept_ids else {}
+        users = {u.id: u.name for u in self.db.query(User).filter(User.id.in_(user_ids)).all()} if user_ids else {}
+
+        results = []
+        for req in requests:
+            res = {
+                "id": req.id,
+                "report_id": req.report_id,
+                "worker_id": req.worker_id,
+                "worker_name": users.get(req.worker_id),
+                "current_department_id": req.current_department_id,
+                "destination_department_id": req.destination_department_id,
+                "source_department_name": depts.get(req.current_department_id),
+                "destination_department_name": depts.get(req.destination_department_id),
+                "reason": req.reason,
+                "status": req.status,
+                "decision_reason": req.decision_reason,
+                "reviewed_at": req.reviewed_at,
+                "reviewed_by": req.reviewed_by,
+                "reviewer_name": users.get(req.reviewed_by),
+                "created_at": req.created_at,
+            }
+            results.append(res)
+        return results
+
     def get_pending_requests(
         self,
         department_admin,
+        include_history: bool = True,
     ):
-
-        return (
+        requests = (
             DepartmentForwardRequestCRUD
             .get_department_pending_requests(
                 self.db,
                 department_admin.department_id,
+                include_history=include_history,
             )
         )
+        return self._enrich_requests(requests)
+
+    def get_rejected_requests(
+        self,
+        department_admin,
+    ):
+        requests = (
+            DepartmentForwardRequestCRUD
+            .get_department_rejected_requests(
+                self.db,
+                department_admin.department_id,
+            )
+        )
+        return self._enrich_requests(requests)
 
     def get_request_details(
         self,
@@ -159,7 +213,7 @@ class ForwardRequestService:
                 detail="Forward request not found.",
             )
 
-        forward_request, report, worker, source_department, destination_department = data
+        forward_request, report, worker, source_department, destination_department, reviewer_user = data
 
         if (
             forward_request.current_department_id
@@ -189,12 +243,6 @@ class ForwardRequestService:
             report.id,
         )
 
-        timeline = (
-            AuditLogService(
-                self.db,
-            )
-        )
-
         return {
 
             "request_id": forward_request.id,
@@ -202,6 +250,14 @@ class ForwardRequestService:
             "status": forward_request.status,
 
             "reason": forward_request.reason,
+
+            "decision_reason": forward_request.decision_reason,
+
+            "reviewed_at": forward_request.reviewed_at,
+
+            "reviewed_by": forward_request.reviewed_by,
+
+            "reviewer_name": reviewer_user.name if reviewer_user else None,
 
             "created_at": forward_request.created_at,
 
@@ -372,19 +428,20 @@ class ForwardRequestService:
             forward_request,
         )
 
-        return forward_request
     def get_destination_requests(
         self,
         department_admin,
+        include_history: bool = True,
     ):
-
-        return (
+        requests = (
             DepartmentForwardRequestCRUD
             .get_destination_pending_requests(
                 self.db,
                 department_admin.department_id,
+                include_history=include_history,
             )
         )
+        return self._enrich_requests(requests)
     def accept_request(
         self,
         request_id: int,

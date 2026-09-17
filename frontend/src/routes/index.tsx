@@ -38,6 +38,7 @@ const SuperAdminGovernancePage = lazy(
 const UnauthorizedPage = lazy(() => import('@/features/auth/pages/UnauthorizedPage'))
 const NotFoundPage = lazy(() => import('@/features/auth/pages/NotFoundPage'))
 const LandingPage = lazy(() => import('@/pages/LandingPage'))
+const PublicUpdateDetailPage = lazy(() => import('@/features/public/pages/PublicUpdateDetailPage'))
 
 export const router = createBrowserRouter([
   // Public landing page
@@ -46,6 +47,16 @@ export const router = createBrowserRouter([
     element: (
       <Suspense fallback={<PageLoader />}>
         <LandingPage />
+      </Suspense>
+    ),
+  },
+
+  // Public update detail page
+  {
+    path: PATHS.PUBLIC_UPDATE_DETAIL,
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <PublicUpdateDetailPage />
       </Suspense>
     ),
   },

@@ -136,8 +136,17 @@ export default function WorkersPage() {
       setDesignation('')
     } catch (err) {
       console.error(err)
-      const apiError = err as { response?: { data?: { detail?: string } } }
-      toast.error(apiError.response?.data?.detail || 'Failed to send worker invitation.')
+      const apiError = err as {
+        response?: { data?: { detail?: string | Array<{ msg?: string }> } }
+      }
+      const detail = apiError.response?.data?.detail
+      const message =
+        typeof detail === 'string'
+          ? detail
+          : Array.isArray(detail) && detail.length > 0 && typeof detail[0]?.msg === 'string'
+            ? detail[0].msg
+            : 'Failed to send worker invitation.'
+      toast.error(message)
     }
   }
 
@@ -181,12 +190,6 @@ export default function WorkersPage() {
     } finally {
       setActionWorkerId(null)
     }
-  }
-
-  const openBlockModal = (w: WorkerDirectoryItem) => {
-    setSelectedWorker(w)
-    setBlockReason('')
-    setIsBlockOpen(true)
   }
 
   const handleBlockSubmit = async (e: React.FormEvent) => {
@@ -234,7 +237,7 @@ export default function WorkersPage() {
         <Button
           type="button"
           onClick={() => setIsInviteOpen(true)}
-          className="flex h-9 cursor-pointer items-center justify-center gap-1.5 bg-[#0A3C7D] px-4 text-xs font-black tracking-wider text-white uppercase hover:bg-[#0A3C7D]/95 dark:bg-blue-600 dark:hover:bg-blue-500"
+          className="flex h-9 w-full cursor-pointer items-center justify-center gap-1.5 bg-[#0A3C7D] px-4 text-xs font-black tracking-wider text-white uppercase hover:bg-[#0A3C7D]/95 sm:w-auto dark:bg-blue-600 dark:hover:bg-blue-500"
         >
           <UserPlus className="h-4 w-4" />
           Invite Field Worker
@@ -343,7 +346,8 @@ export default function WorkersPage() {
         </div>
       ) : (
         <Card className="overflow-hidden border border-neutral-200 bg-white shadow-xs dark:border-neutral-800 dark:bg-[#1C1C1E]">
-          <div className="overflow-x-auto">
+          {/* Desktop Table View */}
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full text-left text-xs select-none">
               <thead className="border-b border-neutral-100 bg-neutral-50/50 text-[13px] font-black tracking-wider text-neutral-400 uppercase dark:border-neutral-800 dark:bg-neutral-900/40 dark:text-neutral-500">
                 <tr>
@@ -392,7 +396,7 @@ export default function WorkersPage() {
                             title="Click to copy email address"
                             className="group inline-flex cursor-pointer items-center gap-1 text-left font-semibold text-neutral-800 transition-colors select-text hover:text-[#0A3C7D] dark:text-neutral-200 dark:hover:text-blue-400"
                           >
-                            <span className="select-text">{w.email}</span>
+                            <span className="max-w-[200px] truncate select-text">{w.email}</span>
                             <Copy className="h-3 w-3 shrink-0 text-neutral-400 opacity-0 transition-opacity group-hover:opacity-100" />
                           </button>
                         </div>
@@ -511,8 +515,11 @@ export default function WorkersPage() {
                               variant="outline"
                               size="xs"
                               disabled={actionWorkerId === w.id}
-                              onClick={() => openBlockModal(w)}
-                              className="border-rose-250 h-7 text-[12px] font-black tracking-wider text-rose-600 uppercase hover:bg-rose-50 dark:border-rose-950/20 dark:hover:bg-rose-950/10"
+                              onClick={() => {
+                                setSelectedWorker(w)
+                                setIsBlockOpen(true)
+                              }}
+                              className="h-7 border-rose-200 text-[12px] font-black tracking-wider text-rose-600 uppercase hover:bg-rose-50 dark:border-rose-900 dark:text-rose-400 dark:hover:bg-rose-950/20"
                             >
                               Block
                             </Button>
@@ -524,6 +531,130 @@ export default function WorkersPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile Card View (< md) */}
+          <div className="divide-y divide-neutral-100 md:hidden dark:divide-neutral-800">
+            {filteredWorkers.map((w) => (
+              <div key={w.id} className="space-y-3 p-4">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <span className="block text-sm font-extrabold text-neutral-900 dark:text-white">
+                      {w.name}
+                    </span>
+                    <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs font-semibold text-neutral-500">
+                      <span className="rounded bg-neutral-100 px-1.5 py-0.5 font-mono dark:bg-neutral-800">
+                        {w.employee_code}
+                      </span>
+                      <span>•</span>
+                      <span>{w.designation}</span>
+                    </div>
+                  </div>
+
+                  {/* Workload badge */}
+                  {w.is_available ? (
+                    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-extrabold text-emerald-600 dark:bg-emerald-950/20 dark:text-emerald-400">
+                      <CheckCircle2 className="h-3 w-3" />
+                      Available
+                    </span>
+                  ) : (
+                    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-extrabold text-amber-600 dark:bg-amber-950/20 dark:text-amber-400">
+                      <XCircle className="h-3 w-3" />
+                      Busy
+                    </span>
+                  )}
+                </div>
+
+                <div className="space-y-1.5 text-xs text-neutral-600 dark:text-neutral-400">
+                  <div className="flex items-center gap-1.5 truncate">
+                    <Mail className="h-3.5 w-3.5 shrink-0 text-neutral-400" />
+                    <span className="truncate">{w.email}</span>
+                  </div>
+                  {w.phone && (
+                    <div className="flex items-center gap-1.5">
+                      <Phone className="h-3.5 w-3.5 shrink-0 text-neutral-400" />
+                      <span>{w.phone}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-1.5">
+                    <Clock className="h-3.5 w-3.5 shrink-0 text-neutral-400" />
+                    <span>Joined {formatDate(w.joined_at)}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-1">
+                  <div>
+                    {w.is_blocked ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2 py-0.5 text-[11px] font-extrabold text-rose-600 dark:bg-rose-950/20 dark:text-rose-400">
+                        <Ban className="h-3 w-3" /> Blocked
+                      </span>
+                    ) : w.is_active ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-extrabold text-blue-600 dark:bg-blue-950/20 dark:text-blue-400">
+                        <CheckCircle2 className="h-3 w-3" /> Active
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] font-extrabold text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400">
+                        <Clock className="h-3 w-3" /> Inactive
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    {w.is_blocked ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="xs"
+                        disabled={actionWorkerId === w.id}
+                        onClick={() => handleUnblockWorker(w)}
+                        className="h-7 text-[11px] font-bold"
+                      >
+                        {actionWorkerId === w.id ? 'Updating...' : 'Unblock'}
+                      </Button>
+                    ) : (
+                      <>
+                        {w.is_active ? (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="xs"
+                            disabled={actionWorkerId === w.id}
+                            onClick={() => handleDeactivateWorker(w)}
+                            className="h-7 text-[11px] font-bold"
+                          >
+                            {actionWorkerId === w.id ? 'Updating...' : 'Deactivate'}
+                          </Button>
+                        ) : (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="xs"
+                            disabled={actionWorkerId === w.id}
+                            onClick={() => handleActivateWorker(w)}
+                            className="h-7 text-[11px] font-bold"
+                          >
+                            {actionWorkerId === w.id ? 'Updating...' : 'Activate'}
+                          </Button>
+                        )}
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="xs"
+                          disabled={actionWorkerId === w.id}
+                          onClick={() => {
+                            setSelectedWorker(w)
+                            setIsBlockOpen(true)
+                          }}
+                          className="h-7 border-rose-200 text-[11px] font-bold text-rose-600 dark:border-rose-900 dark:text-rose-400"
+                        >
+                          Block
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </Card>
       )}

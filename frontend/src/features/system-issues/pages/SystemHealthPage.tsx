@@ -312,7 +312,7 @@ export default function SystemHealthPage() {
         </div>
 
         {/* Dense / Columns preferences */}
-        <div className="flex items-center justify-end gap-2.5">
+        <div className="flex flex-wrap items-center justify-end gap-2.5">
           {/* Density toggle */}
           <div className="dark:border-neutral-750 flex items-center rounded-lg border border-neutral-200/40 bg-neutral-100 p-0.5 dark:bg-neutral-800/80">
             <button

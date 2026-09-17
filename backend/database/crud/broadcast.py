@@ -39,12 +39,39 @@ def create_broadcast(
     return broadcast
 
 
-def get_all_broadcasts(db: Session) -> list[Broadcast]:
-    return (
-        db.query(Broadcast)
-        .order_by(Broadcast.created_at.desc())
-        .all()
-    )
+def get_all_broadcasts(
+    db: Session,
+    lifecycle_state: str = "ALL",
+    announcement_type: str = "ALL",
+) -> list[Broadcast]:
+    now = datetime.now(timezone.utc)
+    query = db.query(Broadcast)
+
+    state_upper = (lifecycle_state or "ALL").upper()
+    if state_upper == "SCHEDULED":
+        query = query.filter(
+            Broadcast.starts_at.isnot(None),
+            Broadcast.starts_at > now,
+        )
+    elif state_upper == "EXPIRED":
+        query = query.filter(
+            or_(Broadcast.starts_at.is_(None), Broadcast.starts_at <= now),
+            Broadcast.ends_at.isnot(None),
+            Broadcast.ends_at <= now,
+        )
+    elif state_upper == "ACTIVE":
+        query = query.filter(
+            or_(Broadcast.starts_at.is_(None), Broadcast.starts_at <= now),
+            or_(Broadcast.ends_at.is_(None), Broadcast.ends_at > now),
+        )
+
+    type_upper = (announcement_type or "ALL").upper()
+    if type_upper != "ALL":
+        query = query.filter(
+            func.upper(Broadcast.announcement_type) == type_upper
+        )
+
+    return query.order_by(Broadcast.created_at.desc()).all()
 
 
 def get_broadcast_by_broadcast_id(db: Session, broadcast_id: str) -> Broadcast | None:
@@ -64,6 +91,17 @@ def end_broadcast(db: Session, broadcast_id: str) -> Broadcast | None:
     broadcast.ends_at = now
     db.commit()
     db.refresh(broadcast)
+
+    return broadcast
+
+
+def delete_broadcast(db: Session, broadcast_id: str) -> Broadcast | None:
+    broadcast = get_broadcast_by_broadcast_id(db, broadcast_id)
+    if not broadcast:
+        return None
+
+    db.delete(broadcast)
+    db.commit()
 
     return broadcast
 

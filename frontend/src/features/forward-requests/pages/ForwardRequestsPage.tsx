@@ -1,10 +1,11 @@
 import React, { useState } from 'react'
-import { ArrowLeftRight, Search, ShieldAlert, RefreshCw, Inbox, Send } from 'lucide-react'
+import { ArrowLeftRight, Search, ShieldAlert, RefreshCw, Inbox, Send, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
   usePendingRequestsQuery,
   useIncomingRequestsQuery,
+  useRejectedRequestsQuery,
   useForwardDetailsQuery,
   useApproveForwardMutation,
   useRejectForwardMutation,
@@ -16,7 +17,7 @@ import { ConfirmationDialog } from '@/features/reports/components/ConfirmationDi
 import type { ForwardReasonType } from '../types'
 
 export default function ForwardRequestsPage() {
-  const [activeTab, setActiveTab] = useState<'outgoing' | 'incoming'>('outgoing')
+  const [activeTab, setActiveTab] = useState<'outgoing' | 'incoming' | 'rejected'>('outgoing')
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedRequestId, setSelectedRequestId] = useState<number | null>(null)
 
@@ -36,6 +37,14 @@ export default function ForwardRequestsPage() {
     refetch: refetchIncoming,
     isRefetching: isIncomingRefetching,
   } = useIncomingRequestsQuery()
+
+  const {
+    data: rejectedForwards = [],
+    isLoading: isRejectedLoading,
+    error: rejectedError,
+    refetch: refetchRejected,
+    isRefetching: isRejectedRefetching,
+  } = useRejectedRequestsQuery()
 
   const { data: detailData, isLoading: isDetailLoading } = useForwardDetailsQuery(selectedRequestId)
 
@@ -160,22 +169,53 @@ export default function ForwardRequestsPage() {
   const handleRefresh = () => {
     if (activeTab === 'outgoing') {
       refetchPending()
-    } else {
+    } else if (activeTab === 'incoming') {
       refetchIncoming()
+    } else {
+      refetchRejected()
     }
   }
 
-  const currentLoading = activeTab === 'outgoing' ? isPendingLoading : isIncomingLoading
-  const currentError = activeTab === 'outgoing' ? pendingError : incomingError
-  const currentRefetching = activeTab === 'outgoing' ? isPendingRefetching : isIncomingRefetching
+  const currentLoading =
+    activeTab === 'outgoing'
+      ? isPendingLoading
+      : activeTab === 'incoming'
+        ? isIncomingLoading
+        : isRejectedLoading
+  const currentError =
+    activeTab === 'outgoing'
+      ? pendingError
+      : activeTab === 'incoming'
+        ? incomingError
+        : rejectedError
+  const currentRefetching =
+    activeTab === 'outgoing'
+      ? isPendingRefetching
+      : activeTab === 'incoming'
+        ? isIncomingRefetching
+        : isRejectedRefetching
 
   // Client-side text search filtering
-  const currentList = activeTab === 'outgoing' ? pendingForwards : incomingForwards
+  const currentList =
+    activeTab === 'outgoing'
+      ? pendingForwards
+      : activeTab === 'incoming'
+        ? incomingForwards
+        : rejectedForwards
+
   const filteredList = currentList.filter(
     (item) =>
       item.report_id.toString().includes(searchTerm) ||
+      item.id.toString().includes(searchTerm) ||
       item.reason.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.status.toLowerCase().includes(searchTerm.toLowerCase())
+      item.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.decision_reason &&
+        item.decision_reason.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (item.source_department_name &&
+        item.source_department_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (item.destination_department_name &&
+        item.destination_department_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (item.worker_name && item.worker_name.toLowerCase().includes(searchTerm.toLowerCase()))
   )
 
   const getStatusBadgeClass = (status: string) => {
@@ -223,14 +263,14 @@ export default function ForwardRequestsPage() {
       </div>
 
       {/* Tabs Switcher */}
-      <div className="dark:border-neutral-850 flex border-b border-neutral-200">
+      <div className="dark:border-neutral-850 flex flex-wrap border-b border-neutral-200">
         <button
           type="button"
           onClick={() => {
             setActiveTab('outgoing')
             setSearchTerm('')
           }}
-          className={`flex items-center gap-2 border-b-2 px-6 py-2.5 text-xs font-black tracking-wider uppercase transition-colors duration-150 outline-none ${
+          className={`flex items-center gap-1.5 border-b-2 px-3 py-2.5 text-xs font-black tracking-wider uppercase transition-colors duration-150 outline-none sm:gap-2 sm:px-6 ${
             activeTab === 'outgoing'
               ? 'border-[#0A3C7D] text-[#0A3C7D] dark:border-blue-500 dark:text-blue-400'
               : 'hover:text-neutral-750 dark:text-neutral-450 border-transparent text-neutral-500 dark:hover:text-neutral-300'
@@ -238,11 +278,6 @@ export default function ForwardRequestsPage() {
         >
           <Send className="h-4 w-4" />
           Outgoing Forwards
-          {pendingForwards.length > 0 && (
-            <span className="ml-1 rounded-full bg-[#0A3C7D] px-2 py-0.5 text-[9px] font-black text-white dark:bg-blue-600">
-              {pendingForwards.length}
-            </span>
-          )}
         </button>
         <button
           type="button"
@@ -250,7 +285,7 @@ export default function ForwardRequestsPage() {
             setActiveTab('incoming')
             setSearchTerm('')
           }}
-          className={`flex items-center gap-2 border-b-2 px-6 py-2.5 text-xs font-black tracking-wider uppercase transition-colors duration-150 outline-none ${
+          className={`flex items-center gap-1.5 border-b-2 px-3 py-2.5 text-xs font-black tracking-wider uppercase transition-colors duration-150 outline-none sm:gap-2 sm:px-6 ${
             activeTab === 'incoming'
               ? 'border-[#0A3C7D] text-[#0A3C7D] dark:border-blue-500 dark:text-blue-400'
               : 'hover:text-neutral-750 dark:text-neutral-450 border-transparent text-neutral-500 dark:hover:text-neutral-300'
@@ -258,11 +293,21 @@ export default function ForwardRequestsPage() {
         >
           <Inbox className="h-4 w-4" />
           Incoming Transfers
-          {incomingForwards.length > 0 && (
-            <span className="ml-1 rounded-full bg-emerald-600 px-2 py-0.5 text-[9px] font-black text-white">
-              {incomingForwards.length}
-            </span>
-          )}
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setActiveTab('rejected')
+            setSearchTerm('')
+          }}
+          className={`flex items-center gap-1.5 border-b-2 px-3 py-2.5 text-xs font-black tracking-wider uppercase transition-colors duration-150 outline-none sm:gap-2 sm:px-6 ${
+            activeTab === 'rejected'
+              ? 'border-rose-600 text-rose-600 dark:border-rose-500 dark:text-rose-400'
+              : 'hover:text-neutral-750 dark:text-neutral-450 border-transparent text-neutral-500 dark:hover:text-neutral-300'
+          }`}
+        >
+          <XCircle className="h-4 w-4 text-rose-600 dark:text-rose-400" />
+          Rejected
         </button>
       </div>
 
@@ -274,8 +319,10 @@ export default function ForwardRequestsPage() {
             type="text"
             placeholder={
               activeTab === 'outgoing'
-                ? 'Search outgoing forwards by report ID or reason...'
-                : 'Search incoming transfers by report ID or reason...'
+                ? 'Search outgoing forwards by report ID, reason, status...'
+                : activeTab === 'incoming'
+                  ? 'Search incoming transfers by report ID, reason, status...'
+                  : 'Search rejected requests by report ID, rejection reason, department...'
             }
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -304,59 +351,212 @@ export default function ForwardRequestsPage() {
           <span className="text-xs font-bold text-neutral-500">No requests found.</span>
           <p className="text-[11px] font-medium text-neutral-400">
             {activeTab === 'outgoing'
-              ? 'No outgoing forwards require your authorization currently.'
-              : 'No incoming transfers are pending in your department inbox.'}
+              ? 'No outgoing forwards found.'
+              : activeTab === 'incoming'
+                ? 'No incoming transfers found.'
+                : 'No rejected transfer requests recorded for your department.'}
           </p>
         </div>
-      ) : (
-        <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white shadow-xs dark:border-neutral-800 dark:bg-[#1C1C1E]">
-          <table className="w-full border-collapse text-left text-xs font-bold text-neutral-700 dark:text-neutral-300">
-            <thead>
-              <tr className="text-neutral-450 dark:border-neutral-850 border-b border-neutral-100 bg-neutral-50/70 text-[10px] font-black tracking-wider uppercase dark:bg-neutral-900/40 dark:text-neutral-500">
-                <th className="px-4 py-3">Request ID</th>
-                <th className="px-4 py-3">Report ID</th>
-                <th className="px-4 py-3">Transfer Reason Summary</th>
-                <th className="px-4 py-3 text-center">Status</th>
-                <th className="px-4 py-3 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="dark:divide-neutral-850 divide-y divide-neutral-100">
-              {filteredList.map((item) => (
-                <tr
-                  key={item.id}
-                  className="transition-colors hover:bg-neutral-50/30 dark:hover:bg-neutral-900/10"
-                >
-                  <td className="px-4 py-3 text-neutral-500 dark:text-neutral-400">#{item.id}</td>
-                  <td className="px-4 py-3 font-extrabold text-[#0A3C7D] select-all dark:text-blue-400">
-                    Report #{item.report_id}
-                  </td>
-                  <td className="max-w-xs truncate px-4 py-3 font-semibold" title={item.reason}>
-                    {item.reason}
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <span
-                      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[9px] font-black uppercase ${getStatusBadgeClass(
-                        item.status
-                      )}`}
-                    >
-                      {item.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="xs"
-                      onClick={() => setSelectedRequestId(item.id)}
-                      className="h-7 cursor-pointer dark:border-neutral-800"
-                    >
-                      Review Request
-                    </Button>
-                  </td>
+      ) : activeTab === 'rejected' ? (
+        <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-xs dark:border-neutral-800 dark:bg-[#1C1C1E]">
+          {/* Desktop Table View */}
+          <div className="hidden overflow-x-auto md:block">
+            <table className="w-full border-collapse text-left text-xs font-bold text-neutral-700 dark:text-neutral-300">
+              <thead>
+                <tr className="text-neutral-450 dark:border-neutral-850 border-b border-neutral-100 bg-neutral-50/70 text-[10px] font-black tracking-wider uppercase dark:bg-neutral-900/40 dark:text-neutral-500">
+                  <th className="px-4 py-3">Req ID</th>
+                  <th className="px-4 py-3">Report Ref</th>
+                  <th className="px-4 py-3">Source Sector</th>
+                  <th className="px-4 py-3">Destination Sector</th>
+                  <th className="px-4 py-3">Rejection Reason</th>
+                  <th className="px-4 py-3">Rejection Date</th>
+                  <th className="px-4 py-3 text-center">Status</th>
+                  <th className="px-4 py-3 text-right">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="dark:divide-neutral-850 divide-y divide-neutral-100">
+                {filteredList.map((item) => (
+                  <tr
+                    key={item.id}
+                    className="transition-colors hover:bg-neutral-50/30 dark:hover:bg-neutral-900/10"
+                  >
+                    <td className="px-4 py-3 text-neutral-500 dark:text-neutral-400">#{item.id}</td>
+                    <td className="px-4 py-3 font-extrabold text-[#0A3C7D] select-all dark:text-blue-400">
+                      Report #{item.report_id}
+                    </td>
+                    <td className="px-4 py-3 font-semibold text-neutral-600 dark:text-neutral-400">
+                      {item.source_department_name || 'Source Dept'}
+                    </td>
+                    <td className="px-4 py-3 font-semibold text-neutral-600 dark:text-neutral-400">
+                      {item.destination_department_name || 'N/A'}
+                    </td>
+                    <td className="max-w-xs px-4 py-3 font-semibold text-rose-700 dark:text-rose-400">
+                      {item.decision_reason || item.reason}
+                    </td>
+                    <td className="px-4 py-3 text-[11px] text-neutral-500 dark:text-neutral-400">
+                      {item.reviewed_at ? new Date(item.reviewed_at).toLocaleString() : 'N/A'}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <span
+                        className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[9px] font-black uppercase ${getStatusBadgeClass(
+                          item.status
+                        )}`}
+                      >
+                        {item.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="xs"
+                        onClick={() => setSelectedRequestId(item.id)}
+                        className="h-7 cursor-pointer dark:border-neutral-800"
+                      >
+                        Review Request
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile Card View (< md) */}
+          <div className="divide-y divide-neutral-100 md:hidden dark:divide-neutral-800">
+            {filteredList.map((item) => (
+              <div key={item.id} className="space-y-2.5 p-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-extrabold text-[#0A3C7D] dark:text-blue-400">
+                    Report #{item.report_id}
+                  </span>
+                  <span
+                    className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[9px] font-black uppercase ${getStatusBadgeClass(
+                      item.status
+                    )}`}
+                  >
+                    {item.status}
+                  </span>
+                </div>
+                <div className="space-y-1 text-xs text-neutral-600 dark:text-neutral-400">
+                  <div>
+                    <span className="font-semibold text-neutral-500">Request ID:</span> #{item.id}
+                  </div>
+                  <div>
+                    <span className="font-semibold text-neutral-500">Source:</span>{' '}
+                    {item.source_department_name || 'Source Dept'}
+                  </div>
+                  <div className="font-medium text-rose-600 dark:text-rose-400">
+                    <span className="font-semibold text-neutral-500 dark:text-neutral-400">
+                      Rejection Reason:
+                    </span>{' '}
+                    {item.decision_reason || item.reason}
+                  </div>
+                </div>
+                <div className="pt-1 text-right">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="xs"
+                    onClick={() => setSelectedRequestId(item.id)}
+                    className="h-7 cursor-pointer text-xs"
+                  >
+                    Review Request
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-xs dark:border-neutral-800 dark:bg-[#1C1C1E]">
+          {/* Desktop Table View */}
+          <div className="hidden overflow-x-auto md:block">
+            <table className="w-full border-collapse text-left text-xs font-bold text-neutral-700 dark:text-neutral-300">
+              <thead>
+                <tr className="text-neutral-450 dark:border-neutral-850 border-b border-neutral-100 bg-neutral-50/70 text-[10px] font-black tracking-wider uppercase dark:bg-neutral-900/40 dark:text-neutral-500">
+                  <th className="px-4 py-3">Request ID</th>
+                  <th className="px-4 py-3">Report ID</th>
+                  <th className="px-4 py-3">Transfer Reason Summary</th>
+                  <th className="px-4 py-3 text-center">Status</th>
+                  <th className="px-4 py-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="dark:divide-neutral-850 divide-y divide-neutral-100">
+                {filteredList.map((item) => (
+                  <tr
+                    key={item.id}
+                    className="transition-colors hover:bg-neutral-50/30 dark:hover:bg-neutral-900/10"
+                  >
+                    <td className="px-4 py-3 text-neutral-500 dark:text-neutral-400">#{item.id}</td>
+                    <td className="px-4 py-3 font-extrabold text-[#0A3C7D] select-all dark:text-blue-400">
+                      Report #{item.report_id}
+                    </td>
+                    <td className="max-w-xs truncate px-4 py-3 font-semibold" title={item.reason}>
+                      {item.reason}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <span
+                        className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[9px] font-black uppercase ${getStatusBadgeClass(
+                          item.status
+                        )}`}
+                      >
+                        {item.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="xs"
+                        onClick={() => setSelectedRequestId(item.id)}
+                        className="h-7 cursor-pointer dark:border-neutral-800"
+                      >
+                        Review Request
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile Card View (< md) */}
+          <div className="divide-y divide-neutral-100 md:hidden dark:divide-neutral-800">
+            {filteredList.map((item) => (
+              <div key={item.id} className="space-y-2.5 p-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-extrabold text-[#0A3C7D] dark:text-blue-400">
+                    Report #{item.report_id}
+                  </span>
+                  <span
+                    className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[9px] font-black uppercase ${getStatusBadgeClass(
+                      item.status
+                    )}`}
+                  >
+                    {item.status}
+                  </span>
+                </div>
+                <p className="line-clamp-2 text-xs font-medium text-neutral-700 dark:text-neutral-300">
+                  {item.reason}
+                </p>
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-[11px] font-semibold text-neutral-400">
+                    Request ID: #{item.id}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="xs"
+                    onClick={() => setSelectedRequestId(item.id)}
+                    className="h-7 cursor-pointer text-xs"
+                  >
+                    Review Request
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

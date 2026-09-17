@@ -76,7 +76,10 @@ interface FooterProps {
   lastSyncTime?: string
 }
 
-export function Footer({ apiStatus = 'connected', lastSyncTime }: FooterProps) {
+export function Footer({
+  apiStatus: _apiStatus = 'connected',
+  lastSyncTime: _lastSyncTime,
+}: FooterProps) {
   const currentYear = new Date().getFullYear()
 
   return (
@@ -88,11 +91,8 @@ export function Footer({ apiStatus = 'connected', lastSyncTime }: FooterProps) {
         <span>Municipal Civic Resolution Platform</span>
       </div>
 
-      {/* System Integrity & Version status */}
+      {/* System Version status */}
       <div className="mt-2 flex items-center space-x-4 sm:mt-0">
-        {/* System connectivity status */}
-        <ApiStatusIndicator status={apiStatus} lastSyncTime={lastSyncTime} />
-
         {/* Version label */}
         <div className="dark:text-neutral-450 dark:border-neutral-750 rounded border border-neutral-200 bg-neutral-50 px-2 py-0.5 text-[10px] font-black text-neutral-400 dark:bg-neutral-800/40">
           {APP_CONFIG.version}

@@ -151,6 +151,46 @@ export function ForwardRequestsDetailsDrawer({
             </div>
           ) : (
             <>
+              {/* Rejection / Decision Details Banner */}
+              {(detail.status === 'Rejected' || detail.decision_reason) && (
+                <div className="border-rose-250 rounded-xl border bg-rose-50/60 p-4 dark:border-rose-950/40 dark:bg-rose-950/20">
+                  <h4 className="mb-2 flex items-center gap-1.5 text-xs font-black tracking-wider text-rose-700 uppercase dark:text-rose-400">
+                    <XCircle className="h-4 w-4 text-rose-600 dark:text-rose-400" />
+                    Rejection / Decision Details
+                  </h4>
+                  <div className="space-y-2">
+                    {detail.decision_reason && (
+                      <div className="space-y-1">
+                        <span className="text-[11px] font-bold text-rose-800 dark:text-rose-300">
+                          Rejection Reason:
+                        </span>
+                        <p className="rounded-lg border border-rose-200/80 bg-white p-3 text-xs leading-relaxed font-semibold text-rose-950 shadow-2xs dark:border-rose-900/50 dark:bg-neutral-900 dark:text-rose-200">
+                          {detail.decision_reason}
+                        </p>
+                      </div>
+                    )}
+                    <div className="mt-2 flex flex-wrap justify-between gap-2 text-xs font-bold text-neutral-600 dark:text-neutral-400">
+                      {detail.reviewer_name && (
+                        <span>
+                          Reviewed By:{' '}
+                          <strong className="text-neutral-800 dark:text-neutral-200">
+                            {detail.reviewer_name}
+                          </strong>
+                        </span>
+                      )}
+                      {detail.reviewed_at && (
+                        <span>
+                          Reviewed At:{' '}
+                          <strong className="text-neutral-800 dark:text-neutral-200">
+                            {new Date(detail.reviewed_at).toLocaleString()}
+                          </strong>
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Request Status / Worker reason */}
               <div className="border-neutral-150 rounded-xl border bg-neutral-50/50 p-4 dark:border-neutral-800 dark:bg-neutral-900/40">
                 <h4 className="text-neutral-450 mb-2 flex items-center gap-1.5 text-xs font-black tracking-wider uppercase dark:text-neutral-500">

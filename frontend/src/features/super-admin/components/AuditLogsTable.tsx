@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useAuditLogsQuery } from '../hooks/use-super-admin'
 import { superAdminService } from '../services/super-admin.service'
+import type { AuditLogItem } from '../types'
+import { AuditLogDetailsDrawer } from './AuditLogDetailsDrawer'
 import { Button } from '@/components/ui/button'
 import { Shield, Download, ChevronLeft, ChevronRight, Search, FileText } from 'lucide-react'
 
@@ -9,6 +11,7 @@ export function AuditLogsTable() {
   const pageSize = 15
   const [actionFilter, setActionFilter] = useState('')
   const [isExporting, setIsExporting] = useState(false)
+  const [selectedLog, setSelectedLog] = useState<AuditLogItem | null>(null)
 
   const { data, isLoading, error, refetch } = useAuditLogsQuery({
     page,
@@ -135,34 +138,40 @@ export function AuditLogsTable() {
 
             {!isLoading &&
               !error &&
-              items.map((log) => (
-                <tr
-                  key={log.id}
-                  className="dark:hover:bg-neutral-850/40 transition-colors hover:bg-neutral-50/60"
-                >
-                  <td className="px-4 py-3 font-mono font-bold text-neutral-500">#{log.id}</td>
-                  <td className="px-4 py-3 font-medium text-neutral-600 dark:text-neutral-400">
-                    {log.created_at ? new Date(log.created_at).toLocaleString() : 'N/A'}
-                  </td>
-                  <td className="px-4 py-3 font-bold text-neutral-800 dark:text-white">
-                    {log.user_id ? `User #${log.user_id}` : 'System'}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="rounded bg-blue-50 px-2 py-0.5 font-extrabold text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
-                      {log.action}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 font-mono font-bold text-neutral-500">
-                    {log.report_id ? `#${log.report_id}` : '-'}
-                  </td>
-                  <td
-                    className="max-w-xs truncate px-4 py-3 text-neutral-500"
-                    title={log.details || ''}
+              items.map((log) => {
+                const isSelected = selectedLog?.id === log.id
+                return (
+                  <tr
+                    key={log.id}
+                    onClick={() => setSelectedLog(log)}
+                    className={`dark:hover:bg-neutral-850/60 cursor-pointer transition-colors hover:bg-neutral-50/80 ${
+                      isSelected ? 'bg-blue-50/60 dark:bg-blue-950/30' : ''
+                    }`}
                   >
-                    {log.details || '-'}
-                  </td>
-                </tr>
-              ))}
+                    <td className="px-4 py-3 font-mono font-bold text-neutral-500">#{log.id}</td>
+                    <td className="px-4 py-3 font-medium text-neutral-600 dark:text-neutral-400">
+                      {log.created_at ? new Date(log.created_at).toLocaleString() : 'N/A'}
+                    </td>
+                    <td className="px-4 py-3 font-bold text-neutral-800 dark:text-white">
+                      {log.user_id ? `User #${log.user_id}` : 'System'}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="rounded bg-blue-50 px-2 py-0.5 font-extrabold text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
+                        {log.action}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 font-mono font-bold text-neutral-500">
+                      {log.report_id ? `#${log.report_id}` : '-'}
+                    </td>
+                    <td
+                      className="max-w-xs truncate px-4 py-3 text-neutral-500"
+                      title={log.details || ''}
+                    >
+                      {log.details || '-'}
+                    </td>
+                  </tr>
+                )
+              })}
           </tbody>
         </table>
       </div>
@@ -203,6 +212,13 @@ export function AuditLogsTable() {
           </div>
         </div>
       )}
+
+      {/* Audit Log Details Drawer */}
+      <AuditLogDetailsDrawer
+        isOpen={!!selectedLog}
+        onClose={() => setSelectedLog(null)}
+        log={selectedLog}
+      />
     </div>
   )
 }

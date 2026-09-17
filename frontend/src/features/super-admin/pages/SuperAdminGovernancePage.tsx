@@ -8,6 +8,7 @@ import { ActiveAnnouncementsWidget } from '../components/ActiveAnnouncementsWidg
 import { AuditLogsTable } from '../components/AuditLogsTable'
 import { LoginAuditsTable } from '../components/LoginAuditsTable'
 import { BroadcastAnnouncementModal } from '../components/BroadcastAnnouncementModal'
+import { PublicUpdatesManagementWidget } from '../components/PublicUpdatesManagementWidget'
 
 export default function SuperAdminGovernancePage() {
   const [activeAuditTab, setActiveAuditTab] = useState<'action' | 'login'>('action')
@@ -51,10 +52,13 @@ export default function SuperAdminGovernancePage() {
       {/* 5. System Announcement Lifecycle Management */}
       <ActiveAnnouncementsWidget />
 
+      {/* 6. Public Landing Page News & Press Updates Management */}
+      <PublicUpdatesManagementWidget />
+
       {/* 6. Audit & Security Trail Section */}
       <div className="space-y-4">
         {/* Tab Selection */}
-        <div className="flex items-center gap-2 border-b border-neutral-200 pb-2 dark:border-neutral-800">
+        <div className="flex flex-wrap items-center gap-2 border-b border-neutral-200 pb-2 dark:border-neutral-800">
           <button
             type="button"
             onClick={() => setActiveAuditTab('action')}

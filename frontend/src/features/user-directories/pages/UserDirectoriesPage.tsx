@@ -31,7 +31,7 @@ export default function UserDirectoriesPage() {
         </div>
 
         {/* Role-Aware Tab Bar */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {isSuperAdmin && (
             <button
               onClick={() => setActiveTab('city-admins')}

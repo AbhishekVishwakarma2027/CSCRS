@@ -73,6 +73,7 @@ interface ReportDetailsDrawerProps {
   report: ReportListItem | null
   departmentsMap: Record<number, string>
   onTransfer?: (report: ReportListItem) => void
+  onAssign?: (reportId: number) => void
 }
 
 export function ReportDetailsDrawer({
@@ -81,6 +82,7 @@ export function ReportDetailsDrawer({
   report,
   departmentsMap,
   onTransfer,
+  onAssign,
 }: ReportDetailsDrawerProps) {
   const drawerRef = useRef<HTMLDivElement>(null)
 
@@ -305,7 +307,7 @@ export function ReportDetailsDrawer({
         className="animate-in slide-in-from-right-full fixed inset-y-0 right-0 z-50 flex w-full transform flex-col bg-white shadow-2xl transition-transform duration-300 ease-in-out md:max-w-2xl lg:max-w-2xl dark:bg-[#1C1C1E]"
       >
         {/* Header Widget */}
-        <div className="flex items-center justify-between border-b border-neutral-200 p-4 select-none dark:border-neutral-800">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-200 p-4 select-none dark:border-neutral-800">
           <div>
             <h2
               id="drawer-title"
@@ -317,7 +319,23 @@ export function ReportDetailsDrawer({
               Reference: {report.report_number}
             </span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-end gap-1.5 sm:gap-2">
+            {isDeptAdmin &&
+              onAssign &&
+              ['Pending', 'Reopened', 'Assigned', 'Submitted'].includes(report.status) && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="xs"
+                  onClick={() => {
+                    onAssign(report.id)
+                  }}
+                  className="flex h-8 items-center gap-1.5 border-emerald-200 text-xs font-extrabold text-emerald-700 hover:bg-emerald-50 dark:border-emerald-900 dark:text-emerald-400 dark:hover:bg-emerald-950/20"
+                >
+                  <UserCheck className="h-3.5 w-3.5" />
+                  Assign Worker
+                </Button>
+              )}
             {isDeptAdmin &&
               onTransfer &&
               ['Pending', 'Assigned', 'In Progress', 'Reopened'].includes(report.status) && (

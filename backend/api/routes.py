@@ -17,7 +17,12 @@ from api.feedback import router as feedback_router
 from api.system_issue import router as system_issue
 from api.ai_dataset import router as ai_dataset_router
 from api.super_admin import router as super_admin_router
-from api.announcements import router as announcements_router
+from api.announcements import (
+    super_admin_router as super_admin_announcements_router,
+    user_router as user_announcements_router,
+)
+from api.public import router as public_router
+from api.public_updates_admin import router as super_admin_updates_router
 from datetime import datetime, timezone
 from fastapi import HTTPException
 from sqlalchemy import text
@@ -88,4 +93,7 @@ router.include_router(feedback_router,prefix="/api/v1",)
 router.include_router(system_issue,prefix="/api/v1",)
 router.include_router(ai_dataset_router,prefix="/api/v1",)
 router.include_router(super_admin_router,prefix="/api/v1",)
-router.include_router(announcements_router,prefix="/api/v1/announcements",)
+router.include_router(super_admin_announcements_router,prefix="/api/v1",)
+router.include_router(user_announcements_router,prefix="/api/v1",)
+router.include_router(super_admin_updates_router,prefix="/api/v1",)
+router.include_router(public_router,prefix="/api/v1",)

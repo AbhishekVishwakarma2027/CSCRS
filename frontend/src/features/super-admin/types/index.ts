@@ -18,10 +18,27 @@ export interface LoginAuditItem {
   id: number
   user_id?: number | null
   email?: string | null
+  role?: string | null
   login_success: boolean
+  failure_reason?: string | null
   ip_address?: string | null
   user_agent?: string | null
+  browser?: string | null
+  browser_version?: string | null
+  operating_system?: string | null
+  os_version?: string | null
+  device_type?: string | null
+  platform?: string | null
+  city?: string | null
+  state?: string | null
+  country?: string | null
+  request_path?: string | null
+  http_method?: string | null
+  login_source?: string | null
   login_at?: string | null
+  logout_at?: string | null
+  session_id?: string | null
+  jwt_id?: string | null
 }
 
 export interface PaginatedLoginAuditResponse {

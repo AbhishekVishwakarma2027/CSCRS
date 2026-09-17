@@ -109,13 +109,19 @@ export const reportsService = {
   },
 
   /**
-   * Trigger worker auto-assignment for a report.
+   * Assign worker (manual or auto) for a report.
    */
-  async assignReport(reportId: number, remarks?: string, signal?: AbortSignal): Promise<unknown> {
+  async assignReport(
+    reportId: number,
+    workerId?: number,
+    remarks?: string,
+    signal?: AbortSignal
+  ): Promise<unknown> {
     const { data } = await apiClient.post(
       '/api/v1/assignments',
       {
         report_id: reportId,
+        worker_id: workerId || undefined,
         remarks: remarks || undefined,
       },
       { signal }

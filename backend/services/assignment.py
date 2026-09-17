@@ -28,6 +28,7 @@ class AssignmentService:
         *,
         report_id: int,
         assigned_by: int,
+        worker_id: int | None = None,
         remarks: str | None = None,
         is_forward_assignment: bool = False,
     ):
@@ -74,10 +75,24 @@ class AssignmentService:
                 detail=f"Cannot assign report with status '{report.status.value}'.",
             )
 
-        worker = self._select_best_worker(
-            department_id=report.department_id,
-            allow_none=is_forward_assignment,
-        )
+        if worker_id is not None:
+            worker = AssignmentCRUD.get_user(self.db, worker_id)
+            if not worker:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Worker not found.",
+                )
+            profile = AssignmentCRUD.get_worker_profile(self.db, worker.id)
+            if not profile or profile.department_id != report.department_id:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Selected worker does not belong to the report's department.",
+                )
+        else:
+            worker = self._select_best_worker(
+                department_id=report.department_id,
+                allow_none=is_forward_assignment,
+            )
 
         if worker is None:
             if is_forward_assignment:

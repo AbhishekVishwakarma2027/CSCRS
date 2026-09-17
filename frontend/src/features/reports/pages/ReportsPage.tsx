@@ -11,6 +11,7 @@ import { ReportsTable } from '../components/ReportsTable'
 import { ReportDetailsDrawer } from '../components/ReportDetailsDrawer'
 import { ConfirmationDialog } from '../components/ConfirmationDialog'
 import { TransferRequestModal } from '../components/TransferRequestModal'
+import { AssignWorkerModal } from '../components/AssignWorkerModal'
 import type { ReportListItem } from '../types'
 import {
   useReportsListQuery,
@@ -183,6 +184,11 @@ export default function ReportsPage() {
     null
   )
 
+  // Assign Worker State
+  const [selectedReportForAssign, setSelectedReportForAssign] = useState<ReportListItem | null>(
+    null
+  )
+
   // ─── 4. Details Drawer & Confirmation Dialogs Toggles ────────────────────────
   const [selectedReportForDetails, setSelectedReportForDetails] = useState<ReportListItem | null>(
     null
@@ -198,13 +204,32 @@ export default function ReportsPage() {
   const [isReopenConfirmOpen, setIsReopenConfirmOpen] = useState(false)
 
   // ─── 5. Trigger Handler Operations ──────────────────────────────────────────
-  const handleAssign = async (reportId: number) => {
+  const handleOpenAssignModal = (reportId: number) => {
+    const reportToAssign =
+      reports.find((r) => r.id === reportId) ||
+      (selectedReportForDetails?.id === reportId ? selectedReportForDetails : null)
+    if (reportToAssign) {
+      setSelectedReportForAssign(reportToAssign)
+    } else {
+      setSelectedReportForAssign({
+        id: reportId,
+        report_number: reportId.toString(),
+      } as ReportListItem)
+    }
+  }
+
+  const handleAssignExecute = async (reportId: number, workerId?: number, remarks?: string) => {
     try {
-      await assignMutation.mutateAsync({ reportId })
-      toast.success('Worker auto-assigned successfully!')
+      await assignMutation.mutateAsync({ reportId, workerId, remarks })
+      toast.success(
+        workerId
+          ? `Worker assigned successfully to Report #${reportId}!`
+          : `Report #${reportId} auto-assigned successfully!`
+      )
+      setSelectedReportForAssign(null)
     } catch (err) {
       const apiError = err as { response?: { data?: { detail?: string } } }
-      toast.error(apiError.response?.data?.detail || 'Assignment scheduling failed')
+      toast.error(apiError.response?.data?.detail || 'Assignment failed')
     }
   }
 
@@ -373,7 +398,7 @@ export default function ReportsPage() {
         departmentsMap={departmentsMap}
         onRefetch={refetch}
         onViewDetails={setSelectedReportForDetails}
-        onAssign={handleAssign}
+        onAssign={handleOpenAssignModal}
         onCancel={setActiveCancelId}
         onReopen={setActiveReopenId}
         onTransfer={setSelectedReportForTransfer}
@@ -453,20 +478,16 @@ export default function ReportsPage() {
 
             <form
               onSubmit={handleCancelFormSubmit}
-              className="dark:text-neutral-350 space-y-4 text-[13px] font-bold text-neutral-700"
+              className="space-y-4 text-left text-xs font-bold text-neutral-700 dark:text-neutral-300"
             >
-              <div className="space-y-1.5">
-                <label
-                  htmlFor="cancel-reason-select"
-                  className="text-neutral-450 text-[13px] font-black uppercase dark:text-neutral-500"
-                >
-                  Select Reason Type
+              <div className="space-y-1">
+                <label className="text-neutral-450 text-[10px] font-black tracking-wider uppercase dark:text-neutral-500">
+                  Select Administrative Category
                 </label>
                 <select
-                  id="cancel-reason-select"
                   value={cancelReason}
                   onChange={(e) => setCancelReason(e.target.value)}
-                  className="h-9 w-full cursor-pointer rounded-lg border border-neutral-200 bg-neutral-50 px-2.5 outline-none focus:ring-1 focus:ring-rose-500 dark:border-neutral-800 dark:bg-[#1C1C1E]"
+                  className="h-9 w-full rounded-lg border border-neutral-200 bg-neutral-50 px-2.5 font-sans text-xs font-bold outline-none focus:ring-1 focus:ring-rose-500 dark:border-neutral-800 dark:bg-[#1C1C1E]"
                 >
                   {CANCELLATION_REASONS.map((r) => (
                     <option key={r.value} value={r.value}>
@@ -476,15 +497,11 @@ export default function ReportsPage() {
                 </select>
               </div>
 
-              <div className="space-y-1.5">
-                <label
-                  htmlFor="cancel-remarks-textarea"
-                  className="text-neutral-450 text-[13px] font-black uppercase dark:text-neutral-500"
-                >
-                  Remarks / Cancellation Details (Min 5 chars)
+              <div className="space-y-1">
+                <label className="text-neutral-450 text-[10px] font-black tracking-wider uppercase dark:text-neutral-500">
+                  Provide Detailed Remarks (Min 5 characters)
                 </label>
                 <textarea
-                  id="cancel-remarks-textarea"
                   value={cancelRemarks}
                   onChange={(e) => setCancelRemarks(e.target.value)}
                   placeholder="Enter specific administrative reasons for cancelling this report..."
@@ -523,7 +540,7 @@ export default function ReportsPage() {
             <div className="dark:border-neutral-850 flex items-center justify-between border-b border-neutral-100 pb-2">
               <h3 className="flex items-center gap-1.5 text-sm font-black tracking-wider text-emerald-600 uppercase">
                 <RotateCcw className="h-4.5 w-4.5" />
-                Reopen Report Issue
+                Reopen Civic Report Issue
               </h3>
               <button
                 type="button"
@@ -536,17 +553,13 @@ export default function ReportsPage() {
 
             <form
               onSubmit={handleReopenFormSubmit}
-              className="dark:text-neutral-350 space-y-4 text-[13px] font-bold text-neutral-700"
+              className="space-y-4 text-left text-xs font-bold text-neutral-700 dark:text-neutral-300"
             >
-              <div className="space-y-1.5">
-                <label
-                  htmlFor="reopen-remarks-textarea"
-                  className="text-neutral-450 text-[13px] font-black uppercase dark:text-neutral-500"
-                >
-                  Remarks / Reason to Reopen (Optional)
+              <div className="space-y-1">
+                <label className="text-neutral-450 text-[10px] font-black tracking-wider uppercase dark:text-neutral-500">
+                  Provide Detailed Reopening Context
                 </label>
                 <textarea
-                  id="reopen-remarks-textarea"
                   value={reopenReason}
                   onChange={(e) => setReopenReason(e.target.value)}
                   placeholder="Enter remarks explaining why this report is being reopened for verification..."
@@ -582,6 +595,9 @@ export default function ReportsPage() {
         onClose={() => setSelectedReportForDetails(null)}
         report={selectedReportForDetails}
         departmentsMap={departmentsMap}
+        onAssign={(id) => {
+          handleOpenAssignModal(id)
+        }}
         onTransfer={(r) => {
           setSelectedReportForDetails(null)
           setSelectedReportForTransfer(r)
@@ -619,6 +635,16 @@ export default function ReportsPage() {
         report={selectedReportForTransfer}
         onSubmit={handleExecuteTransfer}
         isSubmitting={approveForwardMutation.isPending}
+      />
+
+      {/* ─── MANUAL WORKER ASSIGNMENT MODAL DIALOG ─────────────────────────────── */}
+      <AssignWorkerModal
+        isOpen={!!selectedReportForAssign}
+        onClose={() => setSelectedReportForAssign(null)}
+        reportId={selectedReportForAssign?.id || null}
+        reportNumber={selectedReportForAssign?.report_number || null}
+        onAssign={handleAssignExecute}
+        isSubmitting={assignMutation.isPending}
       />
     </div>
   )

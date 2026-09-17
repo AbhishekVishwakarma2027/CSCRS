@@ -41,6 +41,7 @@ router = APIRouter(
     response_model=list[ForwardRequestResponse],
 )
 def get_pending_requests(
+    include_history: bool = True,
     current_user: User = Depends(
         require_department_admin(),
     ),
@@ -54,13 +55,16 @@ def get_pending_requests(
             db,
         ).get_pending_requests(
             current_user,
+            include_history=include_history,
         )
     )
+
 @router.get(
     "/incoming",
     response_model=list[IncomingForwardRequestResponse],
 )
 def get_incoming_requests(
+    include_history: bool = True,
     current_user: User = Depends(
         require_department_admin(),
     ),
@@ -73,6 +77,28 @@ def get_incoming_requests(
         ForwardRequestService(
             db,
         ).get_destination_requests(
+            current_user,
+            include_history=include_history,
+        )
+    )
+
+@router.get(
+    "/rejected",
+    response_model=list[ForwardRequestResponse],
+)
+def get_rejected_requests(
+    current_user: User = Depends(
+        require_department_admin(),
+    ),
+    db: Session = Depends(
+        get_db,
+    ),
+):
+
+    return (
+        ForwardRequestService(
+            db,
+        ).get_rejected_requests(
             current_user,
         )
     )

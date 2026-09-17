@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from io import BytesIO
 import pandas as pd
+from fastapi import HTTPException, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy import func, text
 from sqlalchemy.orm import Session
@@ -221,12 +222,20 @@ class SuperAdminService:
             broadcast_id=broadcast.broadcast_id,
         )
 
-    def get_announcements(self) -> list[dict]:
+    def get_announcements(
+        self,
+        lifecycle_state: str = "ALL",
+        announcement_type: str = "ALL",
+    ) -> list[dict]:
         import database.crud.broadcast as broadcast_crud
-        broadcasts = broadcast_crud.get_all_broadcasts(self.db)
+        broadcasts = broadcast_crud.get_all_broadcasts(
+            self.db,
+            lifecycle_state=lifecycle_state,
+            announcement_type=announcement_type,
+        )
         results = []
         for b in broadcasts:
-            lifecycle_state = broadcast_crud.compute_derived_lifecycle_state(b)
+            lifecycle_state_val = broadcast_crud.compute_derived_lifecycle_state(b)
             results.append({
                 "broadcast_id": b.broadcast_id,
                 "title": b.title,
@@ -237,7 +246,7 @@ class SuperAdminService:
                 "ends_at": b.ends_at,
                 "created_at": b.created_at,
                 "recipient_count": b.recipient_count,
-                "lifecycle_state": lifecycle_state,
+                "lifecycle_state": lifecycle_state_val,
                 "created_by": b.created_by,
             })
         return results
@@ -252,4 +261,25 @@ class SuperAdminService:
             "message": f"Announcement ended successfully.",
             "broadcast_id": broadcast_id,
             "updated_count": 1,
+        }
+
+    def delete_announcement(self, broadcast_id: str) -> dict:
+        import database.crud.broadcast as broadcast_crud
+        broadcast = broadcast_crud.get_broadcast_by_broadcast_id(self.db, broadcast_id)
+        if not broadcast:
+            raise ValueError(f"No announcement found with broadcast ID '{broadcast_id}'.")
+
+        state = broadcast_crud.compute_derived_lifecycle_state(broadcast)
+        if state != "SCHEDULED":
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Cannot delete an announcement in '{state}' state. Only SCHEDULED announcements can be deleted.",
+            )
+
+        broadcast_crud.delete_broadcast(self.db, broadcast_id)
+        return {
+            "success": True,
+            "message": f"Scheduled announcement deleted successfully.",
+            "broadcast_id": broadcast_id,
+            "deleted_count": 1,
         }

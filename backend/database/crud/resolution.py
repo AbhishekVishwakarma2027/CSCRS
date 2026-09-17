@@ -72,14 +72,11 @@ class ResolutionCRUD:
         db: Session,
         department_id: int,
     ):
-
         rows = (
             db.query(
                 Resolution,
                 Report,
                 User,
-                ResolutionAIResult,
-                ResolutionAttempt,
             )
             .join(
                 Report,
@@ -88,15 +85,6 @@ class ResolutionCRUD:
             .join(
                 User,
                 Resolution.worker_id == User.id,
-            )
-
-            .outerjoin(
-                ResolutionAIResult,
-                ResolutionAIResult.report_id == Report.id,
-            )
-            .outerjoin(
-                ResolutionAttempt,
-                ResolutionAttempt.resolution_id == Resolution.id,
             )
             .filter(
                 Resolution.manual_review.is_(True),
@@ -110,7 +98,19 @@ class ResolutionCRUD:
 
         result = []
 
-        for resolution, report, worker, ai, attempt  in rows:
+        for resolution, report, worker in rows:
+            attempt = (
+                db.query(ResolutionAttempt)
+                .filter(ResolutionAttempt.resolution_id == resolution.id)
+                .order_by(ResolutionAttempt.attempt_number.desc())
+                .first()
+            )
+            ai = (
+                db.query(ResolutionAIResult)
+                .filter(ResolutionAIResult.report_id == report.id)
+                .order_by(ResolutionAIResult.id.desc())
+                .first()
+            )
 
             result.append(
                 {
@@ -121,37 +121,33 @@ class ResolutionCRUD:
                     "worker_name": worker.name,
                     "verification_score": resolution.verification_score,
                     "verification_decision": resolution.verification_decision,
-
                     "scene_similarity": (
                         ai.scene_similarity
                         if ai
-                        else None
+                        else (attempt.scene_similarity if attempt else None)
                     ),
-
                     "failure_reason": (
                         attempt.failure_reason
                         if attempt
                         else None
                     ),
-
                     "attempt_number": (
                         attempt.attempt_number
                         if attempt
                         else None
                     ),
-
                     "resolved_at": resolution.resolved_at,
                 }
             )
 
         return result
+
     @staticmethod
     def get_manual_review_details(
         db: Session,
         report_id: int,
-        department_id:int,
+        department_id: int,
     ):
-
         row = (
             db.query(
                 Resolution,
@@ -159,8 +155,6 @@ class ResolutionCRUD:
                 User,
                 WorkerProfile,
                 Department,
-                ResolutionAttempt,
-                ResolutionAIResult,
             )
             .join(
                 Report,
@@ -178,14 +172,6 @@ class ResolutionCRUD:
                 Department,
                 Department.id == WorkerProfile.department_id,
             )
-            .outerjoin(
-                ResolutionAttempt,
-                ResolutionAttempt.resolution_id == Resolution.id,
-            )
-            .outerjoin(
-                ResolutionAIResult,
-                ResolutionAIResult.report_id == Report.id,
-            )
             .filter(
                 Resolution.report_id == report_id,
                 Report.department_id == department_id,
@@ -196,35 +182,48 @@ class ResolutionCRUD:
         if row is None:
             return None
 
-        resolution, report, worker, worker_profile ,department, attempt, ai = row
+        resolution, report, worker, worker_profile, department = row
+
+        attempt = (
+            db.query(ResolutionAttempt)
+            .filter(ResolutionAttempt.resolution_id == resolution.id)
+            .order_by(ResolutionAttempt.attempt_number.desc())
+            .first()
+        )
+        ai = (
+            db.query(ResolutionAIResult)
+            .filter(ResolutionAIResult.report_id == report.id)
+            .order_by(ResolutionAIResult.id.desc())
+            .first()
+        )
 
         original_image = (
-                db.query(ReportImage)
-                .filter(
-                    ReportImage.report_id == report.id,
-                    ReportImage.image_type == ImageType.ORIGINAL,
-                )
-                .first()
+            db.query(ReportImage)
+            .filter(
+                ReportImage.report_id == report.id,
+                ReportImage.image_type == ImageType.ORIGINAL,
             )
+            .first()
+        )
 
         annotated_image = (
-                db.query(ReportImage)
-                .filter(
-                    ReportImage.report_id == report.id,
-                    ReportImage.image_type == ImageType.ANNOTATED,
-                )
-                .first()
+            db.query(ReportImage)
+            .filter(
+                ReportImage.report_id == report.id,
+                ReportImage.image_type == ImageType.ANNOTATED,
             )
+            .first()
+        )
 
         resolution_image = (
-                db.query(ReportImage)
-                .filter(
-                    ReportImage.report_id == report.id,
-                    ReportImage.image_type == ImageType.RESOLUTION,
-                )
-                .order_by(ReportImage.id.desc())
-                .first()
+            db.query(ReportImage)
+            .filter(
+                ReportImage.report_id == report.id,
+                ReportImage.image_type == ImageType.RESOLUTION,
             )
+            .order_by(ReportImage.id.desc())
+            .first()
+        )
 
         return {
             "report_id": report.id,
@@ -238,23 +237,18 @@ class ResolutionCRUD:
             "department_name": department.name,
             "remarks": resolution.remarks,
             "address": report.address,
-
             "latitude": report.latitude,
-
             "longitude": report.longitude,
-
             "original_image_path": (
                 original_image.image_path
                 if original_image
                 else None
             ),
-
             "annotated_image_path": (
                 annotated_image.image_path
                 if annotated_image
                 else None
             ),
-
             "resolution_image_path": (
                 resolution_image.image_path
                 if resolution_image
@@ -262,51 +256,42 @@ class ResolutionCRUD:
             ),
             "verification_score": resolution.verification_score,
             "verification_decision": resolution.verification_decision,
-
             "failure_reason": (
                 attempt.failure_reason
                 if attempt
                 else None
             ),
-
             "attempt_number": (
                 attempt.attempt_number
                 if attempt
                 else None
             ),
-
             "ai_decision": (
                 attempt.ai_decision
                 if attempt
                 else None
             ),
-
             "model_version": (
                 attempt.model_version
                 if attempt
                 else None
             ),
-
             "scene_similarity": (
                 attempt.scene_similarity
                 if attempt
-                else None
+                else (ai.scene_similarity if ai else None)
             ),
-
             "same_scene": (
                 attempt.same_scene
                 if attempt
-                else None
+                else (ai.same_scene if ai else None)
             ),
-
             "yolo_issue_found": (
                 attempt.yolo_issue_found
                 if attempt
-                else None
+                else (ai.yolo_issue_found if ai else None)
             ),
-
             "manual_review": resolution.manual_review,
-
             "resolved_at": resolution.resolved_at,
         }
     @staticmethod

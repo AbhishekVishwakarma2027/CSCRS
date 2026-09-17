@@ -58,7 +58,6 @@ export const SIDEBAR_MENU_GROUPS: SidebarGroup[] = [
         path: '/resolutions/manual-review',
         icon: 'ClipboardCheck',
         roles: [UserRole.DEPARTMENT_ADMIN],
-        badge: 'Pending',
       },
       {
         id: 'transfer-requests',
