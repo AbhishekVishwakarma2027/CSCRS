@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Calendar, Tag, Clock, ArrowRight, Newspaper } from 'lucide-react'
 import { publicService, type PublicUpdate } from '@/features/public/services/public.service'
+import { getMediaUrl } from '@/utils/format'
 
 export function LatestUpdates() {
   const [updates, setUpdates] = useState<PublicUpdate[]>([])
@@ -85,7 +86,7 @@ export function LatestUpdates() {
                     <div className="relative flex h-36 w-full items-center justify-center overflow-hidden rounded-xl border border-neutral-200/80 bg-neutral-100">
                       {news.thumbnail_url ? (
                         <img
-                          src={news.thumbnail_url}
+                          src={getMediaUrl(news.thumbnail_url)}
                           alt={news.title}
                           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                         />

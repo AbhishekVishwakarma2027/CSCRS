@@ -10,6 +10,7 @@ import {
 } from '@/components/landing'
 import { publicService, type PublicUpdate } from '@/features/public/services/public.service'
 import { PATHS } from '@/routes/paths'
+import { getMediaUrl } from '@/utils/format'
 
 export default function PublicUpdateDetailPage() {
   const { slug } = useParams<{ slug: string }>()
@@ -109,7 +110,7 @@ export default function PublicUpdateDetailPage() {
               {update.thumbnail_url ? (
                 <div className="relative h-64 w-full overflow-hidden border-b border-neutral-200 sm:h-80">
                   <img
-                    src={update.thumbnail_url}
+                    src={getMediaUrl(update.thumbnail_url)}
                     alt={update.title}
                     className="h-full w-full object-cover"
                   />

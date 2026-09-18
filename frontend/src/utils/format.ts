@@ -28,20 +28,38 @@ export function formatRelativeTime(isoString: string): string {
  * Normalizes any absolute backend media/profile photo URL to handle host mismatches in dev/prod.
  * Handles extracting relative /uploads paths and appending the active VITE_API_BASE_URL.
  */
-export function getMediaUrl(url: string | null): string {
+export function getMediaUrl(url: string | null | undefined): string {
   if (!url) return ''
 
+  if (url.startsWith('data:') || url.startsWith('blob:')) {
+    return url
+  }
+
   if (url.startsWith('http://') || url.startsWith('https://')) {
+    if (url.includes('/api/')) {
+      const path = url.substring(url.indexOf('/api/'))
+      return import.meta.env.DEV
+        ? path
+        : `${(import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')}${path}`
+    }
     if (url.includes('/uploads/')) {
       const path = url.substring(url.indexOf('/uploads/'))
       return import.meta.env.DEV
         ? path
         : `${(import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')}${path}`
     }
+    return url
   }
 
-  if (url.includes('uploads/')) {
-    const path = '/' + url.substring(url.indexOf('uploads/'))
+  if (url.startsWith('/api/') || url.includes('/api/')) {
+    const path = url.startsWith('/') ? url : '/' + url.substring(url.indexOf('api/'))
+    return import.meta.env.DEV
+      ? path
+      : `${(import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')}${path}`
+  }
+
+  if (url.startsWith('/uploads/') || url.includes('uploads/')) {
+    const path = url.startsWith('/') ? url : '/' + url.substring(url.indexOf('uploads/'))
     return import.meta.env.DEV
       ? path
       : `${(import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')}${path}`

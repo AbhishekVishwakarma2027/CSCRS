@@ -22,6 +22,7 @@ import { Button } from '@/components/ui/button'
 import { ConfirmationDialog } from '@/features/reports/components/ConfirmationDialog'
 import type { PublicUpdate } from '@/features/public/services/public.service'
 import type { CreateUpdatePayload } from '../services/public-updates-admin.service'
+import { getMediaUrl } from '@/utils/format'
 import {
   useAdminPublicUpdatesQuery,
   useCreatePublicUpdateMutation,
@@ -113,11 +114,15 @@ export function PublicUpdatesManagementWidget() {
     const file = e.target.files?.[0]
     if (!file) return
 
+    const localPreview = URL.createObjectURL(file)
+    setThumbnailUrl(localPreview)
+
     try {
       const res = await uploadThumbnailMutation.mutateAsync(file)
       setThumbnailUrl(res.thumbnail_url)
       toast.success('Thumbnail image uploaded successfully.')
     } catch (err: unknown) {
+      setThumbnailUrl('')
       const errorMsg = (err as { response?: { data?: { detail?: string } } })?.response?.data
         ?.detail
       toast.error(errorMsg || 'Failed to upload thumbnail image.')
@@ -131,9 +136,9 @@ export function PublicUpdatesManagementWidget() {
       return
     }
 
-    const parsedReadTime = readTimeMinutes ? parseInt(readTimeMinutes, 10) : undefined
-
     try {
+      const readTime = readTimeMinutes ? parseInt(readTimeMinutes, 10) : undefined
+
       if (editingUpdate) {
         await updateMutation.mutateAsync({
           updateId: editingUpdate.id,
@@ -143,10 +148,10 @@ export function PublicUpdatesManagementWidget() {
             description: description.trim() || undefined,
             content: content.trim(),
             thumbnail_url: thumbnailUrl || undefined,
-            read_time_minutes: parsedReadTime,
+            read_time_minutes: readTime,
           },
         })
-        toast.success('Public update article modified successfully.')
+        toast.success('Public update updated successfully.')
       } else {
         const payload: CreateUpdatePayload = {
           title: title.trim(),
@@ -154,18 +159,19 @@ export function PublicUpdatesManagementWidget() {
           description: description.trim() || undefined,
           content: content.trim(),
           thumbnail_url: thumbnailUrl || undefined,
-          read_time_minutes: parsedReadTime,
+          read_time_minutes: readTime,
           is_published: isPublished,
         }
         await createMutation.mutateAsync(payload)
         toast.success('Public update created successfully.')
       }
+
       setIsFormModalOpen(false)
       resetForm()
     } catch (err: unknown) {
       const errorMsg = (err as { response?: { data?: { detail?: string } } })?.response?.data
         ?.detail
-      toast.error(errorMsg || 'Failed to save update article.')
+      toast.error(errorMsg || 'Failed to save public update.')
     }
   }
 
@@ -198,19 +204,8 @@ export function PublicUpdatesManagementWidget() {
 
   return (
     <div className="space-y-6 select-none">
-      {/* ─── MODULE HEADER & PRIMARY ACTION ─────────────────────────── */}
-      <div className="flex flex-col gap-4 border-b border-neutral-100 pb-4 sm:flex-row sm:items-center sm:justify-between dark:border-neutral-800">
-        <div>
-          <h3 className="text-neutral-850 flex items-center gap-2 text-lg font-black tracking-tight dark:text-white">
-            <Newspaper className="h-5 w-5 text-[#0A3C7D] dark:text-blue-400" />
-            Public News & Press Management
-          </h3>
-          <p className="mt-0.5 text-xs font-semibold text-neutral-500 dark:text-neutral-400">
-            Publish official municipal announcements, platform SOP guidelines, and press updates to
-            the public portal.
-          </p>
-        </div>
-
+      {/* ─── PRIMARY ACTION ─────────────────────────────────────────── */}
+      <div className="flex items-center justify-end">
         <Button
           type="button"
           onClick={handleOpenCreate}
@@ -322,7 +317,7 @@ export function PublicUpdatesManagementWidget() {
                         <div className="flex items-center gap-3">
                           {item.thumbnail_url ? (
                             <img
-                              src={item.thumbnail_url}
+                              src={getMediaUrl(item.thumbnail_url)}
                               alt={item.title}
                               className="h-11 w-11 shrink-0 rounded-lg border border-neutral-200 object-cover dark:border-neutral-800"
                             />
@@ -447,7 +442,7 @@ export function PublicUpdatesManagementWidget() {
                   <div className="flex items-start gap-3">
                     {item.thumbnail_url ? (
                       <img
-                        src={item.thumbnail_url}
+                        src={getMediaUrl(item.thumbnail_url)}
                         alt={item.title}
                         className="h-14 w-14 shrink-0 rounded-lg border border-neutral-200 object-cover dark:border-neutral-800"
                       />
@@ -657,7 +652,7 @@ export function PublicUpdatesManagementWidget() {
                     {thumbnailUrl && (
                       <div className="flex min-w-0 items-center gap-1.5">
                         <img
-                          src={thumbnailUrl}
+                          src={getMediaUrl(thumbnailUrl)}
                           alt="Thumbnail preview"
                           className="h-8 w-8 rounded border border-neutral-200 object-cover"
                         />
@@ -801,7 +796,7 @@ export function PublicUpdatesManagementWidget() {
               {previewUpdate.thumbnail_url && (
                 <div className="relative h-56 w-full overflow-hidden rounded-xl border border-neutral-200 sm:h-72 dark:border-neutral-800">
                   <img
-                    src={previewUpdate.thumbnail_url}
+                    src={getMediaUrl(previewUpdate.thumbnail_url)}
                     alt={previewUpdate.title}
                     className="h-full w-full object-cover"
                   />
