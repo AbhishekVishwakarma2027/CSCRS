@@ -320,7 +320,6 @@ export default function ReportsPage() {
       refetch()
       setSelectedReportForTransfer(null)
     } catch (err) {
-      console.error(err)
       const apiError = err as { response?: { data?: { detail?: string } } }
       toast.error(apiError.response?.data?.detail || 'Failed to process report transfer request.')
     }
@@ -358,10 +357,10 @@ export default function ReportsPage() {
       {/* 1. Header Widget */}
       <div className="flex items-center justify-between select-none">
         <div>
-          <h2 className="dark:text-blue-450 flex items-center gap-2 text-2xl font-black tracking-tight text-[#0A3C7D]">
-            <FileText className="h-5 w-5 text-[#0A3C7D] dark:text-blue-400" />
+          <h1 className="flex items-center gap-2 text-2xl font-black tracking-tight text-neutral-800 dark:text-white">
+            <FileText className="h-5 w-5" />
             {isCityAdmin ? 'Citywide Civic Records' : 'Department Queue'}
-          </h2>
+          </h1>
           <p className="text-neutral-450 mt-1 text-[13px] font-semibold dark:text-neutral-500">
             Manage, verify, audit, and track operational civic reports across municipal sectors.
           </p>

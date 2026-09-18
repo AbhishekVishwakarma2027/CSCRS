@@ -114,6 +114,27 @@ export const SIDEBAR_MENU_GROUPS: SidebarGroup[] = [
         roles: [UserRole.SUPER_ADMIN],
       },
       {
+        id: 'super-admin-broadcasts',
+        title: 'Broadcast Management',
+        path: PATHS.SUPER_ADMIN_BROADCASTS,
+        icon: 'Megaphone',
+        roles: [UserRole.SUPER_ADMIN],
+      },
+      {
+        id: 'super-admin-public-news',
+        title: 'Public News & Press',
+        path: PATHS.SUPER_ADMIN_PUBLIC_NEWS,
+        icon: 'Newspaper',
+        roles: [UserRole.SUPER_ADMIN],
+      },
+      {
+        id: 'super-admin-audit-security',
+        title: 'Audit & Security',
+        path: PATHS.SUPER_ADMIN_AUDIT_SECURITY,
+        icon: 'Lock',
+        roles: [UserRole.SUPER_ADMIN],
+      },
+      {
         id: 'system-issues',
         title: 'System Health & Bugs',
         path: '/system-issues',

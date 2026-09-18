@@ -399,35 +399,35 @@ export function SystemIssueDetailsDrawer({
                 Reporter Details
               </h3>
 
-              <div className="grid grid-cols-2 gap-x-4 gap-y-3.5">
-                <div>
+              <div className="grid grid-cols-1 gap-x-4 gap-y-3.5 sm:grid-cols-2">
+                <div className="min-w-0">
                   <span className="text-neutral-450 block text-[9px] font-black tracking-wider uppercase dark:text-neutral-500">
                     Name
                   </span>
-                  <span className="mt-1 flex items-center gap-1 font-semibold text-neutral-700 dark:text-neutral-300">
+                  <span className="mt-1 flex items-center gap-1.5 font-semibold text-neutral-700 dark:text-neutral-300">
                     <User className="h-3.5 w-3.5 shrink-0 text-neutral-400" />
-                    {activeIssue.reporter_name}
+                    <span className="min-w-0 break-words">{activeIssue.reporter_name}</span>
                   </span>
                 </div>
 
-                <div>
+                <div className="min-w-0">
                   <span className="text-neutral-450 block text-[9px] font-black tracking-wider uppercase dark:text-neutral-500">
                     Email
                   </span>
-                  <span className="mt-1 flex items-center gap-1 font-semibold text-neutral-700 dark:text-neutral-300">
-                    <Mail className="h-3.5 w-3.5 shrink-0 text-neutral-400" />
-                    {activeIssue.reporter_email}
+                  <span className="mt-1 flex items-start gap-1.5 font-semibold text-neutral-700 dark:text-neutral-300">
+                    <Mail className="mt-0.5 h-3.5 w-3.5 shrink-0 text-neutral-400" />
+                    <span className="min-w-0 break-all">{activeIssue.reporter_email}</span>
                   </span>
                 </div>
 
                 {activeIssue.reporter_phone && (
-                  <div>
+                  <div className="min-w-0">
                     <span className="text-neutral-450 block text-[9px] font-black tracking-wider uppercase dark:text-neutral-500">
                       Phone
                     </span>
-                    <span className="mt-1 flex items-center gap-1 font-semibold text-neutral-700 dark:text-neutral-300">
+                    <span className="mt-1 flex items-center gap-1.5 font-semibold text-neutral-700 dark:text-neutral-300">
                       <Phone className="h-3.5 w-3.5 shrink-0 text-neutral-400" />
-                      {activeIssue.reporter_phone}
+                      <span className="min-w-0 break-words">{activeIssue.reporter_phone}</span>
                     </span>
                   </div>
                 )}

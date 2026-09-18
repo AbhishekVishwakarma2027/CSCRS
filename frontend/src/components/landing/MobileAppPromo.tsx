@@ -67,7 +67,7 @@ export function MobileAppPromo() {
             {/* Right Side: Realistic Phone Mockup */}
             <div className="flex justify-center lg:col-span-5">
               {/* Premium smartphone frame proportions (thin bezel, smooth corner radius) */}
-              <div className="relative flex h-[492px] w-[246px] flex-col justify-between overflow-hidden rounded-[38px] border-[8px] border-neutral-800 bg-neutral-950 p-2.5 shadow-xl shadow-black/25 transition-transform duration-500 select-none hover:scale-[1.02]">
+              <div className="relative z-10 flex h-[492px] w-[246px] flex-col justify-between overflow-hidden rounded-[38px] border-[8px] border-neutral-800 bg-neutral-950 p-2.5 shadow-xl shadow-black/25 transition-transform duration-500 select-none hover:scale-[1.02]">
                 {/* Speaker slit notch */}
                 <div className="absolute top-1.5 left-1/2 z-30 flex h-3.5 w-16 -translate-x-1/2 items-center justify-center rounded-full bg-neutral-900">
                   <div className="mr-1.5 h-1.5 w-1.5 rounded-full bg-blue-900" />

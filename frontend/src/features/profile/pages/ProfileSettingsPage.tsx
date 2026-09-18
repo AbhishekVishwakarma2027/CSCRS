@@ -127,10 +127,10 @@ export default function ProfileSettingsPage() {
       {/* Header */}
       <div className="dark:border-neutral-850 flex flex-col gap-4 border-b border-neutral-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="dark:text-blue-450 flex items-center gap-1.5 text-2xl font-black tracking-widest text-[#0A3C7D] uppercase">
+          <h1 className="flex items-center gap-2 text-2xl font-black tracking-tight text-neutral-800 dark:text-white">
             <User className="h-5 w-5" />
             My Profile & Settings
-          </h2>
+          </h1>
           <p className="text-neutral-450 mt-1 text-[13px] font-semibold dark:text-neutral-500">
             Manage your personal information, contact details, and account security.
           </p>

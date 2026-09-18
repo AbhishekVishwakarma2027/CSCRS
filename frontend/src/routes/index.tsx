@@ -35,6 +35,11 @@ const NotificationsPage = lazy(() => import('@/features/notifications/pages/Noti
 const SuperAdminGovernancePage = lazy(
   () => import('@/features/super-admin/pages/SuperAdminGovernancePage')
 )
+const BroadcastManagementPage = lazy(
+  () => import('@/features/super-admin/pages/BroadcastManagementPage')
+)
+const PublicNewsPressPage = lazy(() => import('@/features/super-admin/pages/PublicNewsPressPage'))
+const AuditSecurityPage = lazy(() => import('@/features/super-admin/pages/AuditSecurityPage'))
 const UnauthorizedPage = lazy(() => import('@/features/auth/pages/UnauthorizedPage'))
 const NotFoundPage = lazy(() => import('@/features/auth/pages/NotFoundPage'))
 const LandingPage = lazy(() => import('@/pages/LandingPage'))
@@ -221,6 +226,36 @@ export const router = createBrowserRouter([
           <ProtectedRoute roles={[UserRole.SUPER_ADMIN]}>
             <Suspense fallback={<PageLoader />}>
               <SuperAdminGovernancePage />
+            </Suspense>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: PATHS.SUPER_ADMIN_BROADCASTS,
+        element: (
+          <ProtectedRoute roles={[UserRole.SUPER_ADMIN]}>
+            <Suspense fallback={<PageLoader />}>
+              <BroadcastManagementPage />
+            </Suspense>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: PATHS.SUPER_ADMIN_PUBLIC_NEWS,
+        element: (
+          <ProtectedRoute roles={[UserRole.SUPER_ADMIN]}>
+            <Suspense fallback={<PageLoader />}>
+              <PublicNewsPressPage />
+            </Suspense>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: PATHS.SUPER_ADMIN_AUDIT_SECURITY,
+        element: (
+          <ProtectedRoute roles={[UserRole.SUPER_ADMIN]}>
+            <Suspense fallback={<PageLoader />}>
+              <AuditSecurityPage />
             </Suspense>
           </ProtectedRoute>
         ),

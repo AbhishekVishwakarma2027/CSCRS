@@ -36,8 +36,7 @@ const getSessionIdFromToken = (): string | null => {
         .join('')
     )
     return JSON.parse(jsonPayload).sid || null
-  } catch (e) {
-    console.error('Error decoding session ID from token:', e)
+  } catch {
     return null
   }
 }
@@ -114,8 +113,7 @@ export default function SettingsPage() {
       // Set unique sessions list sorted by last used / created
       setSessions(Array.from(map.values()))
       setHasFetched(true)
-    } catch (err) {
-      console.error('Failed to fetch sessions:', err)
+    } catch {
       setIsError(true)
       toast.error('Failed to load active sessions.')
     } finally {
@@ -131,8 +129,7 @@ export default function SettingsPage() {
       // Perform local cleanup (clears local token cache and user context)
       await logout()
       navigate(PATHS.LOGIN)
-    } catch (err) {
-      console.error('Failed to logout from all devices:', err)
+    } catch {
       toast.error('Failed to revoke all sessions.')
     } finally {
       setIsSubmitting(false)
@@ -145,10 +142,10 @@ export default function SettingsPage() {
       {/* Header */}
       <div className="dark:border-neutral-850 flex flex-col gap-4 border-b border-neutral-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="dark:text-blue-455 flex items-center gap-1.5 text-2xl font-black tracking-widest text-[#0A3C7D] uppercase">
+          <h1 className="flex items-center gap-2 text-2xl font-black tracking-tight text-neutral-800 dark:text-white">
             <Shield className="h-5 w-5" />
             Security & Settings
-          </h2>
+          </h1>
           <p className="text-neutral-450 mt-1 text-[13px] font-semibold dark:text-neutral-500">
             Monitor active web client sessions, view browser metadata, and manage device access.
           </p>

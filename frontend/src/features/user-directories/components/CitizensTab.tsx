@@ -104,18 +104,18 @@ export function CitizensTab() {
     <div className="space-y-4">
       {/* Filters and Search Bar */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative max-w-md flex-1">
-          <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-neutral-400" />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search by name, email, or phone..."
-            className="w-full rounded-lg border border-neutral-200 bg-white py-2 pr-3 pl-9 text-[13px] font-semibold outline-none focus:border-[#0A3C7D] focus:ring-1 focus:ring-[#0A3C7D] dark:border-neutral-800 dark:bg-[#1C1C1E] dark:text-neutral-200"
-          />
-        </div>
+        <div className="flex max-w-lg flex-1 flex-col gap-2.5 sm:flex-row sm:items-center">
+          <div className="relative flex-1">
+            <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search by name, email, or phone..."
+              className="w-full rounded-lg border border-neutral-200 bg-white py-2 pr-3 pl-9 text-[13px] font-semibold outline-none focus:border-[#0A3C7D] focus:ring-1 focus:ring-[#0A3C7D] dark:border-neutral-800 dark:bg-[#1C1C1E] dark:text-neutral-200"
+            />
+          </div>
 
-        <div className="flex items-center gap-2">
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'blocked')}
@@ -128,8 +128,8 @@ export function CitizensTab() {
         </div>
       </div>
 
-      {/* Main Table Container */}
-      <div className="dark:border-neutral-850 rounded-xl border border-neutral-200/60 bg-white shadow-xs dark:bg-[#1E1E20]">
+      {/* Main Table Container (Desktop & Tablet) */}
+      <div className="dark:border-neutral-850 hidden rounded-xl border border-neutral-200/60 bg-white shadow-xs md:block dark:bg-[#1E1E20]">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-[13px] font-semibold whitespace-nowrap text-neutral-600 dark:text-neutral-300">
             <thead>
@@ -178,7 +178,7 @@ export function CitizensTab() {
                     <div className="flex flex-col items-center justify-center gap-2">
                       <AlertCircle className="h-8 w-8 text-rose-500" />
                       <p className="text-[14px] font-bold text-neutral-700 dark:text-neutral-300">
-                        Failed to load citizens directory.
+                        Failed to load registered citizens directory.
                       </p>
                       <Button
                         variant="outline"
@@ -204,8 +204,8 @@ export function CitizensTab() {
                       </h3>
                       <p className="mt-1 max-w-sm text-[13px] font-semibold text-neutral-500 dark:text-neutral-400">
                         {searchTerm || statusFilter !== 'all'
-                          ? 'No citizens match the selected filter parameters.'
-                          : 'No citizen records exist in the system directory.'}
+                          ? 'No citizen accounts match the selected filter parameters.'
+                          : 'No registered citizen records exist in the system directory.'}
                       </p>
                     </div>
                   </td>
@@ -341,6 +341,157 @@ export function CitizensTab() {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Mobile Responsive Cards Reflow */}
+      <div className="space-y-3 md:hidden">
+        {isLoading ? (
+          Array.from({ length: 3 }).map((_, idx) => (
+            <div
+              key={idx}
+              className="dark:border-neutral-850 animate-pulse space-y-2 rounded-xl border border-neutral-200/60 bg-white p-4 dark:bg-[#1E1E20]"
+            >
+              <div className="h-4 w-1/2 rounded bg-neutral-200 dark:bg-neutral-800" />
+              <div className="h-3 w-3/4 rounded bg-neutral-200 dark:bg-neutral-800" />
+            </div>
+          ))
+        ) : isError ? (
+          <div className="dark:border-neutral-850 rounded-xl border border-neutral-200/60 bg-white p-6 text-center dark:bg-[#1E1E20]">
+            <AlertCircle className="mx-auto h-8 w-8 text-rose-500" />
+            <p className="mt-2 text-sm font-bold text-neutral-700 dark:text-neutral-300">
+              Failed to load registered citizens directory.
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => refetch()}
+              className="mt-3 gap-1.5 text-xs font-bold"
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+              Retry
+            </Button>
+          </div>
+        ) : filteredCitizens.length === 0 ? (
+          <div className="dark:border-neutral-850 rounded-xl border border-neutral-200/60 bg-white p-8 text-center dark:bg-[#1E1E20]">
+            <XCircle className="mx-auto h-8 w-8 text-neutral-400" />
+            <h3 className="mt-2 text-sm font-black text-neutral-700 uppercase dark:text-neutral-300">
+              No Citizens Found
+            </h3>
+          </div>
+        ) : (
+          filteredCitizens.map((citizen) => {
+            const isBlocked = citizen.is_blocked || !citizen.is_active
+
+            return (
+              <div
+                key={citizen.id}
+                className="dark:border-neutral-850 space-y-3 rounded-xl border border-neutral-200/60 bg-white p-4 shadow-xs dark:bg-[#1E1E20]"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex min-w-0 items-center gap-2.5">
+                    <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[#0A3C7D]/10 text-xs font-black text-[#0A3C7D] dark:bg-blue-900/30 dark:text-blue-400">
+                      {citizen.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="min-w-0">
+                      <span className="block truncate font-bold text-neutral-800 dark:text-neutral-200">
+                        {citizen.name}
+                      </span>
+                      <span className="text-neutral-450 block text-[11px] font-semibold dark:text-neutral-500">
+                        ID: #{citizen.id}
+                      </span>
+                    </div>
+                  </div>
+
+                  <span
+                    className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-black tracking-wider uppercase ${
+                      isBlocked
+                        ? 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-900/30 dark:bg-rose-950/20 dark:text-rose-400'
+                        : 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/30 dark:bg-emerald-950/20 dark:text-emerald-400'
+                    }`}
+                  >
+                    {isBlocked ? (
+                      <>
+                        <Ban className="h-3 w-3" />
+                        Blocked
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="h-3 w-3" />
+                        Active
+                      </>
+                    )}
+                  </span>
+                </div>
+
+                <div className="space-y-1.5 border-t border-neutral-100 pt-2.5 text-xs dark:border-neutral-800">
+                  <div className="flex items-start gap-1.5 text-neutral-700 dark:text-neutral-300">
+                    <Mail className="mt-0.5 h-3.5 w-3.5 shrink-0 text-neutral-400" />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(citizen.email)
+                        toast.success(`Copied ${citizen.email} to clipboard!`)
+                      }}
+                      className="group inline-flex min-w-0 cursor-pointer items-center gap-1 text-left font-semibold text-neutral-800 hover:text-[#0A3C7D] dark:text-neutral-200 dark:hover:text-blue-400"
+                    >
+                      <span className="min-w-0 break-all select-text">{citizen.email}</span>
+                      <Copy className="h-3 w-3 shrink-0 text-neutral-400 opacity-60 group-hover:opacity-100" />
+                    </button>
+                  </div>
+
+                  {citizen.phone && (
+                    <div className="flex items-center gap-1.5 text-[12px] text-neutral-500">
+                      <Phone className="h-3 w-3 shrink-0 text-neutral-400" />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(citizen.phone!)
+                          toast.success(`Copied ${citizen.phone} to clipboard!`)
+                        }}
+                        className="group inline-flex min-w-0 cursor-pointer items-center gap-1 text-left font-medium text-neutral-600 hover:text-[#0A3C7D] dark:text-neutral-300 dark:hover:text-blue-400"
+                      >
+                        <span className="min-w-0 break-words select-text">{citizen.phone}</span>
+                        <Copy className="h-3 w-3 shrink-0 text-neutral-400 opacity-60 group-hover:opacity-100" />
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="text-neutral-450 flex items-center gap-1.5 dark:text-neutral-400">
+                    <Calendar className="h-3.5 w-3.5 shrink-0 text-neutral-400" />
+                    <span>{formatDate(citizen.created_at)}</span>
+                  </div>
+                </div>
+
+                <div className="border-t border-neutral-100 pt-2.5 text-right dark:border-neutral-800">
+                  {isBlocked ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setUnblockTarget(citizen)}
+                      className="h-8 border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-950/30"
+                    >
+                      Unblock
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setTargetCitizen(citizen)
+                        setBlockType('SUSPENDED')
+                        setReason('')
+                      }}
+                      className="h-8 border-rose-300 text-rose-700 hover:bg-rose-50 dark:border-rose-800 dark:text-rose-400 dark:hover:bg-rose-950/30"
+                    >
+                      <Ban className="mr-1.5 h-3.5 w-3.5" />
+                      Block
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )
+          })
+        )}
       </div>
 
       {/* Block Citizen Modal */}

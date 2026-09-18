@@ -86,7 +86,7 @@ export function PlatformHealthWidget() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3 select-none">
+        <div className="flex flex-wrap items-center gap-2.5 select-none sm:gap-3">
           <div className="flex items-center gap-1.5 rounded-lg border border-neutral-200 px-3 py-1.5 text-xs font-bold dark:border-neutral-800">
             <Database className="h-3.5 w-3.5 text-blue-500" />
             <span>

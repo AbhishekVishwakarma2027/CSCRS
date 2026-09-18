@@ -268,54 +268,54 @@ export function DepartmentDetailsDrawer({
                 Administrative Contact Registry
               </h3>
 
-              <div className="grid grid-cols-2 gap-x-4 gap-y-3.5">
-                <div>
+              <div className="grid grid-cols-1 gap-x-4 gap-y-3.5 sm:grid-cols-2">
+                <div className="min-w-0">
                   <span className="text-neutral-450 block text-[9px] font-black tracking-wider uppercase dark:text-neutral-500">
                     Department Head
                   </span>
                   {deptAdmin ? (
                     <span className="mt-1 flex items-center gap-1.5 font-bold text-neutral-800 dark:text-neutral-200">
                       <User className="h-3.5 w-3.5 shrink-0 text-blue-500" />
-                      {deptAdmin.name}
+                      <span className="min-w-0 break-words">{deptAdmin.name}</span>
                     </span>
                   ) : (
-                    <span className="dark:text-neutral-550 mt-1 block flex items-center gap-1 font-semibold text-neutral-500 italic">
+                    <span className="dark:text-neutral-550 mt-1 flex items-center gap-1 font-semibold text-neutral-500 italic">
                       <User className="h-3.5 w-3.5 shrink-0 text-neutral-400" />
-                      Not Assigned
+                      <span>Not Assigned</span>
                     </span>
                   )}
                 </div>
 
-                <div>
+                <div className="min-w-0">
                   <span className="text-neutral-450 block text-[9px] font-black tracking-wider uppercase dark:text-neutral-500">
                     Contact Email
                   </span>
                   {deptAdmin ? (
-                    <span className="mt-1 flex items-center gap-1.5 font-bold text-blue-600 dark:text-blue-400">
-                      <Mail className="h-3.5 w-3.5 shrink-0 text-blue-500" />
-                      {deptAdmin.email}
+                    <span className="mt-1 flex items-start gap-1.5 font-bold text-blue-600 dark:text-blue-400">
+                      <Mail className="mt-0.5 h-3.5 w-3.5 shrink-0 text-blue-500" />
+                      <span className="min-w-0 break-all">{deptAdmin.email}</span>
                     </span>
                   ) : (
-                    <span className="dark:text-neutral-550 mt-1 block flex items-center gap-1 font-semibold text-neutral-500 italic">
+                    <span className="dark:text-neutral-550 mt-1 flex items-center gap-1 font-semibold text-neutral-500 italic">
                       <Mail className="h-3.5 w-3.5 shrink-0 text-neutral-400" />
-                      No Registry Email
+                      <span>No Registry Email</span>
                     </span>
                   )}
                 </div>
 
-                <div>
+                <div className="min-w-0">
                   <span className="text-neutral-450 block text-[9px] font-black tracking-wider uppercase dark:text-neutral-500">
                     Contact Number
                   </span>
                   {deptAdmin?.phone ? (
                     <span className="mt-1 flex items-center gap-1.5 font-bold text-neutral-800 dark:text-neutral-200">
                       <Phone className="h-3.5 w-3.5 shrink-0 text-blue-500" />
-                      {deptAdmin.phone}
+                      <span className="min-w-0 break-words">{deptAdmin.phone}</span>
                     </span>
                   ) : (
-                    <span className="dark:text-neutral-550 mt-1 block flex items-center gap-1 font-semibold text-neutral-500 italic">
+                    <span className="dark:text-neutral-550 mt-1 flex items-center gap-1 font-semibold text-neutral-500 italic">
                       <Phone className="h-3.5 w-3.5 shrink-0 text-neutral-400" />
-                      No phone registered
+                      <span>No phone registered</span>
                     </span>
                   )}
                 </div>

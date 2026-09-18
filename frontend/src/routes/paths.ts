@@ -31,6 +31,9 @@ export const PATHS = {
   MANUAL_REVIEW: '/resolutions/manual-review',
   FORWARD_REQUESTS: '/forward-requests',
   SUPER_ADMIN_GOVERNANCE: '/super-admin/governance',
+  SUPER_ADMIN_BROADCASTS: '/super-admin/broadcasts',
+  SUPER_ADMIN_PUBLIC_NEWS: '/super-admin/public-news',
+  SUPER_ADMIN_AUDIT_SECURITY: '/super-admin/audit-security',
   NOTIFICATIONS: '/notifications',
 
   // Error states

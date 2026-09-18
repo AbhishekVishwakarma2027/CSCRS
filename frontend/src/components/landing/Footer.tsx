@@ -1,3 +1,5 @@
+import { APP_CONFIG } from '@/config/app.config'
+
 export function Footer() {
   const currentYear = new Date().getFullYear()
 
@@ -142,9 +144,9 @@ export function Footer() {
 
           {/* Metadata: Version and updates */}
           <div className="space-y-1.5 text-center font-semibold md:text-right">
-            <p>Last Updated: July 31, 2026</p>
+            <p>Last Updated: {APP_CONFIG.lastUpdatedDate}</p>
             <p className="text-[11px] font-medium text-neutral-500">
-              Build Version: v0.1.2-alpha.landing-polish
+              Build Version: {APP_CONFIG.version}
             </p>
           </div>
 

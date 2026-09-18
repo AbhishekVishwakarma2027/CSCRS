@@ -52,8 +52,8 @@ export function LoginAuditsTable() {
         </div>
       </div>
 
-      {/* Table View */}
-      <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white shadow-xs dark:border-neutral-800 dark:bg-[#1C1C1E]">
+      {/* Table View (Desktop & Tablet) */}
+      <div className="hidden overflow-x-auto rounded-xl border border-neutral-200 bg-white shadow-xs md:block dark:border-neutral-800 dark:bg-[#1C1C1E]">
         <table className="w-full text-left text-xs font-semibold select-none">
           <thead className="border-b border-neutral-100 bg-neutral-50/80 text-[11px] font-black tracking-wider text-neutral-400 uppercase dark:border-neutral-800 dark:bg-neutral-900/50">
             <tr>
@@ -141,14 +141,85 @@ export function LoginAuditsTable() {
         </table>
       </div>
 
+      {/* Mobile Responsive Cards Reflow View */}
+      <div className="space-y-3 md:hidden">
+        {isLoading ? (
+          <div className="rounded-xl border border-neutral-200 bg-white p-6 text-center text-xs text-neutral-400 dark:border-neutral-800 dark:bg-[#1C1C1E]">
+            Loading login security audit records...
+          </div>
+        ) : error ? (
+          <div className="rounded-xl border border-rose-200 bg-rose-50/30 p-6 text-center text-xs font-bold text-rose-600 dark:border-rose-900/40 dark:bg-rose-950/20">
+            Failed to load login audits.{' '}
+            <button onClick={() => refetch()} className="underline">
+              Retry
+            </button>
+          </div>
+        ) : items.length === 0 ? (
+          <div className="rounded-xl border border-neutral-200 bg-white p-6 text-center text-xs text-neutral-400 dark:border-neutral-800 dark:bg-[#1C1C1E]">
+            No login audit records found.
+          </div>
+        ) : (
+          items.map((log) => {
+            const isSelected = selectedAudit?.id === log.id
+            return (
+              <div
+                key={log.id}
+                onClick={() => setSelectedAudit(log)}
+                className={`cursor-pointer space-y-2.5 rounded-xl border p-4 transition-colors ${
+                  isSelected
+                    ? 'border-indigo-300 bg-indigo-50/40 dark:border-indigo-800 dark:bg-indigo-950/30'
+                    : 'border-neutral-200 bg-white hover:bg-neutral-50/80 dark:border-neutral-800 dark:bg-[#1C1C1E] dark:hover:bg-[#222225]'
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-mono text-xs font-bold text-neutral-500">#{log.id}</span>
+                  {log.login_success ? (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
+                      <CheckCircle className="h-3 w-3" />
+                      Success
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-700 dark:bg-red-950/40 dark:text-red-400">
+                      <XCircle className="h-3 w-3" />
+                      Failed
+                    </span>
+                  )}
+                </div>
+
+                <div className="space-y-1 text-xs">
+                  <div className="min-w-0">
+                    <span className="block text-[11px] font-bold text-neutral-400 uppercase">
+                      Email Address
+                    </span>
+                    <span className="min-w-0 font-bold break-all text-neutral-800 dark:text-white">
+                      {log.email || (log.user_id ? `User #${log.user_id}` : 'Anonymous')}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-wrap items-center justify-between pt-1 text-[11px] text-neutral-500 dark:text-neutral-400">
+                    <span>
+                      IP:{' '}
+                      <strong className="font-mono text-neutral-700 dark:text-neutral-300">
+                        {log.ip_address || 'Unknown'}
+                      </strong>
+                    </span>
+                    <span>{log.login_at ? new Date(log.login_at).toLocaleString() : 'N/A'}</span>
+                  </div>
+                </div>
+              </div>
+            )
+          })
+        )}
+      </div>
+
       {/* Pagination Footer */}
       {!isLoading && !error && total > 0 && (
-        <div className="flex items-center justify-between rounded-xl border border-neutral-200 bg-white p-3 shadow-xs select-none dark:border-neutral-800 dark:bg-[#1C1C1E]">
+        <div className="flex flex-col gap-2.5 rounded-xl border border-neutral-200 bg-white p-3 shadow-xs select-none sm:flex-row sm:items-center sm:justify-between dark:border-neutral-800 dark:bg-[#1C1C1E]">
           <span className="text-xs font-semibold text-neutral-500">
             Showing {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, total)} of {total} items
           </span>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center justify-end gap-1.5">
             <Button
               type="button"
               variant="outline"

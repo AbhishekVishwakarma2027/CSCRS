@@ -37,8 +37,7 @@ export function ActiveAnnouncementsWidget() {
       await endMutation.mutateAsync(broadcastId)
       toast.success('Announcement ended for all recipient users.')
       setConfirmEndId(null)
-    } catch (err) {
-      console.error(err)
+    } catch {
       toast.error('Failed to end announcement.')
     }
   }
@@ -50,7 +49,6 @@ export function ActiveAnnouncementsWidget() {
       toast.success(`Scheduled announcement "${deletingAnnouncement.title}" deleted successfully.`)
       setDeletingAnnouncement(null)
     } catch (err: unknown) {
-      console.error(err)
       const apiErr = err as { response?: { data?: { detail?: string } } }
       const errorDetail =
         apiErr?.response?.data?.detail || 'Failed to delete scheduled announcement.'
@@ -263,7 +261,7 @@ export function ActiveAnnouncementsWidget() {
                     {item.lifecycle_state === 'ACTIVE' && (
                       <div className="shrink-0 pt-2 sm:pt-0">
                         {isConfirming ? (
-                          <div className="flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 p-2 dark:border-rose-900/40 dark:bg-rose-950/30">
+                          <div className="flex flex-wrap items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 p-2 dark:border-rose-900/40 dark:bg-rose-950/30">
                             <span className="text-[11px] font-bold text-rose-700 dark:text-rose-400">
                               End for all users?
                             </span>

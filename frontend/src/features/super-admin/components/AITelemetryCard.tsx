@@ -21,8 +21,7 @@ export function AITelemetryCard() {
       window.URL.revokeObjectURL(url)
       document.body.removeChild(a)
       toast.success(`AI Dataset exported successfully as ${format.toUpperCase()}.`)
-    } catch (err: unknown) {
-      console.error(err)
+    } catch {
       toast.error('Failed to export AI dataset.')
     }
   }
@@ -57,7 +56,7 @@ export function AITelemetryCard() {
             AI Model & Verification Telemetry
           </h3>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <div className="mr-2 hidden items-center gap-1.5 text-xs font-bold text-neutral-500 sm:flex">
             <Layers className="h-3.5 w-3.5 text-indigo-400" />
             <span>Active Models: {data.distinct_model_versions?.join(', ') || 'N/A'}</span>

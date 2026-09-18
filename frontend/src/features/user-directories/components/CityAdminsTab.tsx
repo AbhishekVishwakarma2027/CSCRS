@@ -105,10 +105,10 @@ export function CityAdminsTab() {
 
   return (
     <div className="space-y-4">
-      {/* Search & Actions Bar */}
+      {/* Controls Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-1 items-center gap-2">
-          <div className="relative max-w-md flex-1">
+        <div className="flex max-w-lg flex-1 flex-col gap-2.5 sm:flex-row sm:items-center">
+          <div className="relative flex-1">
             <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-neutral-400" />
             <input
               type="text"
@@ -139,8 +139,8 @@ export function CityAdminsTab() {
         </Button>
       </div>
 
-      {/* Table Container */}
-      <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-[#1C1C1E]">
+      {/* Table Container (Desktop & Tablet) */}
+      <div className="hidden overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm md:block dark:border-neutral-800 dark:bg-[#1C1C1E]">
         {isLoading ? (
           <div className="flex items-center justify-center p-12">
             <RefreshCw className="h-6 w-6 animate-spin text-[#0A3C7D] dark:text-blue-500" />
@@ -290,6 +290,137 @@ export function CityAdminsTab() {
               </tbody>
             </table>
           </div>
+        )}
+      </div>
+
+      {/* Mobile Responsive Cards Reflow */}
+      <div className="space-y-3 md:hidden">
+        {isLoading ? (
+          Array.from({ length: 3 }).map((_, idx) => (
+            <div
+              key={idx}
+              className="dark:border-neutral-850 animate-pulse space-y-2 rounded-xl border border-neutral-200/60 bg-white p-4 dark:bg-[#1E1E20]"
+            >
+              <div className="h-4 w-1/2 rounded bg-neutral-200 dark:bg-neutral-800" />
+              <div className="h-3 w-3/4 rounded bg-neutral-200 dark:bg-neutral-800" />
+            </div>
+          ))
+        ) : isError ? (
+          <div className="dark:border-neutral-850 rounded-xl border border-neutral-200/60 bg-white p-6 text-center dark:bg-[#1E1E20]">
+            <AlertCircle className="mx-auto h-8 w-8 text-rose-500" />
+            <p className="mt-2 text-sm font-bold text-neutral-700 dark:text-neutral-300">
+              Failed to load City Administrators
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => refetch()}
+              className="mt-3 gap-1.5 text-xs font-bold"
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+              Retry
+            </Button>
+          </div>
+        ) : filteredAdmins.length === 0 ? (
+          <div className="dark:border-neutral-850 rounded-xl border border-neutral-200/60 bg-white p-8 text-center dark:bg-[#1E1E20]">
+            <ShieldCheck className="mx-auto h-8 w-8 text-neutral-400" />
+            <p className="mt-2 text-sm font-bold text-neutral-600 dark:text-neutral-400">
+              No City Administrators found.
+            </p>
+          </div>
+        ) : (
+          filteredAdmins.map((admin) => {
+            const isBlocked = admin.is_blocked
+
+            return (
+              <div
+                key={admin.id}
+                className="dark:border-neutral-850 space-y-3 rounded-xl border border-neutral-200/60 bg-white p-4 shadow-xs dark:bg-[#1E1E20]"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex min-w-0 items-center gap-2.5">
+                    <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-blue-50 font-black text-[#0A3C7D] dark:bg-blue-950/50 dark:text-blue-400">
+                      {admin.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="min-w-0">
+                      <span className="block truncate font-bold text-neutral-800 dark:text-neutral-200">
+                        {admin.name}
+                      </span>
+                      <span className="text-neutral-450 block text-[11px] font-semibold dark:text-neutral-500">
+                        ID: #{admin.id}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex shrink-0 flex-wrap gap-1">
+                    {isBlocked ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2 py-0.5 text-[10px] font-bold text-rose-600 dark:bg-rose-950/40 dark:text-rose-400">
+                        <XCircle className="h-3 w-3" />
+                        Blocked
+                      </span>
+                    ) : admin.is_active ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400">
+                        <CheckCircle2 className="h-3 w-3" />
+                        Active
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-600 dark:bg-amber-950/40 dark:text-amber-400">
+                        <AlertCircle className="h-3 w-3" />
+                        Pending
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-1.5 border-t border-neutral-100 pt-2.5 text-xs dark:border-neutral-800">
+                  <div className="flex items-start gap-1.5 text-neutral-700 dark:text-neutral-300">
+                    <Mail className="mt-0.5 h-3.5 w-3.5 shrink-0 text-neutral-400" />
+                    <span className="min-w-0 font-semibold break-all">{admin.email}</span>
+                  </div>
+
+                  {admin.phone && (
+                    <div className="flex items-center gap-1.5 text-[12px] text-neutral-500">
+                      <Phone className="h-3 w-3 shrink-0 text-neutral-400" />
+                      <span className="min-w-0 font-medium break-words">{admin.phone}</span>
+                    </div>
+                  )}
+
+                  <div className="text-neutral-450 flex items-center gap-1.5 dark:text-neutral-400">
+                    <Calendar className="h-3.5 w-3.5 shrink-0 text-neutral-400" />
+                    <span>{formatDate(admin.created_at)}</span>
+                  </div>
+                </div>
+
+                <div className="border-t border-neutral-100 pt-2.5 text-right dark:border-neutral-800">
+                  {isBlocked ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setUnblockTarget(admin)}
+                      className="h-8 border-emerald-200 bg-emerald-50/50 text-xs font-bold text-emerald-700 hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-400"
+                    >
+                      <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />
+                      Unblock
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setTargetAdmin(admin)
+                        setReason('')
+                        setBlockType('SUSPENDED')
+                      }}
+                      className="h-8 border-rose-200 bg-rose-50/50 text-xs font-bold text-rose-700 hover:bg-rose-100 dark:border-rose-800 dark:bg-rose-950/30 dark:text-rose-400"
+                    >
+                      <Ban className="mr-1.5 h-3.5 w-3.5" />
+                      Block
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )
+          })
         )}
       </div>
 

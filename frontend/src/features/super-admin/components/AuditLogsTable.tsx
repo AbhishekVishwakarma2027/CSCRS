@@ -95,8 +95,8 @@ export function AuditLogsTable() {
         </div>
       </div>
 
-      {/* Table View */}
-      <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white shadow-xs dark:border-neutral-800 dark:bg-[#1C1C1E]">
+      {/* Table View (Desktop & Tablet) */}
+      <div className="hidden overflow-x-auto rounded-xl border border-neutral-200 bg-white shadow-xs md:block dark:border-neutral-800 dark:bg-[#1C1C1E]">
         <table className="w-full text-left text-xs font-semibold select-none">
           <thead className="border-b border-neutral-100 bg-neutral-50/80 text-[11px] font-black tracking-wider text-neutral-400 uppercase dark:border-neutral-800 dark:bg-neutral-900/50">
             <tr>
@@ -176,14 +176,76 @@ export function AuditLogsTable() {
         </table>
       </div>
 
+      {/* Mobile Responsive Cards Reflow View */}
+      <div className="space-y-3 md:hidden">
+        {isLoading ? (
+          <div className="rounded-xl border border-neutral-200 bg-white p-6 text-center text-xs text-neutral-400 dark:border-neutral-800 dark:bg-[#1C1C1E]">
+            Loading audit log records...
+          </div>
+        ) : error ? (
+          <div className="rounded-xl border border-rose-200 bg-rose-50/30 p-6 text-center text-xs font-bold text-rose-600 dark:border-rose-900/40 dark:bg-rose-950/20">
+            Failed to load audit logs.{' '}
+            <button onClick={() => refetch()} className="underline">
+              Retry
+            </button>
+          </div>
+        ) : items.length === 0 ? (
+          <div className="rounded-xl border border-neutral-200 bg-white p-6 text-center text-xs text-neutral-400 dark:border-neutral-800 dark:bg-[#1C1C1E]">
+            No audit log records found.
+          </div>
+        ) : (
+          items.map((log) => {
+            const isSelected = selectedLog?.id === log.id
+            return (
+              <div
+                key={log.id}
+                onClick={() => setSelectedLog(log)}
+                className={`cursor-pointer space-y-2.5 rounded-xl border p-4 transition-colors ${
+                  isSelected
+                    ? 'border-blue-300 bg-blue-50/40 dark:border-blue-800 dark:bg-blue-950/30'
+                    : 'border-neutral-200 bg-white hover:bg-neutral-50/80 dark:border-neutral-800 dark:bg-[#1C1C1E] dark:hover:bg-[#222225]'
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-mono text-xs font-bold text-neutral-500">#{log.id}</span>
+                  <span className="rounded bg-blue-50 px-2 py-0.5 text-[11px] font-black text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
+                    {log.action}
+                  </span>
+                </div>
+
+                <div className="space-y-1 text-xs">
+                  <div className="flex items-center justify-between text-neutral-600 dark:text-neutral-400">
+                    <span>
+                      User:{' '}
+                      <strong className="text-neutral-800 dark:text-white">
+                        {log.user_id ? `User #${log.user_id}` : 'System'}
+                      </strong>
+                    </span>
+                    {log.report_id && <span className="font-mono">Report #{log.report_id}</span>}
+                  </div>
+                  <div className="text-[11px] text-neutral-400">
+                    {log.created_at ? new Date(log.created_at).toLocaleString() : 'N/A'}
+                  </div>
+                  {log.details && (
+                    <p className="mt-1 line-clamp-2 text-neutral-500 dark:text-neutral-400">
+                      {log.details}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )
+          })
+        )}
+      </div>
+
       {/* Pagination Footer */}
       {!isLoading && !error && total > 0 && (
-        <div className="flex items-center justify-between rounded-xl border border-neutral-200 bg-white p-3 shadow-xs select-none dark:border-neutral-800 dark:bg-[#1C1C1E]">
+        <div className="flex flex-col gap-2.5 rounded-xl border border-neutral-200 bg-white p-3 shadow-xs select-none sm:flex-row sm:items-center sm:justify-between dark:border-neutral-800 dark:bg-[#1C1C1E]">
           <span className="text-xs font-semibold text-neutral-500">
             Showing {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, total)} of {total} items
           </span>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center justify-end gap-1.5">
             <Button
               type="button"
               variant="outline"
