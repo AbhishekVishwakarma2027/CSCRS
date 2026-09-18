@@ -28,6 +28,7 @@ import {
   useUpdatePublicUpdateMutation,
   useTogglePublishPublicUpdateMutation,
   useDeletePublicUpdateMutation,
+  useUploadThumbnailMutation,
 } from '../hooks/use-public-updates-admin'
 
 export function PublicUpdatesManagementWidget() {
@@ -60,6 +61,7 @@ export function PublicUpdatesManagementWidget() {
   const updateMutation = useUpdatePublicUpdateMutation()
   const togglePublishMutation = useTogglePublishPublicUpdateMutation()
   const deleteMutation = useDeletePublicUpdateMutation()
+  const uploadThumbnailMutation = useUploadThumbnailMutation()
   // Client-side filtering over fetched page items
   const filteredUpdates = useMemo(() => {
     const rawUpdates = data?.items || []
