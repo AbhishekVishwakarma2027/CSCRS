@@ -1,522 +1,391 @@
-# CSCRS Architecture & Workflows Documentation
+# CSCRS System Architecture Specification
 
-## 1. System Architecture Overview
-
-The **Civic Surveillance & Complaint Resolution System (CSCRS)** is engineered as a multi-layered, micro-service-ready web application built around **FastAPI**, **SQLAlchemy ORM**, **SQLite/PostgreSQL**, and specialized **Deep Learning Computer Vision** models.
-
-```mermaid
-graph TD
-    Client[Web / Mobile Clients] -->|HTTPS / JWT| API[FastAPI API Router Layer]
-    API --> Auth[Authentication & Security]
-    API --> Services[Domain Services Layer]
-    
-    subgraph Core Domain Services
-        Services --> ReportSvc[Report Service]
-        Services --> AssignSvc[Assignment Service]
-        Services --> ResSvc[Resolution Service]
-        Services --> FwdSvc[Forward Request Service]
-        Services --> AnalyticsSvc[Analytics Service]
-        Services --> AuditSvc[Audit Log Service]
-        Services --> NotifSvc[Notification Service]
-    end
-
-    subgraph Verification & AI Inference Pipeline
-        ReportSvc --> InferEngine[Inference Engine]
-        ResSvc --> ResAI[Resolution AI Engine]
-        
-        InferEngine --> Verifier[Verification Engine]
-        Verifier --> EXIF[EXIF Detector]
-        Verifier --> Quality[Quality Detector - OpenCV]
-        Verifier --> RiskEng[Risk Engine]
-        
-        InferEngine --> YOLO[YOLO Predictor - best_cscrs_seg_v1.pt]
-        ResAI --> OpenCLIP[Scene Similarity - OpenCLIP ViT-B-32]
-        ResAI --> RuleEng[Resolution Rule Engine]
-    end
-
-    subgraph Data Access Layer
-        Services --> CRUD[SQLAlchemy CRUD Layer]
-        CRUD --> Models[SQLAlchemy Models]
-        Models --> DB [(PostgreSQL / SQLite)]
-    end
-
-    subgraph External System Interfaces
-        NotifSvc --> SMTP[SMTP Email Server]
-    end
-```
+This document presents the complete technical architecture of the **Crowdsourced Civic Issue Reporting and Resolution System (CSCRS)** codebase (`d:\Projects\CSCRS`).
 
 ---
 
-## 2. Global Dependency Graph
+## 1. System Overview & Product Identity
 
-```mermaid
-graph LR
-    api_routes[api/routes.py] --> api_auth[api/auth.py]
-    api_routes --> api_report[api/report.py]
-    api_routes --> api_assignment[api/assignment.py]
-    api_routes --> api_resolution[api/resolution.py]
-    api_routes --> api_forward[api/forward_request.py]
-    api_routes --> api_dashboard[api/dashboard.py]
-
-    api_report --> service_report[services/report_service.py]
-    api_report --> service_assign[services/assignment.py]
-    api_report --> service_duplicate[services/duplicate_detection_service.py]
-    api_report --> infer_engine[inference/engine.py]
-
-    infer_engine --> verifier_engine[verification/verifier.py]
-    infer_engine --> yolo_predictor[inference/predictor.py]
-    verifier_engine --> risk_engine[verification/risk_engine.py]
-    verifier_engine --> exif_detector[verification/exif/detector.py]
-    verifier_engine --> quality_detector[verification/quality/detector.py]
-
-    service_resolution[services/resolution.py] --> res_ai_engine[inference/resolution_ai/engine.py]
-    service_resolution --> res_rule_engine[inference/resolution_ai/rules.py]
-    res_ai_engine --> clip_similarity[inference/resolution_ai/similarity.py]
-
-    service_report --> db_crud_report[database/crud/report.py]
-    service_assign --> db_crud_assign[database/crud/assignment.py]
-    service_resolution --> db_crud_res[database/crud/resolution.py]
-```
-
----
-
-## 3. Service Interaction Map
+CSCRS is an end-to-end municipal governance platform designed for crowdsourced civic issue reporting, automated department dispatch, worker repair execution, AI-driven resolution validation, transparency dashboards, and Super Admin platform governance across Uttar Pradesh municipalities.
 
 ```mermaid
 graph TB
-    subgraph API Layer
-        AuthAPI[Auth API]
-        ReportAPI[Report API]
-        AssignAPI[Assignment API]
-        ResAPI[Resolution API]
-        FwdAPI[Forward Request API]
+    subgraph "Clients Layer"
+        CP["Citizen Web & Mobile"]
+        AP["Admin & Governance Portal"]
+        PP["Public Platform & State Dashboard"]
     end
 
-    subgraph Service Layer
-        AuthSvc[Auth Service]
-        ReportSvc[Report Service]
-        AssignSvc[Assignment Service]
-        ResSvc[Resolution Service]
-        FwdSvc[Forward Request Service]
-        DupSvc[Duplicate Detection Service]
-        AuditSvc[Audit Log Service]
-        InAppNotifSvc[InApp Notification Service]
-        EmailNotifSvc[Notification Service]
+    subgraph "Edge & Network Layer"
+        NGX["Nginx Reverse Proxy / SSL Gateway"]
+        RL["Redis Rate Limiter (SlowAPI)"]
     end
 
-    ReportAPI --> ReportSvc
-    ReportAPI --> DupSvc
-    ReportSvc --> AssignSvc
-    AssignAPI --> AssignSvc
-    ResAPI --> ResSvc
-    FwdAPI --> FwdSvc
+    subgraph "Application Server (FastAPI)"
+        AUTH["Auth & Session Module"]
+        REP["Report Processing Engine"]
+        DISP["Department Dispatcher"]
+        RES["Resolution Verification Engine"]
+        ANALYTICS["Analytics & Telemetry Service"]
+        PUBLIC_SVC["Public Dashboard & News Service"]
+    end
 
-    ReportSvc --> AuditSvc
-    AssignSvc --> AuditSvc
-    AssignSvc --> InAppNotifSvc
-    ResSvc --> AuditSvc
-    ResSvc --> InAppNotifSvc
-    ResSvc --> EmailNotifSvc
-    FwdSvc --> AuditSvc
-    FwdSvc --> InAppNotifSvc
+    subgraph "AI & Vision Pipeline"
+        YOLO["YOLOv8 Detection Engine"]
+        CLIP["OpenCLIP Scene Similarity"]
+        EXIF["EXIF / GPS Extractor"]
+    end
+
+    subgraph "Persistence & Infrastructure"
+        PG[(PostgreSQL 16 Primary DB)]
+        RD[(Redis 7 Session & Cache)]
+        FS["Upload File Storage (/uploads)"]
+    end
+
+    CP --> NGX
+    AP --> NGX
+    PP --> NGX
+
+    NGX --> RL
+    RL --> AUTH
+    RL --> REP
+    RL --> DISP
+    RL --> RES
+    RL --> ANALYTICS
+    RL --> PUBLIC_SVC
+
+    REP --> YOLO
+    REP --> CLIP
+    REP --> EXIF
+    RES --> CLIP
+    RES --> YOLO
+
+    AUTH --> PG
+    AUTH --> RD
+    REP --> PG
+    REP --> FS
+    DISP --> PG
+    RES --> PG
+    RES --> FS
+    ANALYTICS --> PG
+    PUBLIC_SVC --> PG
 ```
 
 ---
 
-## 4. Workflows & Sequence Diagrams
+## 2. High-Level Architecture Principles
 
-### Workflow 1: Authentication & User Management Flow
+1. **Codebase as Source of Truth**: Architecture strictly mirrors the actual implemented code in `backend/` and `frontend/`.
+2. **Decoupled System Architecture**: Clear separation of concern across REST API routers (`backend/api`), domain business services (`backend/services`), data access layer (`backend/database/crud`), and SQLAlchemy ORM models (`backend/database/models`).
+3. **Stateless API & Distributed Caching**: REST API containers are stateless; active sessions and rate-limiting metrics are persisted in Redis (`redis:7-alpine`).
+4. **Dual-Phase AI Verification**: AI computer vision operates at both issue reporting (YOLOv8 + GPS EXIF + OpenCLIP duplicate detection) and resolution validation (OpenCLIP before/after scene similarity + YOLO re-detection).
+5. **Exact-Role Authorization**: Fine-grained role enforcement (`require_citizen`, `require_worker`, `require_department_admin`, `require_city_admin`, `require_super_admin`).
+
+---
+
+## 3. Frontend Architecture (`frontend/src`)
+
+The frontend is built on **React 19**, **Vite**, **TypeScript**, and **Tailwind CSS**, using a feature-folder modular layout:
+
+- **App Shell & Routing (`src/routes/index.tsx`)**: `createBrowserRouter` with code-splitting (`React.lazy`) and role-gated `<ProtectedRoute>` guards.
+- **State Management & Data Fetching**: `React Query` (`@tanstack/react-query`) for server state management and caching; `Zustand` for client UI state (auth token, sidebar toggle).
+- **API Client Layer (`src/lib/api-client.ts`)**: Axios instance with automatic JWT Bearer token injection, token rotation retry, and error interception.
+- **Component Design System (`src/components/`)**: Atomic UI components, loading skeletons, responsive tables, badge status chips, and modal dialogs.
+- **Feature Modules (`src/features/`)**:
+  - `auth`: Login, OTP verification, password recovery.
+  - `dashboard`: Role-specific performance dashboards.
+  - `reports`: Citizen report filing, city report directory, PDF downloads.
+  - `resolutions`: Worker proof upload and admin manual review workspace.
+  - `forward-requests`: Inter-department report transfer approval workflow.
+  - `super-admin`: Governance, broadcast management, public news press editor, audit security logs.
+  - `public`: Landing page, public news details, Uttar Pradesh State Dashboard.
+
+---
+
+## 4. Backend Architecture (`backend/`)
+
+The backend is built on **FastAPI 0.138.2** running on **Uvicorn** with Python 3.12:
+
+- **Application Factory (`backend/api/app.py`)**: Initializes CORS middleware (Vercel origins), `SlowAPI` rate limiter, static `/uploads` file mounting, security headers (`X-Content-Type-Options`, `X-Frame-Options`), and custom lifespan hooks.
+- **Router Layer (`backend/api/routes.py` & `backend/api/*.py`)**: Modular APIRouters bound to `/api/v1` prefixes and health routes (`/health`, `/liveness`, `/readiness`).
+- **Dependency Injection (`backend/authentication/dependencies.py` & `backend/database/dependencies.py`)**: Session injection (`get_db`) and role enforcement dependencies.
+
+---
+
+## 5. API Layer
+
+The API layer maps incoming HTTP requests to corresponding service classes:
+- Handles request payload validation via Pydantic schemas (`backend/schemas/`).
+- Enforces multipart file uploads validation (`validate_uploaded_file`) with extension checks (`.jpg`, `.jpeg`, `.png`, `.webp`) and size limits (`MAX_FILE_SIZE`).
+- Wraps error conditions in standard `HTTPException` responses.
+
+---
+
+## 6. Service Layer (`backend/services/`)
+
+The service layer contains domain logic:
+- `ReportService`: Handles report creation, duplicate checks, image persistence, and cancellation/reopening workflows.
+- `AssignmentService`: Worker auto-assignment logic, manual worker dispatch, and 30m geofenced work start.
+- `ResolutionService`: Worker resolution proof creation, OpenCLIP scene comparison, YOLO verification scoring, and manual review routing.
+- `ForwardRequestService`: Inter-department transfer workflow, source admin approvals, and destination admin acceptances.
+- `SuperAdminService`: System health diagnostics, AI telemetry compilation, system announcements, and audit log querying.
+- `PublicDashboardService`: Aggregates public overview stats and district-level metrics for all 75 Uttar Pradesh districts.
+- `PublicUpdateService`: Public press updates creation, thumbnail upload, slug generation, and publication toggles.
+
+---
+
+## 7. CRUD / Data Access Layer (`backend/database/crud/`)
+
+The CRUD layer handles database queries using SQLAlchemy ORM Sessions:
+- Encapsulates database filters, joins, pagination queries, and model mutations.
+- Modules: `user.py`, `report.py`, `assignment.py`, `resolution.py`, `broadcast.py`, `system_issue.py`, `login_audit.py`, `public_update.py`.
+
+---
+
+## 8. Database Layer (`backend/database/`)
+
+- **ORM Engine**: SQLAlchemy 2.0.51 with declarative Base model definitions (`backend/database/models/`).
+- **Connection Management (`backend/database/connection.py`)**: Connection pooling configured for PostgreSQL 16 (production) and SQLite (development).
+- **Migrations (`backend/alembic/`)**: Alembic 1.18.5 migration chain tracking database schema evolution across 7 revisions.
+
+---
+
+## 9. Authentication & Security Architecture
+
+- **JWT Tokens**: Signed access tokens (Short-lived, HS256) containing `sub` (User ID), `role`, and expiration timestamp.
+- **Refresh Tokens (`RefreshToken` model)**: Stored in database with SHA256 hashed token strings, device user-agent tracking, and remote IP tracking to allow per-device or global session revocation.
+- **Password Hashing**: Cryptographic password hashing using `bcrypt`.
+- **Email OTP Verification**: 6-digit OTP generation with 5-minute expiry, max 5 failed attempts limit, and 60-second resend cooldowns.
+
+---
+
+## 10. Role-Based Access Control (RBAC) Architecture
 
 ```mermaid
-flowchart TD
-    Start([User Registration Request]) --> CheckExists{Email / Phone Exists?}
-    CheckExists -- Yes --> Error[Return 400 Conflict]
-    CheckExists -- No --> HashPwd[Hash Password using bcrypt]
-    HashPwd --> CreateUser[Create Inactive User Record]
-    CreateUser --> GenOTP[Generate 6-Digit OTP]
-    GenOTP --> SendEmail[Dispatch Email via SMTP]
-    SendEmail --> AwaitOTP([Await User OTP Verification])
-    AwaitOTP --> VerifyOTP{OTP Valid & Unexpired?}
-    VerifyOTP -- No --> OTPError[Return 400 Invalid OTP]
-    VerifyOTP -- Yes --> ActivateUser[Set is_active=True]
-    ActivateUser --> Login([User Login Request])
-    Login --> VerifyCreds{Password Valid?}
-    VerifyCreds -- No --> AuthFail[Return 401 Unauthorized]
-    VerifyCreds -- Yes --> GenJWT[Generate JWT Token with jti & sid]
-    GenJWT --> ReturnToken[Return Access Token]
+graph TD
+    subgraph "Role Hierarchy & Operational Boundaries"
+        SA["SUPER_ADMIN"]
+        CA["CITY_ADMIN"]
+        DA["DEPARTMENT_ADMIN"]
+        W["WORKER"]
+        C["CITIZEN"]
+    end
+
+    SA -->|"Platform Scope"| GOV["System Health, AI Telemetry, Broadcasts, Audits, Public Press"]
+    CA -->|"Citywide Operational Scope"| CITY["All Department Reports, City Analytics, Admin Invitations"]
+    DA -->|"Department Scope"| DEPT["Department Reports, Worker Dispatch, Manual Review, Transfers"]
+    W -->|"Field Execution Scope"| FIELD["Assigned Jobs, 30m Start, Resolution Upload, Transfer Flag"]
+    C -->|"Citizen Scope"| CIT["Submit Reports, Track Timeline, Duplicate Support, Feedback"]
 ```
+
+- Operational boundaries are enforced strictly via route dependencies in `authentication/dependencies.py`.
+- Higher roles possess platform-wide visibility but do not bypass department operational boundaries (e.g., `SUPER_ADMIN` cannot perform field worker job starts).
+
+---
+
+## 11. AI Inference Architecture (`backend/inference/`)
+
+The AI vision pipeline consists of:
+- **YOLOv8 Object Detection (`backend/inference/engine.py`)**: Loads pre-trained YOLO model (`models/best.pt`) to detect civic issue classes (potholes, garbage, streetlamps, water leakages) with confidence scoring and polygon annotations.
+- **OpenCLIP Visual Scene Embeddings (`backend/inference/open_clip_engine.py`)**: Generates 512-dimensional visual vector embeddings for scene similarity comparison.
+- **Quality Verification Engine (`backend/verification/quality.py`)**: Evaluates blurriness (Laplacian variance), contrast, brightness, and resolution threshold.
+
+---
+
+## 12. Citizen Report & Verification Pipeline
 
 ```mermaid
 sequenceDiagram
     autonumber
     actor Citizen
-    participant AuthAPI as Auth Router
-    participant AuthSvc as Auth Service
-    participant OTPSvc as OTP Service
-    participant DB as Database
-    participant Email as Email Service
+    participant API as Report API (/report)
+    participant EXIF as EXIF & GPS Module
+    participant Quality as Quality Engine
+    participant YOLO as YOLOv8 Engine
+    participant CLIP as OpenCLIP Duplicate Engine
+    participant DB as PostgreSQL DB
+    participant Worker as Auto-Assigned Worker
 
-    Citizen->>AuthAPI: POST /api/v1/auth/register
-    AuthAPI->>AuthSvc: register(user_data)
-    AuthSvc->>DB: Check existing email/phone
-    AuthSvc->>AuthSvc: hash_password(password)
-    AuthSvc->>DB: Create User (is_active=False)
-    AuthSvc->>OTPSvc: generate_otp(email)
-    OTPSvc->>DB: Save EmailVerification OTP
-    AuthSvc->>Email: send_email_verification_otp()
-    Email-->>Citizen: Email with OTP Code
-
-    Citizen->>AuthAPI: POST /api/v1/auth/verify-email
-    AuthAPI->>AuthSvc: verify_email(email, otp)
-    AuthSvc->>OTPSvc: validate_otp(email, otp)
-    AuthSvc->>DB: Update User (is_active=True)
-    AuthAPI-->>Citizen: 200 Email Verified
-
-    Citizen->>AuthAPI: POST /api/v1/auth/login
-    AuthAPI->>AuthSvc: login(username, password)
-    AuthSvc->>DB: Retrieve User
-    AuthSvc->>AuthSvc: verify_password()
-    AuthSvc->>AuthSvc: create_access_token()
-    AuthSvc->>AuthSvc: create_refresh_token()
-    AuthSvc->>DB: Save RefreshToken record
-    AuthAPI-->>Citizen: 200 Access & Refresh Tokens (JWT)
-```
-
----
-
-### Workflow 2: AI Report Submission & Verification Flow
-
-```mermaid
-flowchart TD
-    CitizenUpload([Citizen Uploads Report Image]) --> SaveTemp[Save file to /uploads]
-    SaveTemp --> RunVerify[VerificationEngine.verify]
-    RunVerify --> EXIFCheck[EXIFDetector: Parse GPS, DateTime, Camera]
-    RunVerify --> QualityCheck[QualityDetector: Calculate Blur, Contrast, Brightness]
-    EXIFCheck & QualityCheck --> RiskEval[RiskEngine.evaluate: Calculate Weighted Risk]
-    RiskEval --> RiskDecision{Risk Decision?}
-    RiskDecision -- REJECT --> DeleteTemp[Delete Image & Return 400 Rejected]
-    RiskDecision -- PASS / REVIEW --> RunYOLO[YOLOPredictor.predict: YOLOv8 Segmentation]
-    RunYOLO --> CheckDetections{Civic Issue Detected?}
-    CheckDetections -- No --> Cleanup[Unlink Image & Return 400 No Issue Detected]
-    CheckDetections -- Yes --> MapDept[DepartmentService: Map Issue to Department]
-    MapDept --> DupCheck[DuplicateDetectionService.find_duplicate]
-    DupCheck --> IsDup{Duplicate Found?}
-    IsDup -- Yes --> AddSupport[Add Citizen Support & Return Duplicate Response]
-    IsDup -- No --> CreateReport[ReportBuilder: Create Report Record]
-    CreateReport --> SaveImages[Save Original & Annotated ReportImages]
-    SaveImages --> AutoAssign[AssignmentService.assign_worker]
-    AutoAssign --> Done([Return Report Confirmation Response])
-```
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Citizen
-    participant API as Report API
-    participant Infer as Inference Engine
-    participant Verifier as Verification Engine
-    participant Risk as Risk Engine
-    participant YOLO as YOLO Predictor
-    participant Dup as Duplicate Service
-    participant Assign as Assignment Service
-    participant DB as Database
-
-    Citizen->>API: POST /api/v1/report (Image file)
-    API->>Infer: predict(image_path)
-    Infer->>Verifier: verify(image_path)
-    Verifier->>Risk: evaluate(EXIF, Quality)
-    Risk-->>Verifier: Decision (PASS/REVIEW)
-    Infer->>YOLO: predict(image_path)
-    YOLO-->>Infer: Bounding Boxes, Class, Confidence
-    Infer-->>API: Detections & Verification Results
-    API->>Dup: find_duplicate(issue_type, lat, lon, image)
-    alt Is Duplicate
-        Dup-->>API: Duplicate Match Found
-        API->>DB: Add ReportSupport record
-        API-->>Citizen: 200 Supported Existing Report
-    else Is New Report
-        Dup-->>API: No Duplicate
-        API->>DB: Save Report & ReportImage
-        API->>Assign: assign_worker(report_id)
-        Assign->>DB: Auto-select worker & create Assignment
-        API-->>Citizen: 200 Report Created (Report Number)
+    Citizen->>API: Upload Report Photo + Description
+    API->>Quality: Run Blurriness & Quality Check
+    Quality-->>API: Image Quality Pass
+    API->>EXIF: Extract GPS Coordinates & Timestamp
+    EXIF-->>API: Lat/Lng Extracted
+    API->>YOLO: Run Object Detection Inference
+    YOLO-->>API: Detections (Class, Confidence, BBox)
+    API->>CLIP: Check Radius (8m) & Scene Similarity (>0.82)
+    alt Duplicate Found
+        CLIP-->>API: Existing Report Match Found
+        API->>DB: Add Citizen Support to Existing Report
+        API-->>Citizen: 200 OK (Supported Existing Report)
+    else Unique Civic Issue
+        CLIP-->>API: No Duplicate Found
+        API->>DB: Create Report (Status: PENDING)
+        API->>DB: Auto-Assign Available Department Worker
+        DB-->>Worker: Dispatch Notification
+        API-->>Citizen: 201 Created (Report & Tracking Number)
     end
 ```
 
 ---
 
-### Workflow 3: Worker Assignment & Work Start Flow
+## 13. Resolution Verification Pipeline
 
-```mermaid
-flowchart TD
-    AssignStart([Report Created / Forward Accepted]) --> GetWorkers[Fetch Available Department Workers]
-    GetWorkers --> WorkersExist{Workers Available?}
-    WorkersExist -- No --> Throw404[Raise 404 No Available Workers]
-    WorkersExist -- Yes --> SelectWorker[Select Worker with Lowest Active Assignments]
-    SelectWorker --> CreateAssignment[Create Assignment (Status: ASSIGNED)]
-    CreateAssignment --> UpdateReportStatus[Update Report Status to ASSIGNED]
-    UpdateReportStatus --> AuditLog[Log Action AUTO_ASSIGNED]
-    AuditLog --> NotifyWorker[Create InAppNotification for Worker]
-    NotifyWorker --> WorkerArrives([Worker Arrives at Site])
-    WorkerArrives --> StartWorkRequest[Worker POST /api/v1/assignments/{assignment_id}/start]
-    StartWorkRequest --> CalcDist[Calculate Distance from Report GPS via Haversine]
-    CalcDist --> CheckRadius{Distance <= 30m?}
-    CheckRadius -- No --> RejectStart[Raise 403 Distance Exceeded]
-    CheckRadius -- Yes --> UpdateAssign[Set Assignment Status IN_PROGRESS]
-    UpdateAssign --> UpdateReport[Set Report Status IN_PROGRESS]
-    UpdateReport --> LogWork[AuditLog: WORK_STARTED]
-    LogWork --> NotifyCitizen[InAppNotification to Citizen: Work Started]
-```
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Worker
-    participant AssignAPI as Assignment API
-    participant AssignSvc as Assignment Service
-    participant DB as Database
-    participant Audit as Audit Log Service
-    participant Notif as InApp Notification Service
-
-    AssignSvc->>DB: Fetch department workers
-    AssignSvc->>AssignSvc: Select worker with min(active_assignments)
-    AssignSvc->>DB: Create Assignment (Status: ASSIGNED)
-    AssignSvc->>DB: Update Report Status to ASSIGNED
-    AssignSvc->>Audit: log("AUTO_ASSIGNED")
-    AssignSvc->>Notif: create_notification("New Assignment")
-
-    Worker->>AssignAPI: POST /api/v1/assignments/{assignment_id}/start (lat, lon)
-    AssignAPI->>AssignSvc: start_work(assignment_id, worker_id, lat, lon)
-    AssignSvc->>AssignSvc: calculate_distance(worker_gps, report_gps)
-    alt Distance > 30 meters
-        AssignSvc-->>AssignAPI: 403 Forbidden (Too far from location)
-    else Distance <= 30 meters
-        AssignSvc->>DB: Update Assignment (Status: IN_PROGRESS)
-        AssignSvc->>DB: Update Report (Status: IN_PROGRESS)
-        AssignSvc->>Audit: log("WORK_STARTED")
-        AssignSvc->>Notif: create_notification("Work Started")
-        AssignAPI-->>Worker: 200 Work Started Confirmed
-    end
-```
+1. **Field Worker Submission**: Worker uploads post-repair photo via `/api/v1/resolutions`.
+2. **Visual Scene Comparison**: OpenCLIP measures cosine similarity between the original report photo and the resolution photo.
+3. **YOLO Re-Inference**: YOLO scans the resolution image to confirm the original civic defect has been resolved.
+4. **Automated Decision Routing**:
+   - If visual similarity > threshold AND defect resolved $\rightarrow$ Status updated to `RESOLVED` / `VERIFIED`.
+   - If metrics are ambiguous $\rightarrow$ Status set to `REVIEW` and routed to the Department Admin's **Manual Review Queue**.
 
 ---
 
-### Workflow 4: Resolution Verification & Approval Flow
+## 14. In-App Notification vs Broadcast Architecture
 
-```mermaid
-flowchart TD
-    WorkerUpload([Worker Uploads Resolution Proof Image]) --> SaveResImg[Save image to /uploads/resolution]
-    SaveResImg --> RunYOLO[InferenceEngine.predict: YOLO Detection on Resolution Photo]
-    RunYOLO --> OpenCLIP[ResolutionAIEngine: OpenCLIP Cosine Scene Similarity]
-    OpenCLIP --> MatchIssue{YOLO Detected Same Issue?}
-    MatchIssue -- Yes --> SetSameIssue[same_issue_detected = True]
-    MatchIssue -- No --> SetNoIssue[same_issue_detected = False]
-    SetSameIssue & SetNoIssue --> EvaluateRule[ResolutionRuleEngine.evaluate]
-    EvaluateRule --> Decision{Rule Decision?}
-    Decision -- PASS --> AutoApprove[Set Report RESOLVED & Assignment COMPLETED]
-    Decision -- REVIEW --> ManualReview[Set manual_review = True]
-    Decision -- FAIL --> RejectRes[Set verification_decision REJECT]
-
-    AutoApprove --> NotifSuccess[Notify Worker & Citizen & Send Resolution Email]
-    ManualReview --> AdminQueue[Add to Department Admin Review Queue]
-    AdminQueue --> AdminAction{Department Admin Decision?}
-    AdminAction -- Approve --> AutoApprove
-    AdminAction -- Reject --> ReopenWork[Revert Report to IN_PROGRESS & Notify Worker]
-```
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Worker
-    actor Admin
-    participant ResAPI as Resolution API
-    participant ResSvc as Resolution Service
-    participant Infer as Inference Engine
-    participant CLIP as OpenCLIP Engine
-    participant DB as Database
-    participant Notif as Notification Service
-
-    Worker->>ResAPI: POST /api/v1/resolutions (Image file)
-    ResAPI->>ResSvc: create_resolution(assignment_id, image)
-    ResSvc->>Infer: predict(resolution_image)
-    ResSvc->>CLIP: compare(original_image, resolution_image)
-    CLIP-->>ResSvc: scene_similarity (e.g. 0.85)
-    ResSvc->>ResSvc: ResolutionRuleEngine.evaluate()
-    
-    alt Decision == PASS
-        ResSvc->>DB: Update Report Status RESOLVED
-        ResSvc->>DB: Update Assignment Status COMPLETED
-        ResSvc->>Notif: Send Resolution Email & InApp Notifications
-        ResAPI-->>Worker: 200 Resolution Approved
-    else Decision == REVIEW
-        ResSvc->>DB: Save Resolution (manual_review=True)
-        ResAPI-->>Worker: 200 Pending Manual Review
-        Admin->>ResAPI: POST /api/v1/resolutions/manual-review/{report_id}/approve
-        ResAPI->>ResSvc: approve_manual_review(report_id)
-        ResSvc->>DB: Update Report Status RESOLVED
-        ResSvc->>Notif: Send Resolution Completed Email
-        ResAPI-->>Admin: 200 Manual Review Approved
-    end
-```
+- **In-App Notifications (`InAppNotification`)**: User-specific targeted notifications triggered by report status updates, worker assignments, or transfer requests.
+- **Broadcast Announcements (`Broadcast`)**: Platform-wide or role-targeted announcements created by Super Admins (`SUPER_ADMIN`), decoupled from individual user rows with derived lifecycle states (`SCHEDULED`, `ACTIVE`, `EXPIRED`, `CANCELLED`).
 
 ---
 
-### Workflow 5: Inter-Department Forwarding Flow
+## 15. Audit Logging & Security Tracking
 
-```mermaid
-flowchart TD
-    WorkerFlag([Worker Flags Wrong Department Issue]) --> CreateFwd[Create DepartmentForwardRequest (Status: PENDING)]
-    CreateFwd --> SourceReview([Source Department Admin Reviews Request])
-    SourceReview --> SourceDecision{Source Admin Decision?}
-    SourceDecision -- Reject --> RejectFwd[Set Status REJECTED & Keep Report Assigned to Worker]
-    SourceDecision -- Approve --> ApproveFwd[Set Status WAITING_DESTINATION & Specify Target Department]
-    ApproveFwd --> DestReview([Destination Department Admin Reviews Request])
-    DestReview --> DestDecision{Destination Admin Decision?}
-    DestDecision -- Decline --> ReturnSource[Set Status REJECTED & Reassign to Source Worker]
-    DestDecision -- Accept --> AcceptFwd[Set Status ACCEPTED & Update Report Department]
-    AcceptFwd --> NewAssign[AssignmentService: Assign Worker in Destination Department]
-```
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Worker
-    actor SourceAdmin as Source Dept Admin
-    actor DestAdmin as Destination Dept Admin
-    participant FwdAPI as Forward API
-    participant FwdSvc as Forward Request Service
-    participant AssignSvc as Assignment Service
-    participant DB as Database
-
-    Worker->>FwdAPI: POST /api/v1/forward-requests/{report_id} (reason)
-    FwdAPI->>FwdSvc: create_request(report_id, worker, request)
-    FwdSvc->>DB: Create DepartmentForwardRequest (Status: PENDING)
-    
-    SourceAdmin->>FwdAPI: POST /api/v1/forward-requests/{request_id}/approve
-    FwdAPI->>FwdSvc: approve_request(request_id, destination_dept_id)
-    FwdSvc->>DB: Update Status (WAITING_DESTINATION)
-
-    alt Destination Admin Accepts
-        DestAdmin->>FwdAPI: POST /api/v1/forward-requests/{request_id}/accept
-        FwdAPI->>FwdSvc: accept_request(request_id)
-        FwdSvc->>DB: Update Report Department ID
-        FwdSvc->>AssignSvc: assign_worker(new_department_id)
-        AssignSvc->>DB: Create New Assignment for Destination Worker
-        FwdAPI-->>DestAdmin: 200 Forward Accepted & Reassigned
-    else Destination Admin Declines
-        DestAdmin->>FwdAPI: POST /api/v1/forward-requests/{request_id}/decline
-        FwdAPI->>FwdSvc: decline_request(request_id, reason)
-        FwdSvc->>DB: Revert Assignment to Original Source Worker
-        FwdAPI-->>DestAdmin: 200 Forward Declined & Returned
-    end
-```
+- **System Audit Log (`AuditLog`)**: Records immutable administrative actions (`REPORT_CANCELLED`, `WORKER_BLOCKED`, `TRANSFER_APPROVED`) with user ID, IP address, and change details.
+- **Login Audit Log (`LoginAudit`)**: Records user login attempts, success/failure flags, IP address, user-agent details, and timestamp for security monitoring.
 
 ---
 
-### Workflow 6: Duplicate Detection Flow
+## 16. Public Platform & Uttar Pradesh State Dashboard Architecture
 
 ```mermaid
-flowchart TD
-    NewReport([New Report Submission Upload]) --> ExtractGPS[Extract Decimal Latitude & Longitude]
-    ExtractGPS --> QueryNearby[Find Active Reports within DUPLICATE_REPORT_RADIUS_METERS (8m)]
-    QueryNearby --> NearbyFound{Nearby Active Reports Found?}
-    NearbyFound -- No --> ReturnNoDup[Return Duplicate: None]
-    NearbyFound -- Yes --> MatchIssueClass{Same Issue Type / Class?}
-    MatchIssueClass -- No --> ReturnNoDup
-    MatchIssueClass -- Yes --> CheckScene{DUPLICATE_ENABLE_SCENE_CHECK == True?}
-    CheckScene -- No --> MarkDuplicate[Mark Duplicate Found]
-    CheckScene -- Yes --> RunCLIP[Compare Image Embeddings via OpenCLIP]
-    RunCLIP --> SimCheck{Scene Similarity >= 0.82?}
-    SimCheck -- No --> ReturnNoDup
-    SimCheck -- Yes --> MarkDuplicate
-    MarkDuplicate --> AddSupport[Add Citizen Support to Existing Report & Increment Support Count]
-```
-
----
-
-### Workflow 7: AI Inference Pipeline Flow
-
-```mermaid
-flowchart TD
-    InputImage([Input Image File Path]) --> ReadEXIF[EXIFDetector: Read PIL EXIF Tags]
-    ReadEXIF --> ReadQuality[QualityDetector: Calculate OpenCV Metrics]
-    ReadQuality --> RiskCalc[RiskEngine: Compute Weighted Risk & Flags]
-    RiskCalc --> RiskCheck{Risk Decision == REJECT?}
-    RiskCheck -- Yes --> AbortInference[Abort & Return Verification Failure]
-    RiskCheck -- No --> LoadYOLO[YOLOPredictor: Run Ultralytics YOLOv8 Segmentation]
-    LoadYOLO --> ParseResults[ResultParser: Parse Polygons, BBoxes, Confidences]
-    ParseResults --> Visualizer[Visualizer: Render Overlay Bounding Boxes & Save Annotated Image]
-    Visualizer --> OutputSummary[Return Detection Summary, Primary Issue, Highest Confidence]
-```
-
----
-
-### Workflow 8: Notification & Email Flow
-
-```mermaid
-flowchart TD
-    TriggerEvent([System Event Triggered]) --> Dispatch{Event Type?}
-    Dispatch -- Account Registration --> SendOTP[NotificationService: Send Email Verification OTP]
-    Dispatch -- Worker Invitation --> SendInvite[NotificationService: Send Worker Activation Link]
-    Dispatch -- Work Started --> InAppCitizen[InAppNotificationService: Notify Citizen Work Started]
-    Dispatch -- Resolution Completed --> EmailCitizen[NotificationService: Send Resolution Completed HTML Email]
-    SendOTP & SendInvite & EmailCitizen --> SMTP[EmailService: Render Template & Send via SMTP]
-```
-
----
-
-### Workflow 9: Citizen Timeline Flow
-
-```mermaid
-flowchart TD
-    TimelineReq([Citizen Requests Timeline GET /api/v1/reports/{id}/timeline]) --> AuthCitizen[Verify Citizen Ownership]
-    AuthCitizen --> QueryLogs[AuditLogCRUD: Fetch Audit Logs for Report ID]
-    QueryLogs --> MapEvents[Map Internal Actions to Citizen-Facing Titles & Descriptions]
-    MapEvents --> FormatTimeline[Format Timestamps & Timeline Items]
-    FormatTimeline --> ReturnJson[Return JSON Array of Chronological Events]
-```
-
----
-
-### Workflow 10: Refresh Token Session Management Flow
-
-This workflow handles rotation of refresh tokens to maintain long-lived sessions safely, revoke reused tokens (replay attack prevention), and execute logouts.
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Client
-    participant AuthAPI as Auth Router
-    participant RefreshSvc as Refresh Token Service
-    participant DB as Database
-
-    Note over Client, DB: Token Refresh Workflow (POST /api/v1/auth/refresh)
-    Client->>AuthAPI: Send old refresh token
-    AuthAPI->>RefreshSvc: refresh(old_refresh_token)
-    RefreshSvc->>DB: Query stored token by token string
-    alt Token Reused (revoked_at is not None)
-        RefreshSvc->>DB: Revoke entire session (reason: TOKEN_REUSE_DETECTED)
-        RefreshSvc-->>AuthAPI: Raise 401 Unauthorized (Session Revoked)
-        AuthAPI-->>Client: 401 Unauthorized (Session Expired)
-    else Token Active & Valid
-        RefreshSvc->>DB: Revoke old token (reason: ROTATED)
-        RefreshSvc->>RefreshSvc: Generate new JWT access & refresh tokens
-        RefreshSvc->>DB: Create new RefreshToken record
-        RefreshSvc-->>AuthAPI: Return new Access & Refresh tokens
-        AuthAPI-->>Client: 200 Return tokens & set cookies
+graph LR
+    subgraph "Public Platform Layer"
+        PO["/api/v1/public/overview"]
+        SD["/api/v1/public/state-dashboard"]
+        PU["/api/v1/public/updates"]
     end
 
-    Note over Client, DB: Single Device Logout (POST /api/v1/auth/logout)
-    Client->>AuthAPI: Send refresh token
-    AuthAPI->>RefreshSvc: logout(refresh_token)
-    RefreshSvc->>DB: Revoke token record (reason: LOGOUT)
-    RefreshSvc-->>AuthAPI: Logout success
-    AuthAPI-->>Client: 200 Logout Confirmed
+    subgraph "Data Aggregation Engine"
+        STAT["State Analytics Service"]
+        DIST["75 UP District GeoJSON Resolver"]
+        PRESS["Published Press Manager"]
+    end
 
-    Note over Client, DB: Multi-Device Logout (POST /api/v1/auth/logout-all)
-    Client->>AuthAPI: Send access token in header
-    AuthAPI->>RefreshSvc: logout_all(user_id)
-    RefreshSvc->>DB: Revoke all refresh tokens for user (reason: LOGOUT_ALL)
-    RefreshSvc-->>AuthAPI: Logout all success
-    AuthAPI-->>Client: 200 All Devices Logged Out
+    subgraph "Public UI Components"
+        LANDING["Public Landing Page"]
+        MAP["Interactive UP District Map"]
+        NEWS["News & Press Portal"]
+    end
+
+    PO --> STAT
+    SD --> DIST
+    PU --> PRESS
+
+    STAT --> LANDING
+    DIST --> MAP
+    PRESS --> NEWS
 ```
+
+- Provides public transparency metrics without exposing citizen personal identifiable information (PII).
+- **Uttar Pradesh State Dashboard**: Aggregates civic metrics across all 75 UP districts with district resolution scores and GeoJSON boundaries.
+
+---
+
+## 17. Super Admin Governance Architecture
+
+- Dedicated governance suite (`/api/v1/super-admin/*`) accessible exclusively to `SUPER_ADMIN`.
+- Features real-time system health diagnostics, AI inference telemetry monitoring, audit log exports, broadcast management, and public press editor controls.
+
+---
+
+## 18. Image Storage & Serving Architecture
+
+- **Upload Structure**:
+  ```
+  uploads/
+  ├── [original_citizen_photos].jpg
+  ├── [annotated_yolo_photos].jpg
+  ├── public_updates/
+  │   └── [press_thumbnails].jpg
+  └── resolution/
+      └── [worker_proof_photos].jpg
+  ```
+- Static images mounted via FastAPI `StaticFiles` at `/uploads`.
+- Administrative report images served securely via authenticated endpoint `/api/v1/reports/{report_id}/admin/image`.
+
+---
+
+## 19. Cache & Rate Limiting Architecture
+
+- **Redis Container**: `redis:7-alpine` running on port 6379 with AOF (`appendonly yes`) persistence.
+- **Rate Limiting**: `SlowAPI` middleware applying limit rules (e.g., 60 reports/hr for citizen reporting, 20/hr for resolution uploads, 20/hr for bug submissions).
+
+---
+
+## 20. Deployment Topology
+
+```mermaid
+graph TB
+    subgraph "Oracle Cloud Infrastructure (ARM64 VM / Ubuntu 24.04)"
+        subgraph "Nginx Reverse Proxy Container"
+            NGINX["Nginx 1.28 Alpine<br/>(Ports 80 / 443)"]
+        end
+
+        subgraph "Docker Compose Internal Bridge Network"
+            API["FastAPI Backend Container<br/>(Port 8000)"]
+            PG["PostgreSQL 16 Container<br/>(Port 5432)"]
+            RD["Redis 7 Alpine Container<br/>(Port 6379)"]
+        end
+
+        subgraph "Host Volumes"
+            VOL_PG[("postgres_data")]
+            VOL_RD[("redis_data")]
+            VOL_UP[("uploads_data")]
+            VOL_LOG[("logs_data")]
+        end
+    end
+
+    NGINX -->|"HTTP Proxy"| API
+    API --> PG
+    API --> RD
+    PG --- VOL_PG
+    RD --- VOL_RD
+    API --- VOL_UP
+    API --- VOL_LOG
+```
+
+---
+
+## 21. Major End-to-End System Workflows
+
+1. **Citizen Filing to Resolution**: Report Submission $\rightarrow$ Quality/EXIF Check $\rightarrow$ YOLO Classification $\rightarrow$ Duplicate Check $\rightarrow$ Auto Assignment $\rightarrow$ Geofenced Job Start $\rightarrow$ Resolution Photo Upload $\rightarrow$ AI Verification / Manual Review $\rightarrow$ Closed.
+2. **Inter-Department Transfer**: Worker Flag $\rightarrow$ Source Admin Approval $\rightarrow$ Destination Admin Acceptance $\rightarrow$ Re-Routing & Auto-Assignment.
+3. **Super Admin System Broadcast**: Broadcast Created $\rightarrow$ Time Lifecycle Check $\rightarrow$ Active Broadcast Injection into User Navbars.
+
+---
+
+## 22. Error Handling & Resiliency
+
+- Database connection failures trigger `503 Service Unavailable` on `/readiness`.
+- File validation failures fail fast prior to running heavy model inference.
+- Non-critical notification failures are logged without breaking primary transaction commits.
+
+---
+
+## 23. Telemetry & Monitoring Architecture
+
+- System health metrics track memory consumption, CPU utilization, active database connections, and worker process pools.
+- AI telemetry tracks model prediction counts, average inference latency in milliseconds, visual similarity score distributions, and OpenCLIP thresholds.
+
+---
+
+## 24. Security Headers & Proxy Configuration
+
+- Reverse proxy passes original client IP (`X-Real-IP`, `X-Forwarded-For`) and protocol (`X-Forwarded-Proto`).
+- Middleware injects security headers (`X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`).
+
+---
+
+## 25. Architectural Extensibility & Evolution
+
+- Decoupled inference engine permits seamless upgrading from YOLOv8 to newer YOLO versions or replacing OpenCLIP models.
+- Modular FastAPI routers allow adding new municipal governance features without modifying existing service code.

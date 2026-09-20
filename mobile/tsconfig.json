@@ -1,0 +1,57 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ESNext", "DOM"],
+    "jsx": "react-native",
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "noImplicitThis": true,
+    "resolveJsonModule": true,
+    "alwaysStrict": true,
+    "removeComments": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@cscrs/config": ["./packages/config/src"],
+      "@cscrs/config/*": ["./packages/config/src/*"],
+      "@cscrs/design-system": ["./packages/design-system/src"],
+      "@cscrs/design-system/*": ["./packages/design-system/src/*"],
+      "@cscrs/models": ["./packages/models/src"],
+      "@cscrs/models/*": ["./packages/models/src/*"],
+      "@cscrs/api": ["./packages/api/src"],
+      "@cscrs/api/*": ["./packages/api/src/*"],
+      "@cscrs/auth": ["./packages/auth/src"],
+      "@cscrs/auth/*": ["./packages/auth/src/*"],
+      "@cscrs/storage": ["./packages/storage/src"],
+      "@cscrs/storage/*": ["./packages/storage/src/*"],
+      "@cscrs/utils": ["./packages/utils/src"],
+      "@cscrs/utils/*": ["./packages/utils/src/*"],
+      "@src/*": ["./src/*"],
+      "@app/*": ["./src/app/*"],
+      "@core/*": ["./src/core/*"],
+      "@features/*": ["./src/features/*"]
+    }
+  },
+  "include": [
+    "apps/**/*",
+    "packages/**/*",
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/node_modules",
+    "**/.expo",
+    "**/dist",
+    "**/android",
+    "**/ios"
+  ]
+}

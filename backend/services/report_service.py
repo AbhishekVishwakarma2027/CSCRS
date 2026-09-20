@@ -821,4 +821,83 @@ class ReportService:
                 detail="Image file not found on disk.",
             )
 
-        return image
+        return image
+
+    def get_report_secure_image(
+        self,
+        report_id: int,
+        image_type: str,
+        current_user,
+    ):
+        report = report_crud.get_report_by_id(self.db, report_id)
+
+        if report is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Report not found.",
+            )
+
+        # RBAC Authorization: match exact established ownership & assignment semantics
+        if current_user.role == UserRole.CITIZEN:
+            is_owner = report.citizen_id == current_user.id
+            is_supporter = False
+            try:
+                from services.report_support_service import ReportSupportService
+                is_supporter = ReportSupportService(self.db).already_supported(report.id, current_user.id)
+            except Exception:
+                pass
+            if not (is_owner or is_supporter):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Access denied.",
+                )
+        elif current_user.role == UserRole.WORKER:
+            from database.models.assignment import Assignment
+            assignment = (
+                self.db.query(Assignment)
+                .filter(
+                    Assignment.report_id == report_id,
+                    Assignment.worker_id == current_user.id,
+                )
+                .first()
+            )
+            if not assignment:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Access denied.",
+                )
+        elif current_user.role == UserRole.DEPARTMENT_ADMIN:
+            if report.department_id != current_user.department_id:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Access denied.",
+                )
+        elif current_user.role in (UserRole.CITY_ADMIN, UserRole.SUPER_ADMIN):
+            pass
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied.",
+            )
+
+        image = None
+        if image_type.lower() == "original":
+            image = report_image_crud.get_original_image(self.db, report_id)
+        elif image_type.lower() == "annotated":
+            image = report_image_crud.get_annotated_image(self.db, report_id)
+        elif image_type.lower() == "resolution":
+            image = report_image_crud.get_latest_resolution_image(self.db, report_id)
+
+        if image is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Image not found.",
+            )
+
+        if not os.path.exists(image.image_path):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Image file not found on disk.",
+            )
+
+        return image

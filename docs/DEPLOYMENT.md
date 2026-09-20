@@ -1,162 +1,271 @@
-# CSCRS Deployment & Operational Environment Specification
+# CSCRS Deployment & Operational Specification
 
-## 1. System Requirements & Dependencies
-
-### System Requirements
-- **OS**: Windows 10/11, Linux (Ubuntu 20.04+), or macOS
-- **Python Version**: Python 3.10+
-- **GPU (Optional)**: NVIDIA GPU with CUDA support for accelerated YOLOv8 and OpenCLIP inference.
-
-### Core Software Stack
-- **Web Framework**: FastAPI (`0.138.2`)
-- **ASGI Server**: Uvicorn (`0.49.0`) / Gunicorn
-- **Database**: SQLite (Development / Standalone) or PostgreSQL 16 (Production)
-- **Cache & Rate Limiting**: Redis (`7-alpine` container, `redis[hiredis]==6.4.0` driver)
-- **ORM**: SQLAlchemy (`2.0.51`)
-- **Migrations**: Alembic (`1.18.5`)
-- **Deep Learning / Vision**:
-  - `ultralytics` (`8.4.41` for YOLOv8 segmentation)
-  - `torch` (`2.5.1+cu121`) & `torchvision` (`0.20.1+cu121`)
-  - `open_clip_torch` (`3.3.0` for scene similarity)
-  - `opencv-contrib-python-headless` (`4.11.0.86` for quality metrics)
-  - `Pillow` (`12.1.1`) & `exifread` (`3.5.1`) (EXIF parsing)
+This document details the environment configuration, local setup protocols, production Docker container topology, and deployment workflows for the **Crowdsourced Civic Issue Reporting and Resolution System (CSCRS)**.
 
 ---
 
-## 2. Environment Variables Configuration
+## 1. System Requirements & Infrastructure Stack
 
-Create a `.env` file in the repository root based on `.env.example`:
+### Hardware & Operating System Specifications
+- **Local Development**: Windows 10/11, macOS, or Linux (Ubuntu 22.04+). Python 3.10+ and Node.js 18+.
+- **Production Server**: **Oracle Cloud Infrastructure (OCI) ARM64 Virtual Machine** running **Ubuntu 24.04 LTS**.
+- **GPU (Optional)**: NVIDIA CUDA-accelerated GPU for accelerated YOLOv8 and OpenCLIP inference.
 
-| Variable Name | Required | Default Value | Description |
+### Production Core Software Stack
+- **Web API Framework**: FastAPI (`0.138.2`) running on Uvicorn (`0.49.0`).
+- **Frontend Hosting**: **Vercel** Edge Network (React 19 + Vite static build).
+- **Production Database**: PostgreSQL 16 (`postgres:16` container).
+- **Cache & Rate Limiter**: Redis 7 (`redis:7-alpine` container) with AOF persistence.
+- **Reverse Proxy**: Nginx 1.28 (`nginx:1.28-alpine` container) handling SSL, CORS, proxy headers, and static uploads serving.
+- **ORM & Migrations**: SQLAlchemy (`2.0.51`) & Alembic (`1.18.5`).
+- **Computer Vision & Deep Learning**:
+  - `ultralytics` (`8.4.41` for YOLOv8 object detection & segmentation)
+  - `torch` (`2.5.1`) & `torchvision` (`0.20.1`)
+  - `open_clip_torch` (`3.3.0` for visual scene similarity)
+  - `opencv-contrib-python-headless` (`4.11.0.86`)
+  - `Pillow` (`12.1.1`) & `exifread` (`3.5.1`)
+
+---
+
+## 2. Environment Configuration
+
+### Root `.env` (Local Development)
+Create `.env` in the repository root based on `.env.example`:
+
+| Variable | Required | Default / Example | Description |
 | :--- | :--- | :--- | :--- |
-| `DATABASE_URL` | **Yes** | `sqlite:///./cscrs.db` | SQLAlchemy connection string URL. Supports SQLite & PostgreSQL. |
+| `DATABASE_URL` | **Yes** | `sqlite:///./cscrs.db` | Connection string URL (SQLite or PostgreSQL). |
 | `REDIS_URL` | No | `redis://localhost:6379/0` | Redis connection URL for rate limiting. |
-| `SECRET_KEY` | **Yes** | — | Cryptographic secret key for signing JWT tokens. |
+| `SECRET_KEY` | **Yes** | — | Cryptographic secret for signing JWT tokens. |
 | `ALGORITHM` | No | `HS256` | JWT signing algorithm. |
-| `ACCESS_TOKEN_EXPIRE_MINUTES` | No | `60` | JWT access token validity lifetime in minutes. |
-| `SMTP_HOST` | **Yes** | `smtp.gmail.com` | SMTP server hostname for email delivery. |
-| `SMTP_PORT` | No | `587` | SMTP port (TLS/STARTTLS). |
-| `SMTP_USERNAME` | **Yes** | — | Email sender account username. |
-| `SMTP_PASSWORD` | **Yes** | — | Email sender account app password. |
-| `MAIL_FROM` | **Yes** | — | Sender email address for outbound emails. |
-| `OTP_EXPIRY_MINUTES` | No | `5` | Email verification OTP expiration time. |
-| `OTP_LENGTH` | No | `6` | Length of generated OTP string. |
-| `OTP_MAX_ATTEMPTS` | No | `5` | Maximum failed OTP attempts before invalidation. |
-| `OTP_RESEND_COOLDOWN_SECONDS` | No | `60` | Cooldown period between OTP resends. |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | No | `60` | JWT access token lifetime in minutes. |
+| `SMTP_HOST` | **Yes** | `smtp.gmail.com` | Outbound SMTP server hostname. |
+| `SMTP_PORT` | No | `587` | SMTP port (STARTTLS). |
+| `SMTP_USERNAME` | **Yes** | — | Sender email address. |
+| `SMTP_PASSWORD` | **Yes** | — | Sender account app password. |
+| `MAIL_FROM` | **Yes** | — | Displayed sender email address. |
+| `OTP_EXPIRY_MINUTES` | No | `5` | Verification OTP expiration time. |
+| `OTP_RESEND_COOLDOWN_SECONDS` | No | `60` | Cooldown between OTP resends. |
 | `APP_BASE_URL` | No | `http://localhost:8000` | Backend API base URL for activation links. |
-| `FRONTEND_BASE_URL` | No | `http://localhost:3000` | Web frontend URL. Supports comma-separated origins. |
-| `DUPLICATE_REPORT_RADIUS_METERS` | No | `8.0` | Spatial radius threshold for duplicate detection. |
-| `DUPLICATE_ENABLE_SCENE_CHECK` | No | `True` | Flag to enable visual scene checks using OpenCLIP for duplicates. |
-| `DUPLICATE_SCENE_THRESHOLD` | No | `0.82` | OpenCLIP cosine similarity threshold for duplicate scene. |
-| `START_WORK_RADIUS_METERS` | No | `30.0` | Proximity radius threshold for starting worker repair. |
-| `LOG_MAX_SIZE_MB` | No | `10` | Maximum size in MB of an application log file before rotating. |
-| `LOG_BACKUP_COUNT` | No | `5` | Number of backup log files to retain during rotation. |
+| `FRONTEND_BASE_URL` | No | `http://localhost:5173` | Allowed origins for CORS (comma-separated). |
+| `DUPLICATE_REPORT_RADIUS_METERS` | No | `8.0` | Spatial duplicate detection radius. |
+| `DUPLICATE_SCENE_THRESHOLD` | No | `0.82` | OpenCLIP visual scene similarity threshold. |
 
-### Docker Production Setup Variables
-The following environment variables are required in the `.env.production` file when deploying via Docker Compose:
-- `POSTGRES_DB` (Production database name)
-- `POSTGRES_USER` (Production database user)
-- `POSTGRES_PASSWORD` (Production database password)
+### Backend `.env.production` (Production Docker)
+The following variables are required in `backend/.env.production` for Docker Compose deployment:
+- `POSTGRES_DB` (e.g., `cscrs_db`)
+- `POSTGRES_USER` (e.g., `cscrs_admin`)
+- `POSTGRES_PASSWORD` (Production database secret)
+- `DATABASE_URL` (`postgresql://cscrs_admin:password@postgres:5432/cscrs_db`)
+- `REDIS_URL` (`redis://redis:6379/0`)
+- `SECRET_KEY` (Strong production key)
+- `FRONTEND_BASE_URL` (`https://cscrs.vercel.app,https://www.cscrs.in`)
 
 ---
 
-## 3. Step-by-Step Setup & Deployment Protocol
+## 3. Local Development Startup
 
-### Step 1: Virtual Environment Creation
+### Backend Service
 ```bash
+# Navigate to backend
+cd backend
+
+# Create & activate virtual environment
 python -m venv venv
-# On Windows
-venv\Scripts\activate
-# On Linux/macOS
-source venv/bin/activate
-```
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-### Step 2: Install Dependencies
-```bash
-# For production runtime:
-pip install -r requirements-prod.txt
-
-# For development / training environment:
+# Install dependencies
 pip install -r requirements-dev.txt
-```
 
-### Step 3: Database Migration Execution
-Apply Alembic database migrations to initialize tables:
-```bash
+# Execute database migrations
 alembic upgrade head
-```
 
-### Step 4: Seed Static Reference Data
-Run administrative bootstrap scripts to seed initial municipal departments and Super Admin:
-```bash
-# Seed default municipal departments (Roads, Water, Waste, Electrical, Sanitation)
-python scripts/seed_departments.py
+# Seed initial departments and Super Admin
+python -m scripts.seed_departments
+python -m scripts.bootstrap_super_admin
 
-# Bootstrap initial Super Admin account
-python scripts/bootstrap_super_admin.py
-```
-
----
-
-## 4. Production Docker Deployment
-
-For production deployments, the system runs as a multi-container stack orchestrated via Docker Compose:
-
-- **Reverse Proxy**: Nginx (`nginx:1.28-alpine`) with proxy headers and static configurations.
-- **Backend Application**: FastAPI server running via Uvicorn inside a Docker container using a custom `Dockerfile`.
-- **Database**: PostgreSQL 16 database container.
-- **Cache / Rate Limiting Storage**: Redis 7 (alpine).
-
-To deploy the production stack:
-1. Ensure a `.env.production` file is created in the root directory.
-2. Run the deployment script:
-   ```bash
-   ./deploy.sh
-   ```
-   Or launch the containers directly:
-   ```bash
-   docker compose up -d --build
-   ```
-
----
-
-## 5. Execution Procedures
-
-### Launch Primary FastAPI Backend
-```bash
+# Start FastAPI server
 uvicorn api.app:app --host 0.0.0.0 --port 8000 --reload
 ```
-- Interactive Swagger API Documentation: `http://localhost:8000/docs`
-- Redoc API Documentation: `http://localhost:8000/redoc`
 
-### Launch Standalone Evaluation Lab (Gradio Interface)
+### Frontend Service
 ```bash
-python evaluation_lab/app.py
-```
-- Access Interactive Evaluation Interface: `http://127.0.0.1:7860`
+# Navigate to frontend
+cd frontend
 
----
+# Install dependencies
+npm install
 
-## 6. Directory Permissions & Upload Storage
-Ensure the runtime user process has write access to the `uploads/` directory for storing citizen photos and annotated YOLO predictions:
-```
-uploads/
-├── [generated_citizen_images].jpg
-└── resolution/
-    └── [generated_worker_resolution_images].jpg
+# Start Vite dev server
+npm run dev
 ```
 
 ---
 
-## 7. CI/CD Pipeline & GitHub Actions
+## 4. Production Docker Topology & Container Orchestration
 
-The repository features automated GitHub Actions workflows for continuous integration and automated deployment:
+The production backend stack is defined in `backend/docker-compose.yml`:
 
-### Continuous Integration (`.github/workflows/backend-ci.yml`)
-- Triggered automatically on push and pull requests targeting the `main` branch.
-- Checks Python compatibility (`3.12`), upgrades pip, installs production dependencies, and compiles the codebase via `compileall` to catch syntax errors or broken imports before merge.
+```yaml
+version: "3.9"
 
-### Continuous Deployment (`.github/workflows/deploy.yml`)
-- Triggered manually via `workflow_dispatch`.
-- Establishes a secure SSH connection to the Oracle VM deployment target utilizing repository secrets.
-- Pulls the latest commits from `main`, executes the `update.sh` system upgrade script, restarts the Docker Compose stack, and performs a deployment health check.
+services:
+  postgres:
+    image: postgres:16
+    container_name: cscrs-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cscrs-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: cscrs-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cscrs-network
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cscrs-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env.production
+    expose:
+      - "8000"
+    volumes:
+      - ../models:/app/models:ro
+      - uploads_data:/app/uploads
+      - logs_data:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - cscrs-network
+
+  nginx:
+    image: nginx:1.28-alpine
+    container_name: cscrs-nginx
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deployment/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - cscrs-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  uploads_data:
+  logs_data:
+
+networks:
+  cscrs-network:
+    driver: bridge
+```
+
+### Automatic Container Entrypoint Workflow (`backend/docker-entrypoint.sh`)
+When the backend container launches, `docker-entrypoint.sh` executes automatically before starting Uvicorn:
+1. Runs Alembic database migrations: `alembic upgrade head`
+2. Executes department bootstrapping: `python -m scripts.seed_departments`
+3. Executes Super Admin bootstrapping: `python -m scripts.bootstrap_super_admin`
+4. Launches FastAPI via Uvicorn: `exec uvicorn api.app:app --host 0.0.0.0 --port 8000`
+
+---
+
+## 5. Deployment Scripts & Automated Execution
+
+### System Update Protocol (`backend/update.sh`)
+To pull the latest code and safely update production containers:
+```bash
+cd backend
+chmod +x update.sh
+./update.sh
+```
+
+`update.sh` executes the following sequence:
+1. Verifies `.env.production` exists.
+2. Runs `git pull` to fetch the latest commits from `main`.
+3. Rebuilds Docker container images (`docker compose build`).
+4. Restarts container stack (`docker compose up -d`).
+5. Waits 10 seconds for backend initialization.
+6. Performs health check against `http://localhost/health`.
+7. Displays container status (`docker compose ps`).
+
+---
+
+## 6. Continuous Integration & Deployment (CI/CD)
+
+The repository features automated GitHub Actions workflows under `.github/workflows/`:
+
+- **Backend CI (`.github/workflows/backend-ci.yml`)**:
+  - Triggers on push and pull requests targeting `main`.
+  - Sets up Python 3.12, installs dependencies, and runs `python -m compileall backend` to verify import integrity.
+- **Deploy Backend (`.github/workflows/deploy.yml`)**:
+  - Manual trigger via `workflow_dispatch`.
+  - Connects via SSH (`secrets.ORACLE_SSH_KEY`) to Oracle VM host (`secrets.ORACLE_HOST`).
+  - Pulls latest code, executes `update.sh`, and validates health check at `https://api.cscrs.in/health`.
+
+---
+
+## 7. Operational Diagnostics & Monitoring
+
+### Container Status
+```bash
+docker compose ps
+```
+
+### Real-Time Logs
+```bash
+# View backend application logs
+docker compose logs -f backend
+
+# View Nginx access & error logs
+docker compose logs -f nginx
+
+# View PostgreSQL logs
+docker compose logs -f postgres
+```
+
+### Health Endpoints
+- `GET /health`: Service health summary.
+- `GET /liveness`: Container liveness check.
+- `GET /readiness`: Database connectivity test (`SELECT 1`).

@@ -17,6 +17,7 @@ from authentication.dependencies import (
     require_department_admin,
     require_city_admin,
     require_admin_reports,
+    get_current_user,
 )
 
 from database.dependencies import get_db
@@ -660,4 +661,18 @@ def get_admin_report_image_api(
 ):
     report_service = ReportService(db)
     image = report_service.get_admin_secure_image(report_id, type, current_user)
+    return FileResponse(image.image_path)
+
+@router.get(
+    "/reports/{report_id}/image",
+    tags=["Reports"],
+)
+def get_report_image_api(
+    report_id: int,
+    type: str = "original",
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    report_service = ReportService(db)
+    image = report_service.get_report_secure_image(report_id, type, current_user)
     return FileResponse(image.image_path)

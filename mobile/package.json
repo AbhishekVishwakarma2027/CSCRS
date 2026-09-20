@@ -1,0 +1,24 @@
+{
+  "name": "cscrs-mobile-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "description": "CSCRS Mobile Application Workspace",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "start": "npm --workspace=cscrs-mobile run start",
+    "start:dev-client": "npm --workspace=cscrs-mobile run start:dev-client",
+    "android": "npm --workspace=cscrs-mobile run android",
+    "ios": "npm --workspace=cscrs-mobile run ios",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test test/authFoundation.test.js test/citizenRegistration.test.js test/citizenLogin.test.js test/workerLogin.test.js test/citizenNavigationAndDashboard.test.js test/citizenReportAndList.test.js test/citizenReportDetailsAndProfile.test.js test/workerWorkflow.test.js test/productionHardening.test.js test/finalUxAndFeatures.test.js",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\""
+  },
+  "devDependencies": {
+    "prettier": "^3.5.0",
+    "typescript": "~5.7.3"
+  }
+}
