@@ -11,7 +11,7 @@ CSCRS (**Crowdsourced Civic Issue Reporting and Resolution System**) is an end-t
 
 ---
 
-## 🚀 Key Capabilities
+## Key Capabilities
 
 - **AI-Driven Issue Detection & Quality Verification**: Integrated YOLOv8 object detection and OpenCLIP visual scene similarity engine with real-time EXIF GPS location verification and image quality sanity checks.
 - **Smart Duplicate Prevention**: Multi-layered duplicate detection using spatial radius matching (8m) combined with OpenCLIP visual scene similarity scoring to eliminate duplicate citizen filings.
@@ -24,7 +24,7 @@ CSCRS (**Crowdsourced Civic Issue Reporting and Resolution System**) is an end-t
 
 ---
 
-## 🏗️ Architecture & Technology Stack
+## Architecture & Technology Stack
 
 | Layer | Technology / Tool | Purpose |
 | :--- | :--- | :--- |
@@ -38,7 +38,7 @@ CSCRS (**Crowdsourced Civic Issue Reporting and Resolution System**) is an end-t
 
 ---
 
-## 👥 Role Hierarchy & Capabilities
+## Role Hierarchy & Capabilities
 
 ```mermaid
 graph TD
@@ -56,7 +56,7 @@ graph TD
 
 ---
 
-## ⚡ Quick Start (Local Development)
+## Quick Start (Local Development)
 
 ### 1. Prerequisites
 - Python 3.10+
@@ -103,7 +103,7 @@ Web application will be accessible at `http://localhost:5173`.
 
 ---
 
-## 🚢 Production Deployment Architecture
+## Production Deployment Architecture
 
 The production environment is hosted on an **Oracle Cloud Infrastructure ARM64 VM (Ubuntu 24.04 LTS)** utilizing Docker Compose and Nginx, paired with **Vercel** for high-availability frontend delivery.
 
@@ -138,22 +138,22 @@ For comprehensive production instructions, deployment scripts, backup routines, 
 
 ---
 
-## 📚 Complete Documentation Suite
+## Complete Documentation Suite
 
 All system documentation resides in the [`docs/`](file:///d:/Projects/CSCRS/docs) directory and represents the exact, verified state of the CSCRS codebase:
 
-- 📖 **[API Specification (`docs/API.md`)](file:///d:/Projects/CSCRS/docs/API.md)** — Complete reference of all 70+ backend endpoints across 23 functional modules, including authorization, parameters, schemas, and rate limits.
-- 🏛️ **[System Architecture (`docs/ARCHITECTURE.md`)](file:///d:/Projects/CSCRS/docs/ARCHITECTURE.md)** — 25 architectural sections with 5 verified Mermaid diagrams covering frontend, backend, AI inference, verification pipelines, notification separation, and public platform services.
-- 🗄️ **[Database Schema & Migrations (`docs/DATABASE.md`)](file:///d:/Projects/CSCRS/docs/DATABASE.md)** — Complete specification of all 26 SQLAlchemy models, relationships, indexes, enums, and the 7 Alembic migration revisions.
-- 🚀 **[Deployment Guide (`docs/DEPLOYMENT.md`)](file:///d:/Projects/CSCRS/docs/DEPLOYMENT.md)** — Local development guide, Oracle Cloud ARM64 Docker Compose stack setup, Nginx configuration, CI/CD pipeline, and update scripts.
-- 🗺️ **[Repository Project Map (`docs/PROJECT_MAP.md`)](file:///d:/Projects/CSCRS/docs/PROJECT_MAP.md)** — Complete filesystem mapping of backend, frontend, scripts, deployment assets, and tests with file responsibilities.
-- 🔒 **[Security Architecture (`docs/SECURITY.md`)](file:///d:/Projects/CSCRS/docs/SECURITY.md)** — Security specification detailing JWT authentication, password hashing, OTP resend cooldowns, Redis rate limiting, RBAC route dependencies, EXIF/GPS security, and audit logging.
-- 🧪 **[Testing Strategy (`docs/TESTING.md`)](file:///d:/Projects/CSCRS/docs/TESTING.md)** — Testing methodology covering pytest backend integration, TypeScript static verification, Vite build checks, API health validation, and known test limitations.
-- 🛠️ **[Operations Runbook (`docs/OPERATIONS_RUNBOOK.md`)](file:///d:/Projects/CSCRS/docs/OPERATIONS_RUNBOOK.md)** — System operator guide for health monitoring, container management, log inspection, migration safety rules, backups, and recovery procedures.
-- 📜 **[System Changelog (`docs/CHANGELOG.md`)](file:///d:/Projects/CSCRS/docs/CHANGELOG.md)** — Comprehensive technical history of system evolution from v1.0.0 initial release to v1.0.1 feature completion.
+- **[API Specification (`docs/API.md`)](file:///d:/Projects/CSCRS/docs/API.md)** — Complete reference of all 70+ backend endpoints across 23 functional modules, including authorization, parameters, schemas, and rate limits.
+- **[System Architecture (`docs/ARCHITECTURE.md`)](file:///d:/Projects/CSCRS/docs/ARCHITECTURE.md)** — 25 architectural sections with 5 verified Mermaid diagrams covering frontend, backend, AI inference, verification pipelines, notification separation, and public platform services.
+- **[Database Schema & Migrations (`docs/DATABASE.md`)](file:///d:/Projects/CSCRS/docs/DATABASE.md)** — Complete specification of all 26 SQLAlchemy models, relationships, indexes, enums, and the 7 Alembic migration revisions.
+- **[Deployment Guide (`docs/DEPLOYMENT.md`)](file:///d:/Projects/CSCRS/docs/DEPLOYMENT.md)** — Local development guide, Oracle Cloud ARM64 Docker Compose stack setup, Nginx configuration, CI/CD pipeline, and update scripts.
+- **[Repository Project Map (`docs/PROJECT_MAP.md`)](file:///d:/Projects/CSCRS/docs/PROJECT_MAP.md)** — Complete filesystem mapping of backend, frontend, scripts, deployment assets, and tests with file responsibilities.
+- **[Security Architecture (`docs/SECURITY.md`)](file:///d:/Projects/CSCRS/docs/SECURITY.md)** — Security specification detailing JWT authentication, password hashing, OTP resend cooldowns, Redis rate limiting, RBAC route dependencies, EXIF/GPS security, and audit logging.
+- **[Testing Strategy (`docs/TESTING.md`)](file:///d:/Projects/CSCRS/docs/TESTING.md)** — Testing methodology covering pytest backend integration, TypeScript static verification, Vite build checks, API health validation, and known test limitations.
+- **[Operations Runbook (`docs/OPERATIONS_RUNBOOK.md`)](file:///d:/Projects/CSCRS/docs/OPERATIONS_RUNBOOK.md)** — System operator guide for health monitoring, container management, log inspection, migration safety rules, backups, and recovery procedures.
+- **[System Changelog (`docs/CHANGELOG.md`)](file:///d:/Projects/CSCRS/docs/CHANGELOG.md)** — Comprehensive technical history of system evolution from v1.0.0 initial release to v1.0.1 feature completion.
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
