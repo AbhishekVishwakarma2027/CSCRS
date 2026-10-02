@@ -277,7 +277,8 @@ def reset_password(
 )
 @limiter.limit("2 per 15 minutes")
 def change_password(
-    request: ChangePasswordRequest,
+    request: Request,
+    body: ChangePasswordRequest,
     current_user: User = Depends(
         get_current_user,
     ),
@@ -290,7 +291,7 @@ def change_password(
 
     return service.change_password(
         current_user=current_user,
-        old_password=request.old_password,
-        new_password=request.new_password,
-        confirm_password=request.confirm_password,
+        old_password=body.old_password,
+        new_password=body.new_password,
+        confirm_password=body.confirm_password,
     )
