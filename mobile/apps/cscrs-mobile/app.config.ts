@@ -12,13 +12,13 @@ export default ({ config }: ConfigContext): ExpoConfig => {
   let resolvedApiUrl: string;
   if (appEnv === 'production') {
     // Deterministic safeguard: reject build if a development tunnel or non-production URL is actively provided
-    if (explicitApiUrl && explicitApiUrl !== 'https://api.cscrs.in') {
+    if (explicitApiUrl && explicitApiUrl !== 'https://api.cscrs.tech') {
       throw new Error(
         `[PRODUCTION BUILD SAFEGUARD] Production environment (EXPO_PUBLIC_ENV=production) cannot use non-production API URL: "${explicitApiUrl}". ` +
-        `Production builds must strictly target https://api.cscrs.in. Please check .env.local or build flags.`
+        `Production builds must strictly target https://api.cscrs.tech. Please check .env.local or build flags.`
       );
     }
-    resolvedApiUrl = 'https://api.cscrs.in';
+    resolvedApiUrl = 'https://api.cscrs.tech';
   } else if (appEnv === 'staging') {
     resolvedApiUrl = explicitApiUrl || 'https://staging-api.cscrs.in';
   } else if (explicitApiUrl && !explicitApiUrl.includes('127.0.0.1')) {

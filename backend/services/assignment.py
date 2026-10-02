@@ -8,7 +8,7 @@ from database.enums import (
 )
 from database.models.assignment import Assignment
 from utils.gps import calculate_distance
-from configs.config import START_WORK_RADIUS_METERS
+from configs.config import START_WORK_RADIUS_METERS, APP_BASE_URL
 from services.audit_log_service import AuditLogService
 from services.in_app_notification_service import (
     InAppNotificationService,
@@ -243,8 +243,10 @@ class AssignmentService:
             image_url = None
 
             if report.images:
-
-                image_url = ("/"+ report.images[0].image_path.replace("\\", "/"))
+                if APP_BASE_URL:
+                    image_url = f"{APP_BASE_URL.rstrip('/')}/api/v1/reports/{report.id}/image?type=original"
+                else:
+                    image_url = f"/api/v1/reports/{report.id}/image?type=original"
 
             google_maps_url = (
                 f"https://www.google.com/maps?q="

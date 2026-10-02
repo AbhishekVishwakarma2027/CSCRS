@@ -49,4 +49,4 @@ jobs:
 
           sleep 20
 
-          curl --fail https://api.cscrs.in/health
+          curl --fail https://api.cscrs.tech/health

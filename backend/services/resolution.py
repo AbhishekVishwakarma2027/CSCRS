@@ -131,8 +131,15 @@ class ResolutionService:
                     detail="Original report image not found.",
                 )
 
+            from storage import get_media_service
+            media_service = get_media_service()
+            orig_ref = getattr(original_image, "object_key", None) or original_image.image_path
+            orig_img_input = media_service.get_image_for_embedding(
+                orig_ref, getattr(original_image, "storage_provider", None)
+            )
+
             resolution_ai = self.resolution_ai.predict(
-                original_image=original_image.image_path,
+                original_image=orig_img_input,
                 resolution_image=str(image_path),
             )
 
@@ -167,13 +174,9 @@ class ResolutionService:
                         break
 
             rule_decision = self.rule_engine.evaluate(
-
                 verification_passed=verification["verification_passed"],
-
                 scene_similarity=resolution_ai["scene_similarity"],
-
                 yolo_issue_found=same_issue_detected,
-
             )
 
             logger.info(
@@ -216,10 +219,42 @@ class ResolutionService:
                 details="Worker uploaded resolution image.",
             )
 
+            # Upload canonical resolution proof to Object Storage
+            canonical_resolution = image_path.with_suffix(".canonical.webp")
+            res_w, res_h, res_size = media_service.process_canonical_image(
+                image_path, canonical_resolution
+            )
+            proof_key = media_service.build_resolution_image_key(
+                assignment.report_id, attempt.id, "proof", "webp"
+            )
+            proof_meta = media_service.upload_file(canonical_resolution, proof_key, "image/webp")
+
+            if report_image is not None:
+                report_image.object_key = proof_key
+                report_image.storage_provider = proof_meta["storage_provider"]
+                report_image.sha256 = proof_meta["sha256"]
+                report_image.width = res_w
+                report_image.height = res_h
+                report_image.mime_type = "image/webp"
+
+            ann_key = None
+            if annotated_path and Path(annotated_path).exists():
+                canonical_ann = Path(annotated_path).with_suffix(".canonical.webp")
+                ann_w, ann_h, ann_size = media_service.process_canonical_image(
+                    annotated_path, canonical_ann
+                )
+                ann_key = media_service.build_resolution_image_key(
+                    assignment.report_id, attempt.id, "annotated", "webp"
+                )
+                ann_meta = media_service.upload_file(canonical_ann, ann_key, "image/webp")
+                from utils.file_utils import safe_delete_file
+                safe_delete_file(canonical_ann)
+                safe_delete_file(annotated_path)
+
             ResolutionAttemptCRUD.update_attempt(
                 self.db,
                 attempt=attempt,
-                annotated_image_path=str(annotated_path),
+                annotated_image_path=ann_key or str(annotated_path),
                 verification_passed=verification["verification_passed"],
                 verification_score=verification.get("risk_score"),
                 verification_decision=verification.get("decision"),
@@ -233,10 +268,16 @@ class ResolutionService:
                 scene_similarity=resolution_ai["scene_similarity"],
                 same_scene=resolution_ai["same_scene"],
                 yolo_issue_found=same_issue_detected,
+                annotated_object_key=ann_key,
+                object_key=proof_key,
+                storage_provider=proof_meta["storage_provider"],
             )
+            from utils.file_utils import safe_delete_file
+            safe_delete_file(canonical_resolution)
 
             if rule_decision == "PASS":
                 ai_decision = ResolutionDecision.FULLY_RESOLVED
+
 
             elif rule_decision == "REVIEW":
                 ai_decision = ResolutionDecision.REVIEW
@@ -384,11 +425,27 @@ class ResolutionService:
             return resolution
         except Exception:
             self.db.rollback()
+            if 'proof_key' in locals() and proof_key:
+                from storage import get_media_service
+                get_media_service().delete_quietly(proof_key)
+            if 'ann_key' in locals() and ann_key:
+                from storage import get_media_service
+                get_media_service().delete_quietly(ann_key)
             if image_path:
                 safe_delete_file(image_path)
             if annotated_path:
                 safe_delete_file(annotated_path)
             raise
+        finally:
+            if image_path:
+                safe_delete_file(image_path)
+            if annotated_path:
+                safe_delete_file(annotated_path)
+            if 'canonical_resolution' in locals() and canonical_resolution:
+                safe_delete_file(canonical_resolution)
+            if 'canonical_ann' in locals() and canonical_ann:
+                safe_delete_file(canonical_ann)
+
 
     def _validate_assignment(
         self,

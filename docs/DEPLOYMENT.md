@@ -59,7 +59,7 @@ The following variables are required in `backend/.env.production` for Docker Com
 - `DATABASE_URL` (`postgresql+psycopg://cscrs_admin:password@postgres:5432/cscrs_db`)
 - `REDIS_URL` (`redis://redis:6379/0`)
 - `SECRET_KEY` (Strong production key)
-- `FRONTEND_BASE_URL` (`https://cscrs.vercel.app,https://www.cscrs.in`)
+- `FRONTEND_BASE_URL` (`https://cscrs.tech`)
 
 ---
 
@@ -242,7 +242,7 @@ The repository features automated GitHub Actions workflows under `.github/workfl
 - **Deploy Backend (`.github/workflows/deploy.yml`)**:
   - Manual trigger via `workflow_dispatch`.
   - Connects via SSH (`secrets.ORACLE_SSH_KEY`) to Oracle VM host (`secrets.ORACLE_HOST`).
-  - Pulls latest code, executes `update.sh`, and validates health check at `https://api.cscrs.in/health`.
+  - Pulls latest code, executes `update.sh`, and validates health check at `https://api.cscrs.tech/health`.
 
 ---
 

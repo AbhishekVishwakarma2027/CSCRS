@@ -52,12 +52,16 @@ class SceneSimilarityEngine:
     @torch.no_grad()
     def get_embedding(
         self,
-        image_path: str,
+        image_path: str | Path | Image.Image,
     ):
 
-        image = Image.open(image_path).convert("RGB")
+        if isinstance(image_path, Image.Image):
+            image = image_path.convert("RGB")
+        else:
+            image = Image.open(image_path).convert("RGB")
 
         image = self.preprocess(image).unsqueeze(0).to(self.device)
+
 
         embedding = self.model.encode_image(image)
 

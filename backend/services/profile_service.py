@@ -1,8 +1,7 @@
 from fastapi import HTTPException, status
-from sqlalchemy.orm import Session
-
-from database.crud.user import UserCRUD
+import os
 from pathlib import Path
+from sqlalchemy.orm import Session
 from database.enums import UserRole
 from database.crud.worker import WorkerCRUD
 from database.crud.department import DepartmentCRUD
@@ -18,6 +17,7 @@ from utils.file_utils import (
     safe_delete_file,
     validate_uploaded_file,
 )
+from storage import get_media_service
 
 
 class ProfileService:
@@ -35,6 +35,10 @@ class ProfileService:
 
         profile_image = getattr(
             current_user,
+            "profile_image_object_key",
+            None,
+        ) or getattr(
+            current_user,
             "profile_image",
             None,
         )
@@ -42,15 +46,19 @@ class ProfileService:
         profile_image_url = None
 
         if profile_image:
+            from storage import get_media_service
+            media_service = get_media_service()
+            if media_service.is_cloud_object(profile_image, getattr(current_user, "profile_image_storage_provider", None)):
+                profile_image_url = f"{APP_BASE_URL.rstrip('/')}/api/v1/profile/{current_user.id}/photo"
+            else:
+                normalized_path = profile_image.replace(
+                    "\\",
+                    "/",
+                ).lstrip("/")
+                profile_image_url = (
+                    f"{APP_BASE_URL.rstrip('/')}/{normalized_path}"
+                )
 
-            normalized_path = profile_image.replace(
-                "\\",
-                "/",
-            )
-
-            profile_image_url = (
-                f"{APP_BASE_URL.rstrip('/')}/{normalized_path}"
-            )
 
         profile_data = {
             "id": current_user.id,
@@ -193,79 +201,122 @@ class ProfileService:
             max_size=5 * 1024 * 1024,
         )
 
-        uploaded = save_uploaded_file(
-            photo,
-            folder="profile",
-        )
+        import shutil
+        import tempfile
+        from fastapi.responses import StreamingResponse
 
-        old_profile_image = current_user.profile_image
+        media_service = get_media_service()
 
-        current_user.profile_image = uploaded[
-            "image_path"
-        ]
+        # Spool uploaded photo to temporary file
+        fd, temp_spool_str = tempfile.mkstemp(suffix=Path(photo.filename).suffix, prefix="profile_upload_")
+        os.close(fd)
+        temp_spool = Path(temp_spool_str)
+        canonical_temp = temp_spool.with_suffix(".canonical.webp")
+        profile_key = None
 
-        self.db.add(
-            current_user,
-        )
+        try:
+            with open(temp_spool, "wb") as buffer:
+                photo.file.seek(0)
+                shutil.copyfileobj(photo.file, buffer)
 
-        self.db.commit()
-
-        self.db.refresh(
-            current_user,
-        )
-
-        if old_profile_image:
-
-            safe_delete_file(
-                old_profile_image,
+            media_service.process_canonical_image(
+                temp_spool, canonical_temp, preserve_transparency=True
             )
 
-        normalized_path = current_user.profile_image.replace(
-            "\\",
-            "/",
-        )
+            profile_key = media_service.build_profile_image_key(current_user.id, "webp")
+            upload_meta = media_service.upload_file(canonical_temp, profile_key, "image/webp")
 
-        profile_image_url = (
-            f"{APP_BASE_URL.rstrip('/')}/{normalized_path}"
-        )
+            old_profile_image = getattr(current_user, "profile_image_object_key", None) or current_user.profile_image
+            old_provider = getattr(current_user, "profile_image_storage_provider", None)
 
-        profile_image_url = (
-            f"{APP_BASE_URL.rstrip('/')}/{normalized_path}"
-        )
+            current_user.profile_image = profile_key
+            current_user.profile_image_object_key = profile_key
+            current_user.profile_image_storage_provider = upload_meta["storage_provider"]
 
-        return {
-            "message": "Profile photo uploaded successfully.",
-            "profile_image": profile_image_url,
-        }
-    
+            self.db.add(current_user)
+            self.db.commit()
+            self.db.refresh(current_user)
+
+            # Safely clean up old profile image after successful commit
+            if old_profile_image:
+                media_service.safe_delete_media(old_profile_image, old_provider)
+
+            profile_image_url = f"{APP_BASE_URL.rstrip('/')}/api/v1/profile/{current_user.id}/photo"
+
+            return {
+                "message": "Profile photo uploaded successfully.",
+                "profile_image": profile_image_url,
+            }
+
+        except Exception:
+            self.db.rollback()
+            if profile_key:
+                media_service.delete_quietly(profile_key)
+            raise
+        finally:
+            safe_delete_file(temp_spool)
+            safe_delete_file(canonical_temp)
+
     def delete_profile_photo(
         self,
         current_user,
     ):
-
-        if not current_user.profile_image:
-
+        old_profile_image = getattr(current_user, "profile_image_object_key", None) or current_user.profile_image
+        if not old_profile_image:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Profile photo not found.",
             )
 
-        old_profile_image = current_user.profile_image
+        old_provider = getattr(current_user, "profile_image_storage_provider", None)
         current_user.profile_image = None
+        current_user.profile_image_object_key = None
 
-        self.db.add(
-            current_user,
-        )
-
+        self.db.add(current_user)
         self.db.commit()
+        self.db.refresh(current_user)
 
-        self.db.refresh(
-            current_user,
-        )
+        get_media_service().safe_delete_media(old_profile_image, old_provider)
 
-        safe_delete_file(
-            old_profile_image,
-        )
         return {
             "message": "Profile photo deleted successfully.",
         }
+
+    def get_profile_photo_stream(
+        self,
+        user_id: int,
+    ):
+        from database.models.user import User
+        from fastapi.responses import StreamingResponse
+
+        user = self.db.query(User).filter(User.id == user_id).first()
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found.",
+            )
+
+        profile_ref = getattr(user, "profile_image_object_key", None) or user.profile_image
+        if not profile_ref:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Profile photo not found.",
+            )
+
+        media_service = get_media_service()
+        try:
+            stream, mime_type, file_size = media_service.get_stream(
+                profile_ref, getattr(user, "profile_image_storage_provider", None)
+            )
+        except Exception:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Profile photo file not found in storage.",
+            )
+
+        headers = {"Content-Length": str(file_size)} if file_size else {}
+        return StreamingResponse(
+            stream,
+            media_type=mime_type or "image/webp",
+            headers=headers,
+        )

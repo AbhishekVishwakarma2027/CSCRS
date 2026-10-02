@@ -28,6 +28,8 @@ class PublicUpdate(Base):
     category = Column(String(100), nullable=False, default="Press")
 
     thumbnail_url = Column(String(500), nullable=True)
+    thumbnail_object_key = Column(String(500), nullable=True)
+    thumbnail_storage_provider = Column(String(50), nullable=True, default="local")
 
     published_at = Column(DateTime(timezone=True), nullable=True)
 

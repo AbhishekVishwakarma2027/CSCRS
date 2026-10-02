@@ -60,8 +60,6 @@ services:
     restart: unless-stopped
 
     depends_on:
-      postgres:
-        condition: service_healthy
       redis:
         condition: service_healthy
 
@@ -75,6 +73,7 @@ services:
       - ../models:/app/models:ro
       - uploads_data:/app/uploads
       - logs_data:/app/logs
+      - /home/ubuntu/cscrs-secrets/oci/oci_api_key.pem:/secrets/oci/oci_api_key.pem:ro
 
 
     healthcheck:

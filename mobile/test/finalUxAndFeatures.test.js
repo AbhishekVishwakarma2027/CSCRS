@@ -176,7 +176,7 @@ describe('CSCRS Mobile: Final UX/UI and Feature Completion Tests', () => {
       const mockClient = {
         post: async (url, data) => {
           calls.push({ url, data });
-          return { data: { message: 'Profile photo uploaded successfully.', profile_image: 'https://api.cscrs.in/uploads/photo.jpg' } };
+          return { data: { message: 'Profile photo uploaded successfully.', profile_image: 'https://api.cscrs.tech/uploads/photo.jpg' } };
         },
       };
 
@@ -190,7 +190,7 @@ describe('CSCRS Mobile: Final UX/UI and Feature Completion Tests', () => {
     test('deleteProfilePhoto calls DELETE /api/v1/profile/photo', () => {
       const filePath = path.join(__dirname, '../packages/api/src/citizenEndpoints.ts');
       const content = fs.readFileSync(filePath, 'utf8');
-      assert.ok(content.includes("client.delete<MessageResponse>(\n    '/api/v1/profile/photo'"));
+      assert.ok(content.replace(/\r\n/g, '\n').includes("client.delete<MessageResponse>(\n    '/api/v1/profile/photo'"));
     });
   });
 

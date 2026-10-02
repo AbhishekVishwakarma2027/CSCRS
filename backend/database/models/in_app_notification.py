@@ -60,6 +60,7 @@ class InAppNotification(Base):
         DateTime(timezone=True),
         server_default=func.now(),
         nullable=False,
+        index=True,
     )
 
     user = relationship(

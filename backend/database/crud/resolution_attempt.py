@@ -26,6 +26,8 @@ class ResolutionAttemptCRUD:
         *,
         resolution_id: int,
         image_path: str,
+        object_key: str | None = None,
+        storage_provider: str = "local",
     ):
 
         last_attempt = ResolutionAttemptCRUD.get_last_attempt(
@@ -43,6 +45,8 @@ class ResolutionAttemptCRUD:
             resolution_id=resolution_id,
             attempt_number=attempt_number,
             image_path=image_path,
+            object_key=object_key,
+            storage_provider=storage_provider,
             verification_passed=False,
         )
 
@@ -51,6 +55,7 @@ class ResolutionAttemptCRUD:
         db.refresh(attempt)
 
         return attempt
+
     @staticmethod
     def update_attempt(
         db: Session,
@@ -66,9 +71,19 @@ class ResolutionAttemptCRUD:
         scene_similarity: float | None,
         same_scene: bool | None,
         yolo_issue_found: bool,
+        annotated_object_key: str | None = None,
+        object_key: str | None = None,
+        storage_provider: str | None = None,
     ):
 
         attempt.annotated_image_path = annotated_image_path
+        if annotated_object_key is not None:
+            attempt.annotated_object_key = annotated_object_key
+        if object_key is not None:
+            attempt.object_key = object_key
+        if storage_provider is not None:
+            attempt.storage_provider = storage_provider
+
         attempt.verification_passed = verification_passed
         attempt.verification_score = verification_score
         attempt.verification_decision = verification_decision
@@ -82,4 +97,4 @@ class ResolutionAttemptCRUD:
         db.commit()
         db.refresh(attempt)
 
-        return attempt
+        return attempt

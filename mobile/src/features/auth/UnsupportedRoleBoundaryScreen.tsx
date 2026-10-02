@@ -82,7 +82,7 @@ export const UnsupportedRoleBoundaryScreen: React.FC = () => {
             Administrative Workflows
           </Text>
           <Text style={[styles.noticeDesc, { color: colors.mutedForeground }]}>
-            Department Administration, City Administration, and System Oversight tools are available through the official CSCRS Web Administrative Portal at https://portal.cscrs.in.
+            Department Administration, City Administration, and System Oversight tools are available through the official CSCRS Web Administrative Portal at https://cscrs.tech.
           </Text>
         </View>
 

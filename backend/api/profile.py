@@ -104,6 +104,42 @@ def upload_profile_photo(
         current_user=current_user,
         photo=photo,
     )
+@router.get(
+    "/photo",
+)
+def get_my_profile_photo(
+    current_user: User = Depends(
+        get_current_user,
+    ),
+    db: Session = Depends(
+        get_db,
+    ),
+):
+    service = ProfileService(
+        db,
+    )
+    return service.get_profile_photo_stream(
+        current_user.id,
+    )
+
+
+@router.get(
+    "/{user_id}/photo",
+)
+def get_user_profile_photo(
+    user_id: int,
+    db: Session = Depends(
+        get_db,
+    ),
+):
+    service = ProfileService(
+        db,
+    )
+    return service.get_profile_photo_stream(
+        user_id,
+    )
+
+
 @router.delete(
     "/photo",
     response_model=MessageResponse,
@@ -116,11 +152,10 @@ def delete_profile_photo(
         get_db,
     ),
 ):
-
     service = ProfileService(
         db,
     )
-
     return service.delete_profile_photo(
         current_user=current_user,
     )
+

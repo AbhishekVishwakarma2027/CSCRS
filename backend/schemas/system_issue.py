@@ -66,13 +66,10 @@ class SystemIssueListItem(BaseModel):
     )
 
 class SystemIssueAttachmentResponse(BaseModel):
-
+    id: Optional[int] = None
     original_filename: str
-
     file_path: str
-
     mime_type: str
-
     file_size: int
 
     model_config = ConfigDict(

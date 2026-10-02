@@ -31,7 +31,12 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(
         60,
     )
 )
-REFRESH_TOKEN_EXPIRE_DAYS = 30
+REFRESH_TOKEN_EXPIRE_DAYS = int(
+    os.getenv(
+        "REFRESH_TOKEN_EXPIRE_DAYS",
+        30,
+    )
+)
 
 # ==========================
 # Email Configuration
@@ -206,3 +211,135 @@ ENABLE_API_DOCS = os.getenv(
     "ENABLE_API_DOCS",
     "True",
 ).lower() == "true"
+
+# ==========================
+# Data Retention Configuration
+# ==========================
+
+LOGIN_AUDIT_RETENTION_DAYS = int(
+    os.getenv(
+        "LOGIN_AUDIT_RETENTION_DAYS",
+        180,
+    )
+)
+
+NOTIFICATION_RETENTION_DAYS = int(
+    os.getenv(
+        "NOTIFICATION_RETENTION_DAYS",
+        90,
+    )
+)
+
+NOTIFICATION_MAX_UNREAD_RETENTION_DAYS = int(
+    os.getenv(
+        "NOTIFICATION_MAX_UNREAD_RETENTION_DAYS",
+        365,
+    )
+)
+
+REFRESH_TOKEN_RETENTION_DAYS = int(
+    os.getenv(
+        "REFRESH_TOKEN_RETENTION_DAYS",
+        0,
+    )
+)
+
+RETENTION_BATCH_SIZE = int(
+    os.getenv(
+        "RETENTION_BATCH_SIZE",
+        1000,
+    )
+)
+
+ENABLE_RETENTION_SCHEDULER = (
+    os.getenv(
+        "ENABLE_RETENTION_SCHEDULER",
+        "False",
+    ).lower()
+    == "true"
+)
+
+RETENTION_SCHEDULER_INTERVAL_HOURS = int(
+    os.getenv(
+        "RETENTION_SCHEDULER_INTERVAL_HOURS",
+        24,
+    )
+)
+
+# ==========================
+# Object Storage Configuration
+# ==========================
+
+OBJECT_STORAGE_PROVIDER = os.getenv(
+    "OBJECT_STORAGE_PROVIDER",
+    "local",
+).lower()
+
+OCI_OBJECT_STORAGE_REGION = os.getenv("OCI_OBJECT_STORAGE_REGION", "ap-mumbai-1")
+OCI_OBJECT_STORAGE_NAMESPACE = os.getenv("OCI_OBJECT_STORAGE_NAMESPACE", "bmv2paypbavo")
+OCI_OBJECT_STORAGE_BUCKET = os.getenv("OCI_OBJECT_STORAGE_BUCKET", "cscrs-storage")
+
+OCI_OBJECT_STORAGE_TENANCY_OCID = os.getenv("OCI_OBJECT_STORAGE_TENANCY_OCID")
+OCI_OBJECT_STORAGE_USER_OCID = os.getenv("OCI_OBJECT_STORAGE_USER_OCID")
+OCI_OBJECT_STORAGE_FINGERPRINT = os.getenv("OCI_OBJECT_STORAGE_FINGERPRINT")
+OCI_OBJECT_STORAGE_KEY_FILE = os.getenv("OCI_OBJECT_STORAGE_KEY_FILE")
+OCI_OBJECT_STORAGE_KEY_PASSPHRASE = os.getenv("OCI_OBJECT_STORAGE_KEY_PASSPHRASE")
+
+OBJECT_STORAGE_PREFIX = os.getenv(
+    "OBJECT_STORAGE_PREFIX",
+    "cscrs/v1",
+).strip("/")
+
+MEDIA_SERVING_MODE = os.getenv(
+    "MEDIA_SERVING_MODE",
+    "stream",
+).lower()
+
+MEDIA_PAR_EXPIRES_SECONDS = int(
+    os.getenv(
+        "MEDIA_PAR_EXPIRES_SECONDS",
+        900,
+    )
+)
+
+CANONICAL_IMAGE_MAX_DIMENSION = int(
+    os.getenv(
+        "CANONICAL_IMAGE_MAX_DIMENSION",
+        2048,
+    )
+)
+
+CANONICAL_IMAGE_WEBP_QUALITY = int(
+    os.getenv(
+        "CANONICAL_IMAGE_WEBP_QUALITY",
+        85,
+    )
+)
+
+CANONICAL_IMAGE_MAX_PIXELS = int(
+    os.getenv(
+        "CANONICAL_IMAGE_MAX_PIXELS",
+        50_000_000,
+    )
+)
+
+if OBJECT_STORAGE_PROVIDER == "oci":
+    oci_required_settings = [
+        ("OCI_OBJECT_STORAGE_REGION", OCI_OBJECT_STORAGE_REGION),
+        ("OCI_OBJECT_STORAGE_NAMESPACE", OCI_OBJECT_STORAGE_NAMESPACE),
+        ("OCI_OBJECT_STORAGE_BUCKET", OCI_OBJECT_STORAGE_BUCKET),
+        ("OCI_OBJECT_STORAGE_TENANCY_OCID", OCI_OBJECT_STORAGE_TENANCY_OCID),
+        ("OCI_OBJECT_STORAGE_USER_OCID", OCI_OBJECT_STORAGE_USER_OCID),
+        ("OCI_OBJECT_STORAGE_FINGERPRINT", OCI_OBJECT_STORAGE_FINGERPRINT),
+        ("OCI_OBJECT_STORAGE_KEY_FILE", OCI_OBJECT_STORAGE_KEY_FILE),
+    ]
+    missing_oci = [name for name, val in oci_required_settings if not val]
+    if missing_oci:
+        raise RuntimeError(
+            f"OCI Object Storage configuration is incomplete. Missing: {', '.join(missing_oci)}"
+        )
+    if not os.path.isfile(OCI_OBJECT_STORAGE_KEY_FILE):
+        raise RuntimeError(
+            f"OCI Object Storage private key file not found: {OCI_OBJECT_STORAGE_KEY_FILE}"
+        )
+

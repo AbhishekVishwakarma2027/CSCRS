@@ -17,6 +17,15 @@ fi
 
 echo "OK"
 
+if grep -q "^OBJECT_STORAGE_PROVIDER=oci" .env.production 2>/dev/null; then
+    OCI_KEY_PATH="/home/ubuntu/cscrs-secrets/oci/oci_api_key.pem"
+    if [ ! -f "$OCI_KEY_PATH" ]; then
+        echo "ERROR: Required OCI private key not found at $OCI_KEY_PATH!"
+        echo "Please provision the host secret with restricted permissions before updating."
+        exit 1
+    fi
+fi
+
 echo ""
 echo "[2/7] Pulling latest source..."
 

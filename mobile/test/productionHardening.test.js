@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 // Replicate or directly test env resolution logic under various process.env states
-const PRODUCTION_API_URL = 'https://api.cscrs.in';
+const PRODUCTION_API_URL = 'https://api.cscrs.tech';
 const STAGING_API_URL = 'https://staging-api.cscrs.in';
 
 const resolveEnvType = (raw) => {
@@ -21,7 +21,7 @@ const resolveApiPort = (raw) => {
 const resolveApiUrl = (envType = resolveEnvType(process.env['EXPO_PUBLIC_ENV'])) => {
   const explicitUrl = process.env['EXPO_PUBLIC_API_URL']?.trim();
 
-  // Production: MUST strictly resolve to https://api.cscrs.in.
+  // Production: MUST strictly resolve to https://api.cscrs.tech.
   // Local .env.local development URLs (e.g. Cloudflare tunnels or localhost)
   // must never silently override production builds.
   if (envType === 'production') {
@@ -61,13 +61,13 @@ const resolveApiUrl = (envType = resolveEnvType(process.env['EXPO_PUBLIC_ENV']))
 const resolveAppConfigApiUrl = (appEnv, explicitApiUrl) => {
   let resolvedApiUrl;
   if (appEnv === 'production') {
-    if (explicitApiUrl && explicitApiUrl !== 'https://api.cscrs.in') {
+    if (explicitApiUrl && explicitApiUrl !== 'https://api.cscrs.tech') {
       throw new Error(
         `[PRODUCTION BUILD SAFEGUARD] Production environment (EXPO_PUBLIC_ENV=production) cannot use non-production API URL: "${explicitApiUrl}". ` +
-        `Production builds must strictly target https://api.cscrs.in. Please check .env.local or build flags.`
+        `Production builds must strictly target https://api.cscrs.tech. Please check .env.local or build flags.`
       );
     }
-    resolvedApiUrl = 'https://api.cscrs.in';
+    resolvedApiUrl = 'https://api.cscrs.tech';
   } else if (appEnv === 'staging') {
     resolvedApiUrl = explicitApiUrl || 'https://staging-api.cscrs.in';
   } else if (explicitApiUrl && !explicitApiUrl.includes('127.0.0.1')) {
@@ -104,12 +104,12 @@ describe('CSCRS Mobile: Production Hardening Patch Tests', () => {
   // =========================================================================
   // 1. Production Environment Safety (P2-1)
   // =========================================================================
-  test('1. Production environment resolves deterministically to https://api.cscrs.in', () => {
+  test('1. Production environment resolves deterministically to https://api.cscrs.tech', () => {
     process.env['EXPO_PUBLIC_ENV'] = 'production';
     delete process.env['EXPO_PUBLIC_API_URL'];
 
     const resolved = resolveApiUrl('production');
-    assert.equal(resolved, 'https://api.cscrs.in');
+    assert.equal(resolved, 'https://api.cscrs.tech');
   });
 
   test('2. Development environment still resolves to development API URL / tunnel', () => {
@@ -127,12 +127,12 @@ describe('CSCRS Mobile: Production Hardening Patch Tests', () => {
 
     const resolved = resolveApiUrl('production');
     // Must strictly be production URL, ignoring the dev tunnel
-    assert.equal(resolved, 'https://api.cscrs.in');
+    assert.equal(resolved, 'https://api.cscrs.tech');
     assert.notEqual(resolved, 'https://residential-notre-sites-recognised.trycloudflare.com');
   });
 
   test('4. packages/config/src/env.ts exports PRODUCTION_API_URL and enforces strictly in resolveApiUrl', () => {
-    assert.ok(envSource.includes("export const PRODUCTION_API_URL = 'https://api.cscrs.in';"));
+    assert.ok(envSource.includes("export const PRODUCTION_API_URL = 'https://api.cscrs.tech';"));
     assert.ok(envSource.includes("if (envType === 'production') {\n    return PRODUCTION_API_URL;\n  }"));
   });
 
@@ -145,18 +145,18 @@ describe('CSCRS Mobile: Production Hardening Patch Tests', () => {
     );
 
     // Approved production URL passes without error
-    const approved = resolveAppConfigApiUrl('production', 'https://api.cscrs.in');
-    assert.equal(approved, 'https://api.cscrs.in');
+    const approved = resolveAppConfigApiUrl('production', 'https://api.cscrs.tech');
+    assert.equal(approved, 'https://api.cscrs.tech');
 
     // Default with no explicit URL passes and resolves to production URL
     const defaultProd = resolveAppConfigApiUrl('production', undefined);
-    assert.equal(defaultProd, 'https://api.cscrs.in');
+    assert.equal(defaultProd, 'https://api.cscrs.tech');
   });
 
   test('6. app.config.ts contains PRODUCTION BUILD SAFEGUARD in source', () => {
     assert.ok(appConfigSource.includes('[PRODUCTION BUILD SAFEGUARD]'));
-    assert.ok(appConfigSource.includes("explicitApiUrl !== 'https://api.cscrs.in'"));
-    assert.ok(appConfigSource.includes("resolvedApiUrl = 'https://api.cscrs.in'"));
+    assert.ok(appConfigSource.includes("explicitApiUrl !== 'https://api.cscrs.tech'"));
+    assert.ok(appConfigSource.includes("resolvedApiUrl = 'https://api.cscrs.tech'"));
   });
 
   // =========================================================================

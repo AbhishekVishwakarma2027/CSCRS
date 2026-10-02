@@ -2,6 +2,7 @@ import math
 import re
 from datetime import datetime, timezone
 from math import ceil
+from pathlib import Path
 from sqlalchemy.orm import Session
 
 from database.models.public_update import PublicUpdate
@@ -11,6 +12,7 @@ from schemas.public_update import (
     PublicUpdateResponse,
     PaginatedPublicUpdatesResponse,
 )
+from storage.media_service import get_media_service
 
 
 class PublicUpdateService:
@@ -111,6 +113,16 @@ class PublicUpdateService:
 
         published_at = datetime.now(timezone.utc) if req.is_published else None
 
+        thumbnail_object_key = None
+        thumbnail_storage_provider = "local"
+        if req.thumbnail_url:
+            filename = Path(req.thumbnail_url).name
+            media_service = get_media_service()
+            candidate_key = f"{media_service.prefix}/public-updates/thumbnails/{filename}"
+            if media_service.provider.exists(candidate_key):
+                thumbnail_object_key = candidate_key
+                thumbnail_storage_provider = media_service.provider_name
+
         update = PublicUpdate(
             title=req.title,
             slug=slug,
@@ -118,6 +130,8 @@ class PublicUpdateService:
             content=req.content,
             category=req.category or "Press",
             thumbnail_url=req.thumbnail_url,
+            thumbnail_object_key=thumbnail_object_key,
+            thumbnail_storage_provider=thumbnail_storage_provider,
             published_at=published_at,
             read_time_minutes=read_time,
             is_published=bool(req.is_published),
@@ -151,7 +165,21 @@ class PublicUpdateService:
             update.category = req.category
 
         if req.thumbnail_url is not None:
+            old_thumbnail_key = update.thumbnail_object_key
             update.thumbnail_url = req.thumbnail_url
+            if req.thumbnail_url:
+                filename = Path(req.thumbnail_url).name
+                media_service = get_media_service()
+                candidate_key = f"{media_service.prefix}/public-updates/thumbnails/{filename}"
+                if media_service.provider.exists(candidate_key):
+                    update.thumbnail_object_key = candidate_key
+                    update.thumbnail_storage_provider = media_service.provider_name
+                else:
+                    update.thumbnail_object_key = None
+                    update.thumbnail_storage_provider = "local"
+            else:
+                update.thumbnail_object_key = None
+                update.thumbnail_storage_provider = "local"
 
         if req.read_time_minutes is not None and req.read_time_minutes > 0:
             update.read_time_minutes = req.read_time_minutes
@@ -181,6 +209,15 @@ class PublicUpdateService:
         update = self.db.query(PublicUpdate).filter(PublicUpdate.id == update_id).first()
         if not update:
             return False
+        old_thumbnail_key = update.thumbnail_object_key
         self.db.delete(update)
         self.db.commit()
+
+        if old_thumbnail_key:
+            media_service = get_media_service()
+            try:
+                media_service.delete(old_thumbnail_key)
+            except Exception:
+                pass
+
         return True

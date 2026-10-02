@@ -27,7 +27,7 @@ export const resolveApiPort = (raw?: string): number => {
 /**
  * Resolves the backend API URL dynamically based on environment, platform,
  * and developer configuration:
- * 1. Production -> https://api.cscrs.in
+ * 1. Production -> https://api.cscrs.tech
  * 2. Staging -> https://staging-api.cscrs.in
  * 3. Development:
  *    a. Explicit custom EXPO_PUBLIC_API_URL (if not generic localhost)
@@ -36,7 +36,7 @@ export const resolveApiPort = (raw?: string): number => {
  *    d. Android Emulator -> http://10.0.2.2:8000
  *    e. iOS Simulator / Web -> http://127.0.0.1:8000
  */
-export const PRODUCTION_API_URL = 'https://api.cscrs.in';
+export const PRODUCTION_API_URL = 'https://api.cscrs.tech';
 export const STAGING_API_URL = 'https://staging-api.cscrs.in';
 
 export const resolveApiUrl = (
@@ -44,7 +44,7 @@ export const resolveApiUrl = (
 ): string => {
   const explicitUrl = process.env['EXPO_PUBLIC_API_URL']?.trim();
 
-  // Production: MUST strictly resolve to https://api.cscrs.in.
+  // Production: MUST strictly resolve to https://api.cscrs.tech.
   // Local .env.local development URLs (e.g. Cloudflare tunnels or localhost)
   // must never silently override production builds.
   if (envType === 'production') {

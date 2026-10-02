@@ -75,6 +75,7 @@ class RefreshToken(Base):
     expires_at = Column(
         DateTime(timezone=True),
         nullable=False,
+        index=True,
     )
 
     last_used_at = Column(

@@ -75,12 +75,22 @@ class DuplicateDetectionService:
             if original_image is None:
                 continue
 
-            if not Path(original_image.image_path).exists():
+            from storage import get_media_service
+            media_service = get_media_service()
+            try:
+                ref = original_image.object_key or original_image.image_path
+                orig_img = media_service.get_image_for_embedding(
+                    ref,
+                    getattr(original_image, "storage_provider", None),
+                )
+            except Exception:
                 continue
+
             same_scene, score = self.is_same_scene(
-                original_image.image_path,
+                orig_img,
                 uploaded_image,
             )
+
 
             if same_scene:
                 return {

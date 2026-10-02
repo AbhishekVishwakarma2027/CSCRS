@@ -243,7 +243,7 @@ export const CitizenProfileScreen: React.FC = () => {
   };
 
   const displayName = profile?.name || user?.name || 'Citizen User';
-  const displayEmail = profile?.email || user?.email || 'citizen@cscrs.in';
+  const displayEmail = profile?.email || user?.email || 'citizen@cscrs.tech';
   const displayPhone = profile?.phone || null;
   const displayRole = profile?.role || user?.role || 'Citizen';
 

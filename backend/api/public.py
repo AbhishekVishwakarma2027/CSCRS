@@ -82,7 +82,29 @@ def get_published_update_by_slug(
     summary="Serve Public News & Press Thumbnail Image",
 )
 def get_update_thumbnail(filename: str):
+    from fastapi.responses import StreamingResponse
+    from storage.media_service import get_media_service
+
+    media_service = get_media_service()
+
+    # 1. Dual-read: Check in active storage provider (OCI or Local)
+    candidate_key = f"{media_service.prefix}/public-updates/thumbnails/{filename}"
+    if media_service.provider.exists(candidate_key):
+        stream_res = media_service.get_stream(candidate_key)
+        if stream_res:
+            stream, content_type, length = stream_res
+            headers = {"Content-Disposition": f'inline; filename="{filename}"'}
+            if length:
+                headers["Content-Length"] = str(length)
+            return StreamingResponse(
+                stream,
+                media_type=content_type or "image/webp",
+                headers=headers,
+            )
+
+    # 2. Dual-read fallback: check local filesystem
     file_path = THUMBNAIL_DIR / filename
-    if not file_path.exists() or not file_path.is_file():
-        raise HTTPException(status_code=404, detail="Thumbnail image not found.")
-    return FileResponse(file_path)
+    if file_path.exists() and file_path.is_file():
+        return FileResponse(file_path)
+
+    raise HTTPException(status_code=404, detail="Thumbnail image not found.")

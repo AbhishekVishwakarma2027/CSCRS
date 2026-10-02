@@ -7,9 +7,9 @@ This document serves as the operational runbook for system administrators mainta
 ## 1. Primary Health Monitoring Protocols
 
 ### Endpoint Probes
-- **Service Status**: `GET https://api.cscrs.in/health` (Returns status `healthy`, API version, and timestamp).
-- **Liveness Probe**: `GET https://api.cscrs.in/liveness` (Returns status `alive`).
-- **Readiness Probe**: `GET https://api.cscrs.in/readiness` (Checks PostgreSQL database connectivity via `SELECT 1`. Returns `200 OK` when ready, or `503 Service Unavailable` if database connection fails).
+- **Service Status**: `GET https://api.cscrs.tech/health` (Returns status `healthy`, API version, and timestamp).
+- **Liveness Probe**: `GET https://api.cscrs.tech/liveness` (Returns status `alive`).
+- **Readiness Probe**: `GET https://api.cscrs.tech/readiness` (Checks PostgreSQL database connectivity via `SELECT 1`. Returns `200 OK` when ready, or `503 Service Unavailable` if database connection fails).
 
 ### Container Status Check
 ```bash

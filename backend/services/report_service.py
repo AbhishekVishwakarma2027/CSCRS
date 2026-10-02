@@ -94,6 +94,11 @@ class ReportService:
         mime_type: str,
         file_size: int,
         image_type=ImageType.ORIGINAL,
+        object_key: str | None = None,
+        storage_provider: str = "local",
+        sha256: str | None = None,
+        width: int | None = None,
+        height: int | None = None,
     ):
         return report_image_crud.create_report_image(
             self.db,
@@ -104,7 +109,13 @@ class ReportService:
             mime_type,
             file_size,
             image_type,
+            object_key=object_key,
+            storage_provider=storage_provider,
+            sha256=sha256,
+            width=width,
+            height=height,
         )
+
     def save_detections(
         self,
         report_id: int,
@@ -815,11 +826,15 @@ class ReportService:
                 detail="Image not found.",
             )
 
-        if not os.path.exists(image.image_path):
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Image file not found on disk.",
-            )
+        from storage import get_media_service
+        media_service = get_media_service()
+        ref = getattr(image, "object_key", None) or image.image_path
+        if not media_service.is_cloud_object(ref, getattr(image, "storage_provider", None)):
+            if not (os.path.exists(ref) or os.path.exists(os.path.join("uploads", ref.lstrip("/\\")))):
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Image file not found on disk.",
+                )
 
         return image
 
@@ -894,10 +909,14 @@ class ReportService:
                 detail="Image not found.",
             )
 
-        if not os.path.exists(image.image_path):
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Image file not found on disk.",
-            )
+        from storage import get_media_service
+        media_service = get_media_service()
+        ref = getattr(image, "object_key", None) or image.image_path
+        if not media_service.is_cloud_object(ref, getattr(image, "storage_provider", None)):
+            if not (os.path.exists(ref) or os.path.exists(os.path.join("uploads", ref.lstrip("/\\")))):
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Image file not found on disk.",
+                )
 
-        return image
+        return image

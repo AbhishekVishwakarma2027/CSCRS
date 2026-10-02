@@ -99,20 +99,55 @@ def upload_thumbnail(
     file: UploadFile = File(...),
     current_user: User = Depends(require_super_admin()),
 ):
+    import uuid
+    import tempfile
+    from storage.media_service import get_media_service
+
     file_size = validate_uploaded_file(
         file=file,
         allowed_extensions={".jpg", ".jpeg", ".png", ".webp"},
         allowed_content_types={"image/jpeg", "image/png", "image/webp"},
         max_size=MAX_FILE_SIZE,
     )
-    stored_filename = generate_filename(file.filename)
-    dest_path = THUMBNAIL_DIR / stored_filename
 
-    with open(dest_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    media_service = get_media_service()
+    temp_files_to_clean = []
+    try:
+        ext = Path(file.filename).suffix.lower() if file.filename else ".jpg"
+        with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as raw_temp:
+            raw_temp_path = Path(raw_temp.name)
+            temp_files_to_clean.append(raw_temp_path)
+            shutil.copyfileobj(file.file, raw_temp)
+        file.file.seek(0)
 
-    return {
-        "success": True,
-        "filename": stored_filename,
-        "thumbnail_url": f"/api/v1/public/updates/images/{stored_filename}",
-    }
+        # Canonicalize to WebP (handles orientation, max dimension, and quality)
+        canonical_path, _, _ = media_service.process_canonical_image(
+            raw_temp_path,
+            output_ext="webp",
+        )
+        temp_files_to_clean.append(canonical_path)
+
+        random_id = uuid.uuid4().hex
+        stored_filename = f"{random_id}.webp"
+        object_key = f"{media_service.prefix}/public-updates/thumbnails/{stored_filename}"
+
+        media_service.upload_file(
+            local_path=canonical_path,
+            object_key=object_key,
+            content_type="image/webp",
+        )
+
+        return {
+            "success": True,
+            "filename": stored_filename,
+            "thumbnail_url": f"/api/v1/public/updates/images/{stored_filename}",
+            "object_key": object_key,
+        }
+    finally:
+        for p in temp_files_to_clean:
+            try:
+                if p.exists():
+                    p.unlink()
+            except Exception:
+                pass
+

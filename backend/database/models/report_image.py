@@ -56,6 +56,34 @@ class ReportImage(Base):
         default=ImageType.ORIGINAL,
     )
 
+    object_key = Column(
+        String(500),
+        nullable=True,
+        index=True,
+    )
+
+    storage_provider = Column(
+        String(50),
+        nullable=False,
+        default="local",
+    )
+
+    sha256 = Column(
+        String(64),
+        nullable=True,
+        index=True,
+    )
+
+    width = Column(
+        Integer,
+        nullable=True,
+    )
+
+    height = Column(
+        Integer,
+        nullable=True,
+    )
+
     uploaded_at = Column(
         DateTime(timezone=True),
         server_default=func.now(),

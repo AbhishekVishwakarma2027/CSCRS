@@ -8,7 +8,7 @@ This document provides a comprehensive, synchronized reference for all REST API 
 
 ### Base URLs
 - **Local Development**: `http://localhost:8000`
-- **Production API Gateway**: `https://api.cscrs.in` (Nginx reverse proxy forwarding to Uvicorn container on port 8000)
+- **Production API Gateway**: `https://api.cscrs.tech` (Nginx reverse proxy forwarding to Uvicorn container on port 8000)
 
 ### API Prefixing
 - All functional resource APIs are prefixed with `/api/v1`.

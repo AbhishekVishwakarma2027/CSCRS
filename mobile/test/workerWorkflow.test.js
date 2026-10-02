@@ -429,7 +429,7 @@ describe('CSCRS Phase 5 Worker Mobile Workflow Tests', () => {
   });
 
   test('5B.3: resolveMediaUrl correctly resolves relative paths against API base URL', () => {
-    const resolveMediaUrlTest = (path, base = 'https://api.cscrs.in') => {
+    const resolveMediaUrlTest = (path, base = 'https://api.cscrs.tech') => {
       if (!path) return null;
       if (path.startsWith('http://') || path.startsWith('https://')) return path;
       const cleanBase = base.replace(/\/+$/, '');
@@ -438,12 +438,12 @@ describe('CSCRS Phase 5 Worker Mobile Workflow Tests', () => {
     };
 
     assert.strictEqual(
-      resolveMediaUrlTest('/uploads/reports/pothole_501.jpg', 'https://api.cscrs.in'),
-      'https://api.cscrs.in/uploads/reports/pothole_501.jpg'
+      resolveMediaUrlTest('/uploads/reports/pothole_501.jpg', 'https://api.cscrs.tech'),
+      'https://api.cscrs.tech/uploads/reports/pothole_501.jpg'
     );
     assert.strictEqual(
-      resolveMediaUrlTest('https://cdn.cscrs.in/photo.jpg', 'https://api.cscrs.in'),
-      'https://cdn.cscrs.in/photo.jpg'
+      resolveMediaUrlTest('https://cdn.cscrs.tech/photo.jpg', 'https://api.cscrs.tech'),
+      'https://cdn.cscrs.tech/photo.jpg'
     );
     assert.strictEqual(resolveMediaUrlTest(null), null);
     assert.strictEqual(resolveMediaUrlTest(undefined), null);

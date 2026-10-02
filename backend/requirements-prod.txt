@@ -43,3 +43,6 @@ ftfy==6.3.1
 regex==2026.5.9
 tqdm==4.68.3
 setuptools==81.0.0
+
+# Cloud Object Storage
+oci>=2.140.0

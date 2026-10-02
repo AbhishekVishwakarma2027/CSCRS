@@ -29,7 +29,9 @@ class User(Base):
 
     phone = Column(String(20), unique=True, nullable=True)
 
-    profile_image = Column(String(500),nullable=True,)
+    profile_image = Column(String(500), nullable=True)
+    profile_image_object_key = Column(String(500), nullable=True)
+    profile_image_storage_provider = Column(String(50), nullable=True, default="local")
 
     password_hash = Column(String(255), nullable=False)
 

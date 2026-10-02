@@ -44,6 +44,23 @@ class ResolutionAttempt(Base):
         nullable=True,
     )
 
+    object_key = Column(
+        String(500),
+        nullable=True,
+        index=True,
+    )
+
+    annotated_object_key = Column(
+        String(500),
+        nullable=True,
+    )
+
+    storage_provider = Column(
+        String(50),
+        nullable=False,
+        default="local",
+    )
+
     verification_passed = Column(
         Boolean,
         nullable=False,

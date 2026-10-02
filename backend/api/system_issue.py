@@ -225,3 +225,21 @@ def update_issue_status(
 
         data=payload,
     )
+
+
+@router.get(
+    "/attachments/{attachment_id}",
+    summary="Get System Issue Attachment",
+    description="Stream system issue attachment image or video with role/ownership authorization.",
+)
+def get_issue_attachment(
+    attachment_id: int,
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    service = SystemIssueService(db)
+    return service.get_attachment_stream(
+        attachment_id=attachment_id,
+        current_user=current_user,
+    )
+

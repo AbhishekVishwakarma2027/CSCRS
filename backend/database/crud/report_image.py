@@ -13,6 +13,11 @@ def create_report_image(
     mime_type,
     file_size,
     image_type=ImageType.ORIGINAL,
+    object_key=None,
+    storage_provider="local",
+    sha256=None,
+    width=None,
+    height=None,
 ):
     image = ReportImage(
         report_id=report_id,
@@ -22,12 +27,18 @@ def create_report_image(
         mime_type=mime_type,
         file_size=file_size,
         image_type=image_type,
+        object_key=object_key,
+        storage_provider=storage_provider,
+        sha256=sha256,
+        width=width,
+        height=height,
     )
 
     db.add(image)
     db.flush()
 
     return image
+
 
 def get_original_image(
     db,

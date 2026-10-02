@@ -68,7 +68,7 @@ class SecureTokenStore {
 // ==========================================
 class TestApiClientManager {
   constructor(options = {}) {
-    this.baseURL = options.baseURL || 'https://api.cscrs.in';
+    this.baseURL = options.baseURL || 'https://api.cscrs.tech';
     this.tokenStore = options.tokenStore || new SecureTokenStore();
     this.onSessionExpiredCallback = options.onSessionExpired;
     this.refreshPromise = null;

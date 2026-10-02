@@ -9,8 +9,11 @@ from fastapi import (
     HTTPException,
     UploadFile,
 )
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from sqlalchemy.orm import Session
+
+from storage import get_media_service
+from utils.file_utils import safe_delete_file
 
 from authentication.dependencies import (
     require_citizen,
@@ -266,64 +269,74 @@ async def report_issue(
 
         report_data = ReportBuilder.build(
             inference_result=result,
-
             citizen_id=current_user.id,
-
             department_id=department.id,
-
             address=None,
-
             description=description,
         )
 
-        report = report_service.create_report(
-            report_data
-        )
+        report = report_service.create_report(report_data)
 
-        report_service.save_image(
-            report_id=report.id,
+        media_service = get_media_service()
+        orig_key = None
+        annotated_key = None
+        canonical_temp = None
+        annotated_canonical_temp = None
 
-            original_filename=file.filename,
-
-            stored_filename=stored_filename,
-
-            image_path=str(image_path),
-
-            mime_type=mime_type,
-
-            file_size=file_size,
-        )
-
-        annotated_relative_path = result["ai"]["annotated_image"]
-
-        annotated_filename = Path(
-            annotated_relative_path
-        ).name
-
-        annotated_full_path = Path(
-            annotated_relative_path.lstrip("/")
-        )
-
-        if annotated_full_path.exists():
+        try:
+            # 1. Canonical conversion and upload of original image
+            canonical_temp = image_path.with_suffix(".canonical.webp")
+            orig_w, orig_h, orig_file_size = media_service.process_canonical_image(
+                image_path, canonical_temp
+            )
+            orig_key = media_service.build_report_image_key(report.id, "original", "webp")
+            orig_meta = media_service.upload_file(canonical_temp, orig_key, "image/webp")
 
             report_service.save_image(
-
                 report_id=report.id,
-
-                original_filename=annotated_filename,
-
-                stored_filename=annotated_filename,
-
-                image_path=str(annotated_full_path),
-
-                mime_type="image/jpeg",
-
-                file_size=annotated_full_path.stat().st_size,
-
-                image_type=ImageType.ANNOTATED,
+                original_filename=file.filename,
+                stored_filename=Path(orig_key).name,
+                image_path=orig_key,
+                mime_type="image/webp",
+                file_size=orig_meta["file_size"],
+                image_type=ImageType.ORIGINAL,
+                object_key=orig_key,
+                storage_provider=orig_meta["storage_provider"],
+                sha256=orig_meta["sha256"],
+                width=orig_w,
+                height=orig_h,
             )
 
-        report_service.save_detections(
+            # 2. Canonical conversion and upload of annotated image
+            annotated_relative_path = result["ai"]["annotated_image"]
+            annotated_full_path = Path(annotated_relative_path.lstrip("/"))
+
+            if annotated_full_path.exists():
+                annotated_canonical_temp = annotated_full_path.with_suffix(".canonical.webp")
+                ann_w, ann_h, ann_file_size = media_service.process_canonical_image(
+                    annotated_full_path, annotated_canonical_temp
+                )
+                annotated_key = media_service.build_report_image_key(report.id, "annotated", "webp")
+                annotated_meta = media_service.upload_file(
+                    annotated_canonical_temp, annotated_key, "image/webp"
+                )
+
+                report_service.save_image(
+                    report_id=report.id,
+                    original_filename=Path(annotated_key).name,
+                    stored_filename=Path(annotated_key).name,
+                    image_path=annotated_key,
+                    mime_type="image/webp",
+                    file_size=annotated_meta["file_size"],
+                    image_type=ImageType.ANNOTATED,
+                    object_key=annotated_key,
+                    storage_provider=annotated_meta["storage_provider"],
+                    sha256=annotated_meta["sha256"],
+                    width=ann_w,
+                    height=ann_h,
+                )
+
+            report_service.save_detections(
                 report_id=report.id,
                 detections=result["ai"]["detections"],
                 model_version=result["ai"]["model_version"],
@@ -331,84 +344,63 @@ async def report_issue(
                     result["processing_time"] * 1000
                 ),
             )
-        assignment_message=None
-        try:
+            db.commit()
 
+        except Exception:
+            db.rollback()
+            if orig_key:
+                media_service.delete_quietly(orig_key)
+            if annotated_key:
+                media_service.delete_quietly(annotated_key)
+            raise
+
+        finally:
+            safe_delete_file(canonical_temp)
+            safe_delete_file(annotated_canonical_temp)
+            if 'annotated_full_path' in locals() and annotated_full_path:
+                safe_delete_file(annotated_full_path)
+
+        assignment_message = None
+        try:
             assignment_service.assign_worker(
                 report_id=report.id,
-                assigned_by=current_user.id,      
+                assigned_by=current_user.id,
                 remarks="Auto assigned by system",
             )
-
         except HTTPException as exc:
-
             if (
                 exc.status_code == 404
                 and exc.detail == "No available workers found."
             ):
-
                 assignment_message = (
                     "Report submitted successfully. "
                     "Currently no worker is available. "
                     "and report will be assigned "
                     "manually as soon as a worker becomes available."
                 )
-
             else:
                 raise
-        
+
         public_detections = []
-
         for detection in result["ai"]["detections"]:
-
             public_detection = detection.copy()
-
             public_detection.pop("polygon", None)
-
             public_detections.append(public_detection)
 
         return {
-
             "success": True,
-
             "message": assignment_message or "Report Submitted Successfully.",
-
             "report_id": report.id,
-
             "report_number": report.report_number,
-
             "verification": result["verification"],
-
-            "ai": {**result["ai"],"detections":public_detections,},
-
-            # "detections": result["detections"],
-
+            "ai": {**result["ai"], "detections": public_detections},
             "processing_time": result["processing_time"],
         }
 
     except HTTPException:
-
-        if image_path.exists():
-            image_path.unlink()
         raise
 
     except ValueError as exc:
-
-        if image_path.exists():
-            image_path.unlink()
-
-        annotated = result.get("ai", {}).get(
-            "annotated_image"
-        )
-
-        if annotated:
-            annotated_path = Path(
-                annotated.lstrip("/")
-            )
-
-            if annotated_path.exists():
-                annotated_path.unlink()
-
         raise HTTPException(
             status_code=400,
             detail=str(exc),
@@ -417,13 +409,17 @@ async def report_issue(
     except Exception as e:
         import traceback
         traceback.print_exc()
-        if image_path.exists():
-            image_path.unlink()
-
         raise HTTPException(
             status_code=500,
             detail="Failed to process report.",
         )
+    finally:
+        safe_delete_file(image_path)
+        if "result" in locals() and isinstance(result, dict):
+            annotated = result.get("ai", {}).get("annotated_image") if isinstance(result.get("ai"), dict) else None
+            if annotated:
+                safe_delete_file(Path(annotated.lstrip("/")))
+
 @router.get(
     "/reports/my",
     response_model=list[CitizenReportListItem],
@@ -661,7 +657,17 @@ def get_admin_report_image_api(
 ):
     report_service = ReportService(db)
     image = report_service.get_admin_secure_image(report_id, type, current_user)
-    return FileResponse(image.image_path)
+    media_service = get_media_service()
+    ref = getattr(image, "object_key", None) or image.image_path
+    stream, mime_type, file_size = media_service.get_stream(
+        ref, getattr(image, "storage_provider", None)
+    )
+    headers = {"Content-Length": str(file_size)} if file_size else {}
+    return StreamingResponse(
+        stream,
+        media_type=mime_type or image.mime_type or "image/jpeg",
+        headers=headers,
+    )
 
 @router.get(
     "/reports/{report_id}/image",
@@ -675,4 +681,15 @@ def get_report_image_api(
 ):
     report_service = ReportService(db)
     image = report_service.get_report_secure_image(report_id, type, current_user)
-    return FileResponse(image.image_path)
+    media_service = get_media_service()
+    ref = getattr(image, "object_key", None) or image.image_path
+    stream, mime_type, file_size = media_service.get_stream(
+        ref, getattr(image, "storage_provider", None)
+    )
+    headers = {"Content-Length": str(file_size)} if file_size else {}
+    return StreamingResponse(
+        stream,
+        media_type=mime_type or image.mime_type or "image/jpeg",
+        headers=headers,
+    )
+

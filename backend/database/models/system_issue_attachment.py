@@ -56,6 +56,23 @@ class SystemIssueAttachment(Base):
         nullable=False,
     )
 
+    object_key = Column(
+        String(500),
+        nullable=True,
+        index=True,
+    )
+
+    storage_provider = Column(
+        String(50),
+        nullable=False,
+        default="local",
+    )
+
+    sha256 = Column(
+        String(64),
+        nullable=True,
+    )
+
     mime_type = Column(
         String(100),
         nullable=False,
@@ -64,4 +81,4 @@ class SystemIssueAttachment(Base):
     file_size = Column(
         Integer,
         nullable=False,
-    )
+    )
