@@ -21,21 +21,21 @@ export const CitizenOnboardingScreen: React.FC = () => {
       badge: 'STEP 1 OF 3',
       title: t('citizenOnboarding', 'step1Title'),
       description: t('citizenOnboarding', 'step1Desc'),
-      image: require('../../../../apps/cscrs-mobile/assets/onboarding/citizen/report-civic-issues.png'),
+      image: require('../../../../apps/cscrs-mobile/assets/onboarding/citizen/report-civic-issues.webp'),
     },
     {
       id: 'citizen-2',
       badge: 'STEP 2 OF 3',
       title: t('citizenOnboarding', 'step2Title'),
       description: t('citizenOnboarding', 'step2Desc'),
-      image: require('../../../../apps/cscrs-mobile/assets/onboarding/citizen/capture-photo-evidence.png'),
+      image: require('../../../../apps/cscrs-mobile/assets/onboarding/citizen/capture-photo-evidence.webp'),
     },
     {
       id: 'citizen-3',
       badge: 'STEP 3 OF 3',
       title: t('citizenOnboarding', 'step3Title'),
       description: t('citizenOnboarding', 'step3Desc'),
-      image: require('../../../../apps/cscrs-mobile/assets/onboarding/citizen/track-live-milestones.png'),
+      image: require('../../../../apps/cscrs-mobile/assets/onboarding/citizen/track-live-milestones.webp'),
     },
   ];
 

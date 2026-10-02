@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,9 @@ import {
   RefreshControl,
   Image,
   Modal,
+  Linking,
+  Alert,
+  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme, CscrsIcon } from '@cscrs/design-system';
@@ -52,6 +55,9 @@ export const CitizenReportDetailsScreen: React.FC<
     annotated: undefined,
     resolution: undefined,
   });
+  const imagesCacheRef = useRef<Record<ImageTab, string | null | undefined>>(imagesCache);
+  imagesCacheRef.current = imagesCache;
+
   const [loadingImage, setLoadingImage] = useState<boolean>(false);
   const [fullScreenImage, setFullScreenImage] = useState<string | null>(null);
 
@@ -75,19 +81,61 @@ export const CitizenReportDetailsScreen: React.FC<
 
   const loadImageForTab = useCallback(
     async (tab: ImageTab, reportId: number) => {
-      if (imagesCache[tab] !== undefined) return;
+      if (imagesCacheRef.current[tab] !== undefined) return;
       setLoadingImage(true);
       try {
         const base64Uri = await fetchReportImageBase64(reportId, tab);
-        setImagesCache((prev) => ({ ...prev, [tab]: base64Uri }));
+        setImagesCache((prev) => {
+          const next = { ...prev, [tab]: base64Uri };
+          imagesCacheRef.current = next;
+          return next;
+        });
       } catch {
-        setImagesCache((prev) => ({ ...prev, [tab]: null }));
+        setImagesCache((prev) => {
+          const next = { ...prev, [tab]: null };
+          imagesCacheRef.current = next;
+          return next;
+        });
       } finally {
         setLoadingImage(false);
       }
     },
-    [imagesCache]
+    []
   );
+
+  const handleOpenMaps = async () => {
+    if (!report || report.latitude == null || report.longitude == null) return;
+    const lat = report.latitude;
+    const lng = report.longitude;
+    const geoUrl = `geo:${lat},${lng}?q=${lat},${lng}(${encodeURIComponent(report.issue_type || 'Civic Issue')})`;
+    const webUrl = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+
+    try {
+      if (Platform.OS === 'android') {
+        try {
+          await Linking.openURL(geoUrl);
+          return;
+        } catch {
+          // Fall back to webUrl
+        }
+      } else if (Platform.OS === 'ios') {
+        const appleMapsUrl = `maps://?q=${lat},${lng}`;
+        try {
+          await Linking.openURL(appleMapsUrl);
+          return;
+        } catch {
+          // Fall back to webUrl
+        }
+      }
+
+      await Linking.openURL(webUrl);
+    } catch {
+      Alert.alert(
+        t('workerTaskDetails', 'mapErrorTitle'),
+        t('workerTaskDetails', 'unableToLaunchMapsMsg')
+      );
+    }
+  };
 
   const loadReportData = useCallback(
     async (isRefresh = false) => {
@@ -517,7 +565,12 @@ export const CitizenReportDetailsScreen: React.FC<
                         borderRadius: radii.sm,
                       },
                     ]}
-                    onPress={() => setActiveTab(tab)}
+                    onPress={() => {
+                      setActiveTab(tab);
+                      if (report?.id) {
+                        loadImageForTab(tab, report.id);
+                      }
+                    }}
                     activeOpacity={0.8}
                   >
                     <Text
@@ -634,6 +687,26 @@ export const CitizenReportDetailsScreen: React.FC<
                 {report.latitude?.toFixed(4)}° N, {report.longitude?.toFixed(4)}° E
               </Text>
             </View>
+
+            {report.latitude != null && report.longitude != null && (
+              <TouchableOpacity
+                style={[
+                  styles.openMapBtn,
+                  {
+                    backgroundColor: colors.primary + '15',
+                    borderColor: colors.primary + '40',
+                    borderRadius: radii.md,
+                  },
+                ]}
+                onPress={handleOpenMaps}
+                activeOpacity={0.8}
+              >
+                <CscrsIcon name="map-pin" size={16} color={colors.primary} />
+                <Text style={[styles.openMapBtnText, { color: colors.primary }]}>
+                  {t('citizenReportDetails', 'openInMaps')}
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           {/* Feedback CTA if Resolved */}
@@ -1058,6 +1131,20 @@ const styles = StyleSheet.create({
   coordinatesText: {
     fontSize: 12,
     fontWeight: '500',
+  },
+  openMapBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    marginTop: 12,
+    borderWidth: 1,
+  },
+  openMapBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
   },
   feedbackCta: {
     flexDirection: 'row',

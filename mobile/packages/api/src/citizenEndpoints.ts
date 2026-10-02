@@ -443,8 +443,23 @@ export async function fetchReportImageBase64(
     });
 
     const contentType = response.headers['content-type'] || 'image/jpeg';
-    const binary = Buffer.from(response.data).toString('base64');
-    return `data:${contentType};base64,${binary}`;
+    let base64 = '';
+    if (typeof Buffer !== 'undefined') {
+      base64 = Buffer.from(response.data).toString('base64');
+    } else {
+      const bytes = new Uint8Array(response.data);
+      let binary = '';
+      const len = bytes.byteLength;
+      for (let i = 0; i < len; i++) {
+        const byte = bytes[i];
+        if (byte !== undefined) {
+          binary += String.fromCharCode(byte);
+        }
+      }
+      const globalBtoa = typeof btoa !== 'undefined' ? btoa : (globalThis as any).btoa;
+      base64 = globalBtoa ? globalBtoa(binary) : '';
+    }
+    return `data:${contentType};base64,${base64}`;
   } catch (err: any) {
     if (err?.response?.status === 404) {
       return null;

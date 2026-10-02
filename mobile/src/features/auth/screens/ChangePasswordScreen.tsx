@@ -51,17 +51,26 @@ export function ChangePasswordScreen() {
   const hasNumber = /[0-9]/.test(newPassword);
   const hasSpecial = /[^A-Za-z0-9]/.test(newPassword);
   const passwordsMatch = newPassword === confirmPassword && confirmPassword.length > 0;
-  const isFormValid =
-    oldPassword.length > 0 &&
-    hasMinLen &&
-    hasUpper &&
-    hasLower &&
-    hasNumber &&
-    hasSpecial &&
-    passwordsMatch;
+  const isFormValid = oldPassword.length > 0 && hasMinLen && passwordsMatch;
 
   const handleSubmit = async () => {
-    if (!isFormValid || isLoading) return;
+    if (isLoading) return;
+
+    if (!oldPassword.trim()) {
+      setErrorMessage(t('changePassword', 'oldPasswordPlaceholder'));
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      setErrorMessage(t('changePassword', 'passwordLengthError'));
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setErrorMessage(t('changePassword', 'passwordMismatch'));
+      return;
+    }
+
     setErrorMessage(null);
     setSuccessMessage(null);
     setIsLoading(true);
@@ -79,7 +88,7 @@ export function ChangePasswordScreen() {
       setConfirmPassword('');
       setSuccessMessage(t('changePassword', 'changeSuccess'));
     } catch (err: unknown) {
-      const parsed = parseApiError(err, 'Failed to change password. Please try again.');
+      const parsed = parseApiError(err, t('changePassword', 'genericError'));
       setErrorMessage(parsed);
     } finally {
       setIsLoading(false);

@@ -500,9 +500,10 @@ export const CitizenReportCreateScreen: React.FC = () => {
             </Text>
 
             <Text style={[styles.successDesc, { color: colors.mutedForeground }]}>
-              {submissionResult.duplicate
-                ? t('citizenReportCreate', 'duplicateSupportedMessage')
-                : t('citizenReportCreate', 'successMessage')}
+              {submissionResult.message ||
+                (submissionResult.duplicate
+                  ? t('citizenReportCreate', 'duplicateSupportedMessage')
+                  : t('citizenReportCreate', 'successMessage'))}
             </Text>
 
             {submissionResult.report_number && (

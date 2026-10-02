@@ -21,7 +21,7 @@ import {
 import { useI18n } from '../../../core/i18n';
 import { RootStackParamList } from '../../../app/navigation/types';
 
-type FilterType = 'all' | 'assigned' | 'in_progress' | 'completed';
+type FilterType = 'all' | 'assigned' | 'in_progress' | 'completed' | 'cancelled';
 
 export const WorkerTasksScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
@@ -74,6 +74,9 @@ export const WorkerTasksScreen: React.FC = () => {
     }
     if (filter === 'completed') {
       return s.includes('COMPLETED') || s.includes('RESOLVED');
+    }
+    if (filter === 'cancelled') {
+      return s === 'CANCELLED' || s === 'REJECTED';
     }
     return true;
   });
@@ -163,7 +166,7 @@ export const WorkerTasksScreen: React.FC = () => {
             </View>
           </View>
           <Text style={[styles.reportIdText, { color: colors.mutedForeground }]}>
-            #{item.report_id}
+            {t('workerTasks', 'reportId')} #{item.report_id}
           </Text>
         </View>
 
@@ -256,7 +259,7 @@ export const WorkerTasksScreen: React.FC = () => {
 
         {/* Filter Pills */}
         <View style={styles.filterRow}>
-          {(['all', 'assigned', 'in_progress', 'completed'] as FilterType[]).map((tab) => {
+          {(['all', 'assigned', 'in_progress', 'completed', 'cancelled'] as FilterType[]).map((tab) => {
             const isActive = filter === tab;
             const label =
               tab === 'all'
@@ -265,7 +268,9 @@ export const WorkerTasksScreen: React.FC = () => {
                 ? t('workerTasks', 'filterAssigned')
                 : tab === 'in_progress'
                 ? t('workerTasks', 'filterInProgress')
-                : t('workerTasks', 'filterCompleted');
+                : tab === 'completed'
+                ? t('workerTasks', 'filterCompleted')
+                : t('workerTasks', 'filterCancelled');
 
             return (
               <TouchableOpacity

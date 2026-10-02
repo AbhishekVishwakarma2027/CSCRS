@@ -24,6 +24,7 @@ import {
   ProfileData,
 } from '@cscrs/api';
 import { resolveApiUrl } from '@cscrs/config';
+import { clearStoredRole } from '@cscrs/storage';
 import { RootStackParamList } from '../../../app/navigation/types';
 import { useAuthSession } from '../../../core/auth';
 import { useI18n } from '../../../core/i18n';
@@ -189,6 +190,7 @@ export const CitizenProfileScreen: React.FC = () => {
         try {
           const res = await uploadProfilePhoto(asset.uri, asset.mimeType ?? 'image/jpeg');
           setProfile((prev) => (prev ? { ...prev, profile_image: res.profile_image } : null));
+          await fetchProfile(false);
           setSaveSuccess(t('profileAvatar', 'uploadSuccess'));
         } catch (err: any) {
           setSaveError(err?.response?.data?.detail ?? 'Failed to update photo');
@@ -209,6 +211,7 @@ export const CitizenProfileScreen: React.FC = () => {
     try {
       await deleteProfilePhoto();
       setProfile((prev) => (prev ? { ...prev, profile_image: null } : null));
+      await fetchProfile(false);
       setSaveSuccess(t('profileAvatar', 'removeSuccess'));
     } catch (err: any) {
       setSaveError(err?.response?.data?.detail ?? 'Failed to remove photo');
@@ -228,7 +231,11 @@ export const CitizenProfileScreen: React.FC = () => {
           style: 'destructive',
           onPress: async () => {
             await logout();
-            navigation.replace('AuthBoundary');
+            await clearStoredRole();
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'RoleSelection' }],
+            });
           },
         },
       ]
@@ -242,9 +249,14 @@ export const CitizenProfileScreen: React.FC = () => {
 
   const getFullProfileImageUrl = (img: string | null | undefined) => {
     if (!img) return null;
-    if (img.startsWith('http://') || img.startsWith('https://')) return img;
-    const baseHost = resolveApiUrl().replace('/api/v1', '');
-    return `${baseHost.replace(/\/$/, '')}/${img.replace(/^\//, '')}`;
+    let url = img;
+    const baseHost = resolveApiUrl().replace(/\/api\/v1\/?$/, '');
+    if (url.startsWith('http://localhost:8000') || url.startsWith('http://127.0.0.1:8000')) {
+      url = url.replace(/^http:\/\/(localhost|127\.0\.0\.1):8000/, baseHost);
+    } else if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      url = `${baseHost.replace(/\/$/, '')}/${url.replace(/^\//, '')}`;
+    }
+    return url;
   };
 
   const photoUri = getFullProfileImageUrl(profile?.profile_image);

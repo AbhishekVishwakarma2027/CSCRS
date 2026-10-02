@@ -21,21 +21,21 @@ export const WorkerOnboardingScreen: React.FC = () => {
       badge: 'STEP 1 OF 3',
       title: t('workerOnboarding', 'step1Title'),
       description: t('workerOnboarding', 'step1Desc'),
-      image: require('../../../../apps/cscrs-mobile/assets/onboarding/worker/view-assigned-queue.png'),
+      image: require('../../../../apps/cscrs-mobile/assets/onboarding/worker/view-assigned-queue.webp'),
     },
     {
       id: 'worker-2',
       badge: 'STEP 2 OF 3',
       title: t('workerOnboarding', 'step2Title'),
       description: t('workerOnboarding', 'step2Desc'),
-      image: require('../../../../apps/cscrs-mobile/assets/onboarding/worker/start-work-on-site.png'),
+      image: require('../../../../apps/cscrs-mobile/assets/onboarding/worker/start-work-on-site.webp'),
     },
     {
       id: 'worker-3',
       badge: 'STEP 3 OF 3',
       title: t('workerOnboarding', 'step3Title'),
       description: t('workerOnboarding', 'step3Desc'),
-      image: require('../../../../apps/cscrs-mobile/assets/onboarding/worker/submit-resolution-proof.png'),
+      image: require('../../../../apps/cscrs-mobile/assets/onboarding/worker/submit-resolution-proof.webp'),
     },
   ];
 

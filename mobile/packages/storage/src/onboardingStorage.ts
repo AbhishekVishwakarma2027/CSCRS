@@ -26,6 +26,10 @@ export async function setStoredRole(role: MobilePersona): Promise<void> {
   await defaultStorage.setItem(STORAGE_KEYS.ROLE, role);
 }
 
+export async function clearStoredRole(): Promise<void> {
+  await defaultStorage.removeItem(STORAGE_KEYS.ROLE);
+}
+
 export async function isOnboardingCompleted(): Promise<boolean> {
   const val = await defaultStorage.getItem(STORAGE_KEYS.ONBOARDING_COMPLETED);
   return val === 'true';

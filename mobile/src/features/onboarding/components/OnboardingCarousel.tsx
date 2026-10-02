@@ -7,6 +7,7 @@ import {
   Image,
   ImageSourcePropType,
   Platform,
+  useWindowDimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@cscrs/design-system';
@@ -35,6 +36,7 @@ export const OnboardingCarousel: React.FC<OnboardingCarouselProps> = ({
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const insets = useSafeAreaInsets();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const { theme } = useTheme();
   const { colors, spacing, radii } = theme;
   const { t } = useI18n();
@@ -42,6 +44,32 @@ export const OnboardingCarousel: React.FC<OnboardingCarouselProps> = ({
 
   const isLastSlide = currentIndex === slides.length - 1;
   const currentSlide = slides[currentIndex] || slides[0]!;
+
+  // Source WebP illustration aspect ratio: 941 x 1672 (~0.5628)
+  const IMAGE_ASPECT_RATIO = 941 / 1672;
+  const minHeaderHeight = insets.top + (Platform.OS === 'ios' ? 56 : 64);
+  const availableHeightForImage = windowHeight - minHeaderHeight;
+  const naturalHeightAtFullWidth = windowWidth / IMAGE_ASPECT_RATIO;
+
+  let imageWidth: number;
+  let imageHeight: number;
+  let imageLeft: number;
+  let topHeaderHeight: number;
+
+  if (naturalHeightAtFullWidth <= availableHeightForImage) {
+    // Phone is tall enough: image spans 100% width edge-to-edge
+    // All unused aspect-ratio space is cleanly absorbed by the white top header area
+    imageWidth = windowWidth;
+    imageHeight = naturalHeightAtFullWidth;
+    imageLeft = 0;
+    topHeaderHeight = windowHeight - imageHeight;
+  } else {
+    // Shorter/wider device: header gets minHeaderHeight, image fits remaining height without cropping
+    imageHeight = availableHeightForImage;
+    imageWidth = availableHeightForImage * IMAGE_ASPECT_RATIO;
+    imageLeft = (windowWidth - imageWidth) / 2;
+    topHeaderHeight = minHeaderHeight;
+  }
 
   const handleNext = () => {
     if (isLastSlide) {
@@ -61,23 +89,15 @@ export const OnboardingCarousel: React.FC<OnboardingCarouselProps> = ({
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {/* 1. Full-bleed background illustration */}
-      {currentSlide.image && (
-        <Image
-          source={currentSlide.image}
-          style={styles.fullBleedIllustration}
-          resizeMode="contain"
-          accessibilityLabel={currentSlide.title}
-        />
-      )}
-
-      {/* 2. Top Overlay: Role Badge, Skip Button, Progress Indicators */}
+      {/* 1. Clean White Top Header Area (Citizen, Skip, Pagination) */}
       <View
         style={[
-          styles.topOverlay,
+          styles.topHeaderArea,
           {
+            height: topHeaderHeight,
             paddingTop: insets.top + (Platform.OS === 'ios' ? 8 : 12),
             paddingHorizontal: spacing[4],
+            backgroundColor: colors.background,
           },
         ]}
       >
@@ -153,15 +173,35 @@ export const OnboardingCarousel: React.FC<OnboardingCarouselProps> = ({
         </View>
       </View>
 
-      {/* Spacer pushing the card to the bottom while artwork spans the entire view */}
-      <View style={styles.artworkSpace} pointerEvents="none" />
-
-      {/* 3. Translucent / Frosted Bottom Information Card */}
+      {/* 2. Full Image Area (starts right underneath top header, extends to bottom) */}
       <View
         style={[
-          styles.bottomCardWrapper,
+          styles.artworkArea,
           {
-            paddingBottom: Math.max(insets.bottom + 8, 20),
+            top: topHeaderHeight,
+            left: imageLeft,
+            width: imageWidth,
+            height: imageHeight,
+          },
+        ]}
+        pointerEvents="none"
+      >
+        {currentSlide.image && (
+          <Image
+            source={currentSlide.image}
+            style={styles.illustrationImage}
+            resizeMode="contain"
+            accessibilityLabel={currentSlide.title}
+          />
+        )}
+      </View>
+
+      {/* 3. Glassmorphism Card Overlay (position: absolute, anchored near bottom, layered ABOVE image) */}
+      <View
+        style={[
+          styles.cardOverlayWrapper,
+          {
+            bottom: Math.max(insets.bottom + 8, 20),
             paddingHorizontal: spacing[4],
           },
         ]}
@@ -258,19 +298,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     position: 'relative',
-    justifyContent: 'space-between',
   },
-  fullBleedIllustration: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+  topHeaderArea: {
     width: '100%',
-    height: '100%',
-  },
-  topOverlay: {
-    width: '100%',
+    maxWidth: 540,
+    alignSelf: 'center',
     zIndex: 10,
     gap: 12,
   },
@@ -319,12 +351,21 @@ const styles = StyleSheet.create({
   dot: {
     height: 6,
   },
-  artworkSpace: {
-    flex: 1,
+  artworkArea: {
+    position: 'absolute',
   },
-  bottomCardWrapper: {
+  illustrationImage: {
     width: '100%',
-    zIndex: 10,
+    height: '100%',
+  },
+  cardOverlayWrapper: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    width: '100%',
+    maxWidth: 540,
+    alignSelf: 'center',
+    zIndex: 20,
   },
   glassCard: {
     padding: 20,
@@ -374,7 +415,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   nextButton: {
-    flex: 2,
+    flex: 1,
     paddingVertical: 14,
     alignItems: 'center',
     justifyContent: 'center',

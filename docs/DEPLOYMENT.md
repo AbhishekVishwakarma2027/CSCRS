@@ -56,7 +56,7 @@ The following variables are required in `backend/.env.production` for Docker Com
 - `POSTGRES_DB` (e.g., `cscrs_db`)
 - `POSTGRES_USER` (e.g., `cscrs_admin`)
 - `POSTGRES_PASSWORD` (Production database secret)
-- `DATABASE_URL` (`postgresql://cscrs_admin:password@postgres:5432/cscrs_db`)
+- `DATABASE_URL` (`postgresql+psycopg://cscrs_admin:password@postgres:5432/cscrs_db`)
 - `REDIS_URL` (`redis://redis:6379/0`)
 - `SECRET_KEY` (Strong production key)
 - `FRONTEND_BASE_URL` (`https://cscrs.vercel.app,https://www.cscrs.in`)

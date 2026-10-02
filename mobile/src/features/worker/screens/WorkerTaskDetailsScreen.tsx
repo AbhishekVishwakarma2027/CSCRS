@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Linking,
   Alert,
+  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
@@ -25,6 +26,25 @@ import { RootStackParamList } from '../../../app/navigation/types';
 
 type TaskDetailsRouteProp = RouteProp<RootStackParamList, 'WorkerTaskDetails'>;
 
+function calculateHaversineDistanceMeters(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+): number {
+  const R = 6371000;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return Math.round(R * c);
+}
+
 export const WorkerTaskDetailsScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -39,6 +59,9 @@ export const WorkerTaskDetailsScreen: React.FC = () => {
   const [isStartingWork, setIsStartingWork] = useState<boolean>(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
+  const [workerLocation, setWorkerLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [distanceMeters, setDistanceMeters] = useState<number | null>(null);
+  const [isFetchingLocation, setIsFetchingLocation] = useState<boolean>(false);
 
   const isAssigned =
     (assignment.status || '').toUpperCase() === 'ASSIGNED' ||
@@ -47,8 +70,39 @@ export const WorkerTaskDetailsScreen: React.FC = () => {
   const isCompleted =
     (assignment.status || '').toUpperCase().includes('COMPLETED') ||
     (assignment.status || '').toUpperCase().includes('RESOLVED');
+  const isCancelled =
+    (assignment.status || '').toUpperCase() === 'CANCELLED' ||
+    (assignment.status || '').toUpperCase() === 'REJECTED';
 
   const mediaUri = resolveMediaUrl(assignment.image_url);
+
+  const fetchWorkerPosition = useCallback(async () => {
+    try {
+      setIsFetchingLocation(true);
+      const { status } = await Location.getForegroundPermissionsAsync();
+      if (status === 'granted') {
+        const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+        setWorkerLocation({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
+        if (assignment.latitude != null && assignment.longitude != null) {
+          const dist = calculateHaversineDistanceMeters(
+            pos.coords.latitude,
+            pos.coords.longitude,
+            assignment.latitude,
+            assignment.longitude
+          );
+          setDistanceMeters(dist);
+        }
+      }
+    } catch {
+      // Ignore background location error
+    } finally {
+      setIsFetchingLocation(false);
+    }
+  }, [assignment.latitude, assignment.longitude]);
+
+  useEffect(() => {
+    fetchWorkerPosition();
+  }, [fetchWorkerPosition]);
 
   // Geofenced Start Work handler
   const handleStartWork = async () => {
@@ -83,6 +137,17 @@ export const WorkerTaskDetailsScreen: React.FC = () => {
       });
 
       const { latitude, longitude } = loc.coords;
+      setWorkerLocation({ latitude, longitude });
+
+      if (assignment.latitude != null && assignment.longitude != null) {
+        const dist = calculateHaversineDistanceMeters(
+          latitude,
+          longitude,
+          assignment.latitude,
+          assignment.longitude
+        );
+        setDistanceMeters(dist);
+      }
 
       // 4. Send authoritative backend start-work request
       const startRes = await startWork(assignment.assignment_id, {
@@ -142,19 +207,29 @@ export const WorkerTaskDetailsScreen: React.FC = () => {
 
     try {
       if (geoUrl) {
-        const canOpenGeo = await Linking.canOpenURL(geoUrl);
-        if (canOpenGeo) {
-          await Linking.openURL(geoUrl);
-          return;
+        try {
+          const canOpenGeo = await Linking.canOpenURL(geoUrl);
+          if (canOpenGeo) {
+            await Linking.openURL(geoUrl);
+            return;
+          }
+        } catch {
+          // Fall through to webUrl
         }
       }
 
       if (webUrl) {
-        const canOpenWeb = await Linking.canOpenURL(webUrl);
-        if (canOpenWeb) {
-          await Linking.openURL(webUrl);
-          return;
+        try {
+          const canOpenWeb = await Linking.canOpenURL(webUrl);
+          if (canOpenWeb) {
+            await Linking.openURL(webUrl);
+            return;
+          }
+        } catch {
+          // Fall through to direct open
         }
+        await Linking.openURL(webUrl);
+        return;
       }
 
       Alert.alert(
@@ -287,7 +362,9 @@ export const WorkerTaskDetailsScreen: React.FC = () => {
           ]}
         >
           <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-            {t('workerTaskDetails', 'originalPhoto')}
+            {isCompleted
+              ? t('workerTaskDetails', 'resolutionPhoto')
+              : t('workerTaskDetails', 'originalPhoto')}
           </Text>
           {mediaUri ? (
             <Image
@@ -327,6 +404,16 @@ export const WorkerTaskDetailsScreen: React.FC = () => {
           <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
             {t('workerTaskDetails', 'taskInfo')}
           </Text>
+
+          {/* Report ID */}
+          <View style={styles.fieldBlock}>
+            <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>
+              {t('workerTasks', 'reportId')}
+            </Text>
+            <Text style={[styles.fieldValue, { color: colors.primary, fontWeight: '700' }]}>
+              #{assignment.report_id}
+            </Text>
+          </View>
 
           {/* Description */}
           <View style={styles.fieldBlock}>
@@ -394,7 +481,7 @@ export const WorkerTaskDetailsScreen: React.FC = () => {
           {assignment.latitude != null && assignment.longitude != null ? (
             <View style={styles.fieldBlock}>
               <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>
-                {t('workerTaskDetails', 'coordinates')}
+                {t('workerTaskDetails', 'reportLocation')}
               </Text>
               <Text style={[styles.fieldValue, { color: colors.foreground }]}>
                 {assignment.latitude.toFixed(6)}, {assignment.longitude.toFixed(6)}
@@ -402,7 +489,46 @@ export const WorkerTaskDetailsScreen: React.FC = () => {
             </View>
           ) : null}
 
-          {assignment.google_maps_url ? (
+          <View style={styles.fieldBlock}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>
+                {t('workerTaskDetails', 'workerLocation')}
+              </Text>
+              <TouchableOpacity onPress={fetchWorkerPosition} disabled={isFetchingLocation}>
+                <Text style={{ fontSize: 12, color: colors.primary, fontWeight: '600' }}>
+                  {isFetchingLocation ? t('common', 'loading') : '↻ GPS'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+            <Text style={[styles.fieldValue, { color: colors.foreground }]}>
+              {workerLocation
+                ? `${workerLocation.latitude.toFixed(6)}, ${workerLocation.longitude.toFixed(6)}`
+                : isFetchingLocation
+                ? t('common', 'loading')
+                : 'GPS Location not acquired yet'}
+            </Text>
+          </View>
+
+          {distanceMeters != null && (
+            <View style={styles.fieldBlock}>
+              <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>
+                {t('workerTaskDetails', 'distanceFromSite')}
+              </Text>
+              <Text
+                style={[
+                  styles.fieldValue,
+                  {
+                    color: distanceMeters <= 30 ? colors.success : colors.warning,
+                    fontWeight: '700',
+                  },
+                ]}
+              >
+                {distanceMeters}m {distanceMeters <= 30 ? '(Within 30m boundary)' : '(Outside 30m boundary)'}
+              </Text>
+            </View>
+          )}
+
+          {assignment.latitude != null && assignment.longitude != null ? (
             <TouchableOpacity
               style={[
                 styles.mapsBtn,
@@ -550,8 +676,25 @@ export const WorkerTaskDetailsScreen: React.FC = () => {
             </View>
           )}
 
+          {isCancelled && (
+            <View
+              style={[
+                styles.completedBox,
+                {
+                  backgroundColor: colors.destructive + '15',
+                  borderColor: colors.destructive,
+                  borderRadius: radii.lg,
+                },
+              ]}
+            >
+              <Text style={[styles.completedBoxText, { color: colors.destructive }]}>
+                ✕ Cancelled / Rejected
+              </Text>
+            </View>
+          )}
+
           {/* Secondary Action: Flag for Department Forward */}
-          {!isCompleted && (
+          {!isCompleted && !isCancelled && (
             <TouchableOpacity
               style={[
                 styles.secondaryActionBtn,

@@ -22,7 +22,9 @@ import {
   deleteProfilePhoto,
   WorkerProfileData,
 } from '@cscrs/api';
+import * as Location from 'expo-location';
 import { resolveApiUrl } from '@cscrs/config';
+import { clearStoredRole } from '@cscrs/storage';
 import { useAuthSession } from '../../../core/auth';
 import { useI18n } from '../../../core/i18n';
 import { RootStackParamList } from '../../../app/navigation/types';
@@ -46,6 +48,29 @@ export const WorkerProfileScreen: React.FC = () => {
   const [saving, setSaving] = useState<boolean>(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
+
+  // Live Location State
+  const [currentLocation, setCurrentLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [isLocLoading, setIsLocLoading] = useState<boolean>(false);
+
+  const fetchWorkerLocation = useCallback(async () => {
+    try {
+      setIsLocLoading(true);
+      const { status } = await Location.getForegroundPermissionsAsync();
+      if (status === 'granted') {
+        const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+        setCurrentLocation({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
+      }
+    } catch {
+      // Ignore location error
+    } finally {
+      setIsLocLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchWorkerLocation();
+  }, [fetchWorkerLocation]);
 
   const fetchProfile = useCallback(async () => {
     setLoading(true);
@@ -173,6 +198,7 @@ export const WorkerProfileScreen: React.FC = () => {
         try {
           const res = await uploadProfilePhoto(asset.uri, asset.mimeType ?? 'image/jpeg');
           setProfile((prev) => (prev ? { ...prev, profile_image: res.profile_image } : null));
+          await fetchProfile();
           setSaveSuccess(t('profileAvatar', 'uploadSuccess'));
         } catch (err: any) {
           setSaveError(err?.response?.data?.detail ?? 'Failed to update photo');
@@ -193,6 +219,7 @@ export const WorkerProfileScreen: React.FC = () => {
     try {
       await deleteProfilePhoto();
       setProfile((prev) => (prev ? { ...prev, profile_image: null } : null));
+      await fetchProfile();
       setSaveSuccess(t('profileAvatar', 'removeSuccess'));
     } catch (err: any) {
       setSaveError(err?.response?.data?.detail ?? 'Failed to remove photo');
@@ -212,7 +239,11 @@ export const WorkerProfileScreen: React.FC = () => {
           style: 'destructive',
           onPress: async () => {
             await logout();
-            navigation.replace('AuthBoundary');
+            await clearStoredRole();
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'RoleSelection' }],
+            });
           },
         },
       ]
@@ -226,9 +257,14 @@ export const WorkerProfileScreen: React.FC = () => {
 
   const getFullProfileImageUrl = (img: string | null | undefined) => {
     if (!img) return null;
-    if (img.startsWith('http://') || img.startsWith('https://')) return img;
-    const baseHost = resolveApiUrl().replace('/api/v1', '');
-    return `${baseHost.replace(/\/$/, '')}/${img.replace(/^\//, '')}`;
+    let url = img;
+    const baseHost = resolveApiUrl().replace(/\/api\/v1\/?$/, '');
+    if (url.startsWith('http://localhost:8000') || url.startsWith('http://127.0.0.1:8000')) {
+      url = url.replace(/^http:\/\/(localhost|127\.0\.0\.1):8000/, baseHost);
+    } else if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      url = `${baseHost.replace(/\/$/, '')}/${url.replace(/^\//, '')}`;
+    }
+    return url;
   };
 
   const photoUri = getFullProfileImageUrl(profile?.profile_image);
@@ -574,13 +610,25 @@ export const WorkerProfileScreen: React.FC = () => {
                 {t('workerProfile', 'departmentInfoHeading')}
               </Text>
 
-              {profile?.department_name ? (
+              <View style={styles.fieldRow}>
+                <Text style={[styles.fieldKey, { color: colors.mutedForeground }]}>
+                  {t('workerProfile', 'departmentLabel')}
+                </Text>
+                <Text style={[styles.fieldVal, { color: colors.foreground }]}>
+                  {profile?.department_name ||
+                    (profile?.department_id != null
+                      ? `Department #${profile.department_id}`
+                      : t('workerProfile', 'departmentNotAssigned'))}
+                </Text>
+              </View>
+
+              {profile?.department_id != null && profile?.department_name ? (
                 <View style={styles.fieldRow}>
                   <Text style={[styles.fieldKey, { color: colors.mutedForeground }]}>
-                    {t('workerProfile', 'departmentLabel')}
+                    {t('workerProfile', 'departmentIdLabel')}
                   </Text>
                   <Text style={[styles.fieldVal, { color: colors.foreground }]}>
-                    {profile.department_name}
+                    #{profile.department_id}
                   </Text>
                 </View>
               ) : null}
@@ -633,6 +681,45 @@ export const WorkerProfileScreen: React.FC = () => {
                       : t('workerProfile', 'onAssignment')}
                   </Text>
                 </View>
+              </View>
+            </View>
+
+            {/* Live Coordinates Card */}
+            <View
+              style={[
+                styles.card,
+                {
+                  backgroundColor: colors.card,
+                  borderColor: colors.border,
+                  borderRadius: radii.xl,
+                },
+              ]}
+            >
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <CscrsIcon name="map-pin" size={16} color={colors.primary} />
+                  <Text style={[styles.sectionTitle, { color: colors.foreground, marginBottom: 0 }]}>
+                    {t('workerProfile', 'currentLocationHeading')}
+                  </Text>
+                </View>
+                <TouchableOpacity onPress={fetchWorkerLocation} disabled={isLocLoading}>
+                  <Text style={{ fontSize: 12, color: colors.primary, fontWeight: '600' }}>
+                    {isLocLoading ? t('common', 'loading') : '↻ GPS'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.fieldRow}>
+                <Text style={[styles.fieldKey, { color: colors.mutedForeground }]}>
+                  {t('workerProfile', 'currentCoordinates')}
+                </Text>
+                <Text style={[styles.fieldVal, { color: colors.foreground }]}>
+                  {currentLocation
+                    ? `${currentLocation.latitude.toFixed(6)}, ${currentLocation.longitude.toFixed(6)}`
+                    : isLocLoading
+                    ? t('common', 'loading')
+                    : 'GPS location not acquired'}
+                </Text>
               </View>
             </View>
 

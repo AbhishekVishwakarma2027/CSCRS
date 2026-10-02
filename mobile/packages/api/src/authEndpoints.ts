@@ -61,7 +61,13 @@ export async function resendVerificationOtp(
 export function parseApiError(error: unknown, fallback = 'An unexpected error occurred.'): string {
   if (isAxiosError(error)) {
     if (!error.response) {
-      return 'Network error. Please check your internet connection and try again.';
+      if (error.code === 'ECONNABORTED' || error.message?.toLowerCase().includes('timeout')) {
+        return 'Request timed out. Please check your connection and try again.';
+      }
+      if (typeof navigator !== 'undefined' && 'onLine' in navigator && (navigator as { onLine?: boolean }).onLine === false) {
+        return 'Network connection unavailable. Please check your internet settings.';
+      }
+      return "Can't reach the server. Please check if the server is running and try again.";
     }
 
     const status = error.response.status;
@@ -88,10 +94,16 @@ export function parseApiError(error: unknown, fallback = 'An unexpected error oc
     }
 
     if (status === 401) {
-      return 'Invalid email or password. Please try again.';
+      return 'Invalid credentials or session expired. Please try again.';
+    }
+    if (status === 403) {
+      return 'You do not have permission to perform this action.';
+    }
+    if (status === 404) {
+      return 'The requested resource was not found.';
     }
     if (status === 409) {
-      return 'An account with this email or phone number already exists.';
+      return 'An account or record with these details already exists.';
     }
     if (status === 422) {
       return 'Please check your input for invalid format or missing fields.';
@@ -105,6 +117,13 @@ export function parseApiError(error: unknown, fallback = 'An unexpected error oc
   }
 
   if (error instanceof Error) {
+    const msgLower = error.message.toLowerCase();
+    if (msgLower.includes('network') || msgLower.includes('offline') || msgLower.includes('failed to fetch')) {
+      if (typeof navigator !== 'undefined' && 'onLine' in navigator && (navigator as { onLine?: boolean }).onLine === false) {
+        return 'Network connection unavailable. Please check your internet settings.';
+      }
+      return "Can't reach the server. Please check your connection and try again.";
+    }
     return error.message;
   }
 

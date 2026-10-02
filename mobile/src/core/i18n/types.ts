@@ -11,6 +11,10 @@ export interface TranslationDictionary {
     getStarted: string;
     reset: string;
     loading: string;
+    networkUnavailable: string;
+    serverUnreachable: string;
+    requestTimeout: string;
+    serverError: string;
   };
   splash: {
     title: string;
@@ -217,6 +221,7 @@ export interface TranslationDictionary {
     filterPending: string;
     filterInProgress: string;
     filterResolved: string;
+    filterCancelled: string;
     noReports: string;
     noReportsDesc: string;
     noSearchResults: string;
@@ -242,6 +247,7 @@ export interface TranslationDictionary {
     priority: string;
     address: string;
     coordinates: string;
+    openInMaps: string;
     riskScore: string;
     aiConfidence: string;
     verification: string;
@@ -337,6 +343,7 @@ export interface TranslationDictionary {
     filterAssigned: string;
     filterInProgress: string;
     filterCompleted: string;
+    filterCancelled: string;
     noTasks: string;
     noTasksDesc: string;
     loadingTasks: string;
@@ -363,10 +370,14 @@ export interface TranslationDictionary {
     locationSection: string;
     address: string;
     coordinates: string;
+    reportLocation: string;
+    workerLocation: string;
+    distanceFromSite: string;
     openInMaps: string;
     assignedAt: string;
     workStartedAt: string;
     originalPhoto: string;
+    resolutionPhoto: string;
     noPhoto: string;
     startWorkAction: string;
     startingWork: string;
@@ -479,6 +490,10 @@ export interface TranslationDictionary {
     namePlaceholder: string;
     phonePlaceholder: string;
     departmentInfoHeading: string;
+    departmentIdLabel: string;
+    departmentNotAssigned: string;
+    currentLocationHeading: string;
+    currentCoordinates: string;
     changePassword: string;
     signOut: string;
     confirmSignOut: string;
@@ -530,6 +545,8 @@ export interface TranslationDictionary {
     changeSuccess: string;
     passwordMismatch: string;
     passwordLengthError: string;
+    errorTitle: string;
+    genericError: string;
   };
   profileAvatar: {
     addPhoto: string;

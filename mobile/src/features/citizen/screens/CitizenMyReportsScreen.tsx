@@ -19,7 +19,7 @@ import { useI18n } from '../../../core/i18n';
 
 type MyReportsNavProp = NativeStackNavigationProp<RootStackParamList>;
 
-type FilterStatus = 'ALL' | 'PENDING' | 'IN_PROGRESS' | 'RESOLVED';
+type FilterStatus = 'ALL' | 'PENDING' | 'IN_PROGRESS' | 'RESOLVED' | 'CANCELLED';
 
 export const CitizenMyReportsScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
@@ -81,6 +81,9 @@ export const CitizenMyReportsScreen: React.FC = () => {
     }
     if (activeFilter === 'RESOLVED') {
       return s === 'RESOLVED' || s === 'CLOSED';
+    }
+    if (activeFilter === 'CANCELLED') {
+      return s === 'CANCELLED' || s === 'REJECTED';
     }
     return true;
   });
@@ -177,6 +180,7 @@ export const CitizenMyReportsScreen: React.FC = () => {
               { key: 'PENDING', label: t('citizenMyReports', 'filterPending') },
               { key: 'IN_PROGRESS', label: t('citizenMyReports', 'filterInProgress') },
               { key: 'RESOLVED', label: t('citizenMyReports', 'filterResolved') },
+              { key: 'CANCELLED', label: t('citizenMyReports', 'filterCancelled') },
             ] as const
           ).map((filter) => {
             const isSelected = activeFilter === filter.key;

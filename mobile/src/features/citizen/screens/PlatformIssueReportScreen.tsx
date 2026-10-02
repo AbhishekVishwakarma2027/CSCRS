@@ -16,7 +16,33 @@ import { useTheme, CscrsIcon } from '@cscrs/design-system';
 import { submitPlatformIssue, parseApiError } from '@cscrs/api';
 import { useI18n } from '../../../core/i18n';
 
-const ISSUE_CATEGORIES = ['UI / Display', 'Performance / Lag', 'Network / Connection', 'Crash / Bug', 'Other'];
+export const ISSUE_CATEGORIES = [
+  'UI / UX',
+  'Performance',
+  'Authentication',
+  'Authorization',
+  'Report Submission',
+  'Report Verification',
+  'Duplicate Detection',
+  'Assignment',
+  'Worker',
+  'Resolution Upload',
+  'Resolution Verification',
+  'Timeline',
+  'Notification',
+  'Email',
+  'Dashboard',
+  'Search',
+  'Filter',
+  'API',
+  'Database',
+  'AI Detection',
+  'GPS / EXIF',
+  'Image Upload',
+  'Video Upload',
+  'Security',
+  'Other',
+] as const;
 
 export function PlatformIssueReportScreen() {
   const { theme } = useTheme();
@@ -27,7 +53,7 @@ export function PlatformIssueReportScreen() {
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [category, setCategory] = useState<string>(ISSUE_CATEGORIES[0] || 'UI / Display');
+  const [category, setCategory] = useState<string>(ISSUE_CATEGORIES[0]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);

@@ -99,10 +99,13 @@ export interface ForwardRequestResponse {
  */
 export function resolveMediaUrl(path: string | null | undefined): string | null {
   if (!path) return null;
+  const base = resolveApiUrl().replace(/\/api\/v1\/?$/, '').replace(/\/+$/, '');
+  if (path.startsWith('http://localhost:8000') || path.startsWith('http://127.0.0.1:8000')) {
+    return path.replace(/^http:\/\/(localhost|127\.0\.0\.1):8000/, base);
+  }
   if (path.startsWith('http://') || path.startsWith('https://')) {
     return path;
   }
-  const base = resolveApiUrl().replace(/\/+$/, '');
   const cleanPath = path.startsWith('/') ? path : `/${path}`;
   return `${base}${cleanPath}`;
 }
